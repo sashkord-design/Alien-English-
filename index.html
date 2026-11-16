@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alien Memory Scanner</title>
+    <style>
+        :root {
+            --bg-color: #fcfcfc;
+            --text-main: #111111;
+            --text-muted: #666666;
+            --card-bg: #ffffff;
+            --border-color: #e0e0e0;
+            --accent: #2563eb;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            padding: 24px;
+            overflow-x: hidden;
+        }
+
+        header {
+            width: 100%;
+            max-width: 480px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+            color: var(--text-muted);
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+
+        .main-container {
+            width: 100%;
+            max-width: 480px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex-grow: 1;
+            justify-content: center;
+            transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        /* Riddle section */
+        .riddle-box {
+            text-align: center;
+            margin-bottom: 32px;
+            opacity: 1;
+            transition: opacity 0.4s ease;
+        }
+
+        .riddle-label {
+            font-size: 12px;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .riddle-text {
+            font-size: 20px;
+            line-height: 1.4;
+            font-weight: 500;
+            color: var(--text-main);
+        }
+
+        /* Cards grid */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            width: 100%;
+            margin-bottom: 32px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+            min-height: 120px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+        }
+
+        .card:hover {
+            border-color: var(--text-main);
+            transform: translateY(-2px);
+        }
+
+        .card.selected {
+            border-color: #16a34a;
+            background-color: #f0fdf4;
+        }
+
+        .card.wrong {
+            border-color: #dc2626;
+            background-color: #fef2f2;
+            opacity: 0.7;
+        }
+
+        .card-emoji {
+            font-size: 36px;
+            margin-bottom: 8px;
+        }
+
+        .card-title {
+            font-size: 15px;
+            font-weight: 500;
+        }
+
+        .card-content {
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Example state on cards */
+        .card.flipped .card-front {
+            display: none;
+        }
+        .card .card-back {
+            display: none;
+            font-size: 13px;
+            line-height: 1.3;
+            color: var(--text-muted);
+            text-align: left;
+        }
+        .card.flipped .card-back {
+            display: block;
+        }
+
+        /* Action Button */
+        .btn-action {
+            background: var(--text-main);
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            padding: 16px 32px;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            width: 100%;
+            opacity: 0;
+            transform: translateY(10px);
+            pointer-events: none;
+            transition: all 0.4s ease;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .btn-action.visible {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+
+        .btn-action:active {
+            transform: scale(0.98);
+        }
+
+        /* 3D CUBE VIEWER */
+        .cube-wrapper {
+            perspective: 1000px;
+            width: 220px;
+            height: 220px;
+            display: none;
+            margin: 40px auto;
+            cursor: grab;
+        }
+
+        .cube-wrapper:active {
+            cursor: grabbing;
+        }
+
+        .cube {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transform: translateZ(-110px);
+            transition: transform 0.1s ease-out;
+        }
+
+        .cube-face {
+            position: absolute;
+            width: 220px;
+            height: 220px;
+            background: #ffffff;
+            border: 1px solid #d1d5db;
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            backface-visibility: hidden;
+        }
+
+        /* Cube faces positions */
+        .face-front  { transform: rotateY(  0deg) translateZ(110px); background: #fafafa; }
+        .face-right  { transform: rotateY( 90deg) translateZ(110px); font-size: 12px; line-height: 1.3; text-align: left; align-items: flex-start; }
+        .face-back   { transform: rotateY(180deg) translateZ(110px); font-size: 12px; line-height: 1.3; text-align: left; align-items: flex-start; }
+        .face-left   { transform: rotateY(-90deg) translateZ(110px); font-size: 12px; line-height: 1.3; text-align: left; align-items: flex-start; }
+        .face-top    { transform: rotateX( 90deg) translateZ(110px); }
+        .face-bottom { transform: rotateX(-90deg) translateZ(110px); color: var(--text-muted); font-size: 12px; }
+
+        .cube-controls {
+            display: none;
+            gap: 8px;
+            margin-top: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .cube-btn {
+            background: #f3f4f6;
+            border: 1px solid var(--border-color);
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .cube-btn:hover {
+            background: #e5e7eb;
+        }
+
+        .success-banner {
+            display: none;
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 13px;
+            color: #16a34a;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <span>Alien Scanner v0.1</span>
+        <span>#001 Apple</span>
+    </header>
+
+    <div class="main-container" id="mainContainer">
+        
+        <div class="success-banner" id="successBanner">Занесено в пам'ять корабля ✓</div>
+
+        <div class="riddle-box" id="riddleBox">
+            <div class="riddle-label">Сканування об'єкта</div>
+            <div class="riddle-text">«Фрукт, що впав Ньютону на голову»</div>
+        </div>
+
+        <div class="cards-grid" id="cardsGrid">
+            <div class="card" onclick="selectCard(this, false)">
+                <div class="card-content">
+                    <div class="card-front">
+                        <div class="card-emoji">🍑</div>
+                        <div class="card-title">Слива</div>
+                    </div>
+                    <div class="card-back">He bought a fresh plum at the local market.</div>
+                </div>
+            </div>
+            <div class="card" onclick="selectCard(this, false)">
+                <div class="card-content">
+                    <div class="card-front">
+                        <div class="card-emoji">🍊</div>
+                        <div class="card-title">Апельсин</div>
+                    </div>
+                    <div class="card-back">She peeled the sweet orange for breakfast.</div>
+                </div>
+            </div>
+            <div class="card" onclick="selectCard(this, false)">
+                <div class="card-content">
+                    <div class="card-front">
+                        <div class="card-emoji">🍐</div>
+                        <div class="card-title">Груша</div>
+                    </div>
+                    <div class="card-back">The ripe pear was sweet and juicy.</div>
+                </div>
+            </div>
+            <div class="card" onclick="selectCard(this, true)">
+                <div class="card-content">
+                    <div class="card-front">
+                        <div class="card-emoji">🍎</div>
+                        <div class="card-title">Яблуко</div>
+                    </div>
+                    <div class="card-back"><b>APPLE</b><br><span>Яблуко</span></div>
+                </div>
+            </div>
+        </div>
+
+        <button class="btn-action" id="actionBtn" onclick="transformToCube()">Занести в пам'ять</button>
+
+        <!-- 3D CUBE CONTAINER -->
+        <div class="cube-wrapper" id="cubeWrapper">
+            <div class="cube" id="cube">
+                <div class="cube-face face-front">
+                    <div style="font-size: 42px; margin-bottom: 8px;">🍎</div>
+                    <div style="font-weight: 600; font-size: 16px;">APPLE</div>
+                    <div style="font-size: 12px; color: #666;">Яблуко</div>
+                </div>
+                <div class="cube-face face-right">
+                    <b>Приклад 1:</b><br>I eat a fresh apple every morning.
+                </div>
+                <div class="cube-face face-back">
+                    <b>Приклад 2:</b><br>She cut the apple into four pieces.
+                </div>
+                <div class="cube-face face-left">
+                    <b>Приклад 3:</b><br>This green apple is quite sour.
+                </div>
+                <div class="cube-face face-top">
+                    <span style="font-size: 11px; color: #888;">Опис:</span><br>Фрукт Ньютона
+                </div>
+                <div class="cube-face face-bottom">
+                    ID: #001 <br>Мова: Земля
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="cube-controls" id="cubeControls">
+        <button class="cube-btn" onclick="rotateCube(0, 0)">Лицьова</button>
+        <button class="cube-btn" onclick="rotateCube(0, -90)">Приклад 1</button>
+        <button class="cube-btn" onclick="rotateCube(0, -180)">Приклад 2</button>
+        <button class="cube-btn" onclick="rotateCube(0, 90)">Приклад 3</button>
+        <button class="cube-btn" onclick="rotateCube(-90, 0)">Згори</button>
+    </div>
+
+    <script>
+        let isCorrectSelected = false;
+
+        function selectCard(element, isCorrect) {
+            const cards = document.querySelectorAll('.card');
+            
+            if (isCorrect) {
+                element.classList.add('selected');
+                isCorrectSelected = true;
+                
+                // Перевертаємо решту карток
+                cards.forEach(c => {
+                    if (c !== element) {
+                        c.classList.add('flipped', 'wrong');
+                    }
+                });
+
+                document.getElementById('actionBtn').classList.add('visible');
+            } else {
+                element.classList.add('wrong');
+            }
+        }
+
+        function transformToCube() {
+            document.getElementById('riddleBox').style.opacity = '0';
+            document.getElementById('cardsGrid').style.opacity = '0';
+            document.getElementById('actionBtn').style.opacity = '0';
+
+            setTimeout(() => {
+                document.getElementById('riddleBox').style.display = 'none';
+                document.getElementById('cardsGrid').style.display = 'none';
+                document.getElementById('actionBtn').style.display = 'none';
+
+                document.getElementById('successBanner').style.display = 'block';
+                document.getElementById('cubeWrapper').style.display = 'block';
+                document.getElementById('cubeControls').style.display = 'flex';
+            }, 400);
+        }
+
+        // Логіка обертання куба мишею / пальцем
+        const cube = document.getElementById('cube');
+        const wrapper = document.getElementById('cubeWrapper');
+        
+        let isDragging = false;
+        let startX, startY;
+        let currentX = -15;
+        let currentY = 25;
+
+        function updateCubeRotation() {
+            cube.style.transform = `translateZ(-110px) rotateX(${currentX}deg) rotateY(${currentY}deg)`;
+        }
+
+        updateCubeRotation();
+
+        wrapper.addEventListener('pointerdown', (e) => {
+            isDragging = true;
+            startX = e.clientX;
+            startY = e.clientY;
+            wrapper.setPointerCapture(e.pointerId);
+        });
+
+        wrapper.addEventListener('pointermove', (e) => {
+            if (!isDragging) return;
+            const deltaX = e.clientX - startX;
+            const deltaY = e.clientY - startY;
+
+            currentY += deltaX * 0.5;
+            currentX -= deltaY * 0.5;
+
+            startX = e.clientX;
+            startY = e.clientY;
+
+            updateCubeRotation();
+        });
+
+        wrapper.addEventListener('pointerup', (e) => {
+            isDragging = false;
+            wrapper.releasePointerCapture(e.pointerId);
+        });
+
+        function rotateCube(x, y) {
+            currentX = x;
+            currentY = y;
+            updateCubeRotation();
+        }
+    </script>
+</body>
+</html>
