@@ -6,11 +6,11 @@
     <title>Alien Memory Scanner</title>
     <style>
         :root {
-            --bg-color: #f7f6f2; /* Теплий фон скетчбука */
-            --text-main: #111111;
-            --text-muted: #555555;
-            --card-bg: #faf9f5;  /* Кремовий колір фактурного паперу */
-            --border-color: #b8b8b0; /* Олівцевий сірий контур */
+            --bg-color: #fcfcfc;
+            --text-main: #18181b;
+            --text-muted: #52525b;
+            --card-bg: #ffffff;
+            --border-color: #8e8e93;
             --wrong-bg: #f3e8ff;
             --wrong-border: #a855f7;
             --correct-bg: #f0fdf4;
@@ -91,23 +91,23 @@
         .scan-btn {
             background: var(--card-bg);
             color: var(--text-main);
-            border: 1.5px solid var(--text-main);
-            border-radius: 12px;
-            padding: 10px 20px;
+            border: 1.5px solid #27272a;
+            border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
+            padding: 10px 22px;
             margin-top: 4px;
             font-size: 11px;
             font-weight: 600;
             letter-spacing: 0.12em;
             text-transform: uppercase;
             cursor: pointer;
-            box-shadow: 2px 2px 0px rgba(0,0,0,0.06);
+            box-shadow: 2px 3px 0px rgba(0, 0, 0, 0.08);
             transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.2s;
             user-select: none;
         }
 
         .scan-btn.pressed {
             transform: scale(0.92);
-            background-color: #f0eee6;
+            background-color: #f4f4f5;
         }
 
         /* 2. SCAN WORKSPACE */
@@ -122,17 +122,14 @@
             width: 100%;
             background: var(--card-bg);
             border: 1.5px solid var(--border-color);
-            border-radius: 14px;
+            border-radius: 235px 20px 215px 18px / 18px 215px 20px 235px;
             padding: 14px 18px;
             text-align: center;
             margin-bottom: 14px;
             opacity: 0;
             transform: translateY(10px);
             transition: opacity 0.9s ease, transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
-            box-shadow: 2px 3px 12px rgba(0, 0, 0, 0.03);
-            /* Ефект зернистого паперу */
-            background-image: radial-gradient(rgba(0,0,0,0.03) 1px, transparent 0);
-            background-size: 4px 4px;
+            box-shadow: 2px 3px 0px rgba(0, 0, 0, 0.05), inset 0 0 12px rgba(0, 0, 0, 0.02);
         }
 
         .riddle-box.revealed {
@@ -198,7 +195,7 @@
             height: 100%;
             backface-visibility: hidden;
             -webkit-backface-visibility: hidden;
-            border-radius: 14px;
+            border-radius: 240px 18px 220px 15px / 15px 220px 18px 240px;
             border: 1.5px solid var(--border-color);
             background: var(--card-bg);
             display: flex;
@@ -206,10 +203,7 @@
             align-items: center;
             justify-content: center;
             padding: 12px;
-            box-shadow: 2px 3px 10px rgba(0, 0, 0, 0.03);
-            /* Ефект фактурного паперу */
-            background-image: radial-gradient(rgba(0,0,0,0.025) 1px, transparent 0);
-            background-size: 4px 4px;
+            box-shadow: 2px 3px 0px rgba(0, 0, 0, 0.05), inset 0 0 12px rgba(0, 0, 0, 0.02);
         }
 
         .card-emoji { font-size: 32px; margin-bottom: 6px; }
@@ -242,8 +236,8 @@
         .btn-action {
             background: var(--card-bg);
             color: var(--text-main);
-            border: 1.5px solid var(--text-main);
-            border-radius: 12px;
+            border: 1.5px solid #27272a;
+            border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
             padding: 14px 28px;
             font-size: 14px;
             font-weight: 600;
@@ -254,10 +248,7 @@
             transform: translateY(10px);
             pointer-events: none;
             transition: opacity 0.35s ease, transform 0.35s ease, background-color 0.2s;
-            box-shadow: 2px 3px 10px rgba(0, 0, 0, 0.04);
-            /* Фактура паперу */
-            background-image: radial-gradient(rgba(0,0,0,0.025) 1px, transparent 0);
-            background-size: 4px 4px;
+            box-shadow: 2px 3px 0px rgba(0, 0, 0, 0.08);
         }
 
         .btn-action.visible {
@@ -268,10 +259,10 @@
 
         .btn-action:active {
             transform: scale(0.97);
-            background-color: #f0eee6;
+            background-color: #f4f4f5;
         }
 
-        /* 3. PENCIL SKETCH PAPER 3D CUBE STAGE */
+        /* 3. VARIANT 3: WATERCOLOR-PENCIL VOLUME & SKETCHY EDGES */
         .cube-stage {
             display: none;
             flex-direction: column;
@@ -330,16 +321,16 @@
             transition: none;
         }
 
-        /* Грані куба з ефектом фактурного паперу та олівцевого штрихування */
+        /* Hand-drawn double pencil stroke & soft graphite edge shading */
         .cube-face {
             position: absolute;
             top: 0;
             left: 0;
             width: 170px;
             height: 170px;
-            background: #faf9f5;
-            border: 1.5px solid #a8a8a0;
-            border-radius: 12px;
+            background: #ffffff;
+            border-radius: 255px 16px 225px 14px / 14px 225px 16px 255px;
+            border: 1.5px solid #71717a;
             padding: 14px;
             display: flex;
             flex-direction: column;
@@ -348,16 +339,15 @@
             text-align: center;
             backface-visibility: hidden;
             -webkit-backface-visibility: hidden;
-            /* Текстура зернистого паперу + легке олівцеве штрихування по діагоналі */
-            background-image: 
-                radial-gradient(rgba(0,0,0,0.035) 1px, transparent 0),
-                linear-gradient(135deg, rgba(255,255,255,0.4) 25%, transparent 25%, transparent 50%, rgba(255,255,255,0.4) 50%, rgba(255,255,255,0.4) 75%, transparent 75%, transparent);
-            background-size: 4px 4px, 12px 12px;
-            box-shadow: 2px 4px 14px rgba(0, 0, 0, 0.05);
+            /* Double-line pencil sketch shadow + soft watercolor edge shading */
+            box-shadow:
+                2px 2px 0px rgba(113, 113, 122, 0.35),
+                inset 0 0 18px rgba(0, 0, 0, 0.045),
+                inset -3px -3px 8px rgba(113, 113, 122, 0.12);
             transition: opacity 0.3s ease;
         }
 
-        /* Приховати текст при автообертанні */
+        /* Hide text during auto-spin to keep motion flicker-free */
         .cube.spinning-mode .face-content-element {
             opacity: 0;
         }
@@ -383,25 +373,37 @@
         .cube.folded .face-bottom { transform: rotateX(-90deg) translateZ(85px); }
         .cube.folded .face-left   { transform: rotateY(-90deg) translateZ(85px); }
         .cube.folded .face-right  { transform: rotateY( 90deg) translateZ(85px); }
-        .cube.folded .face-back   { transform: rotateY(180deg) translateZ(85px); background-color: #f2f0ea; }
+        .cube.folded .face-back   { transform: rotateY(180deg) translateZ(85px); background: #fafafa; }
 
+        /* Handwritten sketchbook-style margin note tags */
         .face-tag {
             position: absolute;
-            top: 8px;
-            left: 10px;
-            font-size: 7.5px;
-            font-weight: 700;
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
-            color: #7a7a80;
-            opacity: 0.8;
+            top: 9px;
+            left: 14px;
+            font-family: Georgia, "Times New Roman", serif;
+            font-style: italic;
+            font-size: 8.5px;
+            font-weight: 400;
+            letter-spacing: 0.04em;
+            color: #71717a;
+            opacity: 0.85;
+            transform: rotate(-1.5deg);
         }
 
         .face-content-text {
             font-size: 13px;
-            line-height: 1.35;
+            line-height: 1.38;
             color: var(--text-main);
             font-weight: 400;
+        }
+
+        .term-sketch {
+            font-family: Georgia, "Times New Roman", serif;
+            font-size: 23px;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            color: #18181b;
+            transform: rotate(-1deg);
         }
 
         .touch-overlay {
@@ -456,13 +458,13 @@
         .line-btn::after {
             content: '';
             display: block;
-            background-color: rgba(17, 17, 17, 0.6);
+            background-color: rgba(24, 24, 27, 0.65);
             border-radius: 2px;
             transition: transform 0.18s ease, background-color 0.2s ease;
         }
 
         .line-btn:hover::after {
-            background-color: rgba(17, 17, 17, 1);
+            background-color: rgba(24, 24, 27, 1);
         }
 
         .line-btn:active::after {
@@ -494,7 +496,7 @@
             width: 30px;
             height: 26px;
         }
-        .line-left::after { width: 26px; height: 2px; }
+        .line-left::after { width: 24px; height: 2px; }
 
         .line-right {
             right: 0;
@@ -503,7 +505,7 @@
             width: 30px;
             height: 26px;
         }
-        .line-right::after { width: 26px; height: 2px; }
+        .line-right::after { width: 24px; height: 2px; }
     </style>
 </head>
 <body>
@@ -590,7 +592,7 @@
             <button class="btn-action" id="actionBtn" onclick="transformToCube()">Store in Memory</button>
         </div>
 
-        <!-- Screen 3: Sketchbook Paper 3D Cube Stage -->
+        <!-- Screen 3: Sketchbook Volume 3D Cube Stage -->
         <div class="cube-stage" id="cubeStage">
             <div class="success-banner">Stored in Ship's Memory ✓</div>
 
@@ -654,8 +656,8 @@
                     <div class="cube-face face-bottom" id="faceBottom">
                         <span class="face-tag">Term</span>
                         <div class="face-content-element">
-                            <div style="font-size: 22px; font-weight: 700; letter-spacing: 0.08em;">APPLE</div>
-                            <div style="font-size: 11px; color: #7a7a80; margin-top: 3px;">/ˈæp.əl/</div>
+                            <div class="term-sketch">APPLE</div>
+                            <div style="font-size: 11px; color: #71717a; margin-top: 3px;">/ˈæp.əl/</div>
                         </div>
                     </div>
                 </div>
