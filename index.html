@@ -45,7 +45,6 @@
             align-items: center;
             justify-content: center;
             position: relative;
-            min-height: 460px;
         }
 
         /* 1. INTRO NARRATIVE */
@@ -61,7 +60,6 @@
             line-height: 1.6;
             color: var(--text-main);
             font-weight: 400;
-            letter-spacing: -0.01em;
         }
 
         .narrative-box.hidden {
@@ -98,17 +96,15 @@
             opacity: 0.45;
         }
 
-        /* SCAN WORKSPACE (Gets morphed into the cube) */
+        /* SCAN WORKSPACE */
         .scan-workspace {
             width: 100%;
             display: none;
             flex-direction: column;
             align-items: center;
-            position: relative;
-            z-index: 10;
+            transition: opacity 0.35s ease;
         }
 
-        /* Riddle Box */
         .riddle-box {
             width: 100%;
             background: var(--card-bg);
@@ -119,7 +115,7 @@
             margin-bottom: 14px;
             opacity: 0;
             transform: translateY(10px);
-            transition: opacity 0.8s ease, transform 0.8s cubic-bezier(0.22, 1, 0.36, 1), border-radius 0.8s ease;
+            transition: opacity 0.8s ease, transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
             box-shadow: 0 4px 16px rgba(0, 0, 0, 0.02);
         }
 
@@ -132,10 +128,8 @@
             font-size: 16px;
             line-height: 1.4;
             font-weight: 500;
-            color: var(--text-main);
         }
 
-        /* Cards Grid */
         .cards-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -153,7 +147,6 @@
         .card-slot {
             perspective: 1000px;
             height: 118px;
-            transition: transform 0.85s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.75s ease 0.15s;
         }
 
         .card-press {
@@ -194,29 +187,16 @@
             justify-content: center;
             padding: 12px;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
-            transition: background-color 0.3s ease, border-color 0.3s ease;
         }
 
-        .card-front:hover {
-            border-color: var(--text-main);
-        }
-
-        .card-emoji {
-            font-size: 32px;
-            margin-bottom: 6px;
-        }
-
-        .card-title {
-            font-size: 14px;
-            font-weight: 500;
-        }
+        .card-emoji { font-size: 32px; margin-bottom: 6px; }
+        .card-title { font-size: 14px; font-weight: 500; }
 
         .card-back {
             transform: rotateY(180deg);
             font-size: 12px;
             line-height: 1.35;
             text-align: center;
-            color: var(--text-main);
             padding: 8px;
         }
 
@@ -234,7 +214,6 @@
             color: #14532d;
         }
 
-        /* Store in memory button */
         .btn-action {
             background: var(--text-main);
             color: #ffffff;
@@ -259,44 +238,14 @@
             pointer-events: auto;
         }
 
-        .btn-action:active {
-            transform: scale(0.97);
-        }
-
-        /* VISIBLE MORPHING INTO THE CUBE FACES */
-        .riddle-box.morph-to-cube {
-            transform: translate(0px, 115px) scaleX(0.55) scaleY(1.8) rotateX(75deg);
-            opacity: 0;
-        }
-
-        .card-slot.morph-0 {
-            transform: translate(88px, 42px) scale(0.85) rotateY(-65deg);
-            opacity: 0;
-        }
-
-        .card-slot.morph-1 {
-            transform: translate(-88px, 42px) scale(0.85) rotateY(65deg);
-            opacity: 0;
-        }
-
-        .card-slot.morph-2 {
-            transform: translate(88px, -78px) scale(0.85) rotateX(-65deg);
-            opacity: 0;
-        }
-
-        .card-slot.morph-3 {
-            transform: translate(-88px, -78px) scale(0.95) rotateY(0deg);
-            opacity: 0;
-        }
-
-        /* 3D CUBE STAGE */
+        /* =========================================================
+           TRUE ORIGAMI 3D FOLDING CUBE STAGE
+           ========================================================= */
         .cube-stage {
             display: none;
             flex-direction: column;
             align-items: center;
             width: 100%;
-            position: relative;
-            z-index: 5;
         }
 
         .success-banner {
@@ -308,30 +257,23 @@
             letter-spacing: 0.08em;
             text-transform: uppercase;
             opacity: 0;
-            transform: translateY(-6px);
-            transition: opacity 0.6s ease 0.5s, transform 0.6s ease 0.5s;
+            transition: opacity 0.6s ease;
         }
 
-        .cube-stage.assembled .success-banner {
+        .cube-stage.folded .success-banner {
             opacity: 1;
-            transform: translateY(0);
         }
 
         .cube-wrapper {
-            perspective: 1000px;
+            perspective: 1100px;
             width: 206px;
             height: 206px;
             margin: 8px auto 26px;
             position: relative;
-            opacity: 0;
-            transform: scale(0.45);
-            transition: opacity 0.75s cubic-bezier(0.22, 1, 0.36, 1), transform 0.85s cubic-bezier(0.22, 1, 0.36, 1);
         }
 
-        .cube-stage.assembled .cube-wrapper {
-            opacity: 1;
-            transform: scale(1);
-            animation: levitate 4s ease-in-out 0.9s infinite;
+        .cube-wrapper.levitating {
+            animation: levitate 4s ease-in-out infinite;
         }
 
         @keyframes levitate {
@@ -344,6 +286,13 @@
             height: 100%;
             position: relative;
             transform-style: preserve-3d;
+            /* Initial unfolded net zooms smoothly into final cube position */
+            transform: translateZ(-280px) scale(0.55);
+            transition: transform 1.15s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        /* Once folded, user navigation uses smooth 0.95s ease */
+        .cube.interactive {
             transition: transform 0.95s cubic-bezier(0.65, 0, 0.35, 1);
         }
 
@@ -362,15 +311,24 @@
             text-align: center;
             box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.02), 0 8px 24px rgba(0, 0, 0, 0.05);
             backface-visibility: hidden;
+            transition: transform 1.15s cubic-bezier(0.22, 1, 0.36, 1);
         }
 
-        /* 206px / 2 = 103px */
-        .face-front  { transform: rotateY(  0deg) translateZ(103px); }
-        .face-back   { transform: rotateY(180deg) translateZ(103px); background: #fafafa; }
-        .face-right  { transform: rotateY( 90deg) translateZ(103px); }
-        .face-left   { transform: rotateY(-90deg) translateZ(103px); }
-        .face-top    { transform: rotateX( 90deg) translateZ(103px); }
-        .face-bottom { transform: rotateX(-90deg) translateZ(103px); }
+        /* STATE 1: UNFOLDED CROSS NET (Flat 3D panels laid out in space) */
+        .face-front  { transform: translateZ(0px); }
+        .face-top    { transform: translateY(-218px) rotateX(0deg); }
+        .face-bottom { transform: translateY( 218px) rotateX(0deg); }
+        .face-left   { transform: translateX(-218px) rotateY(0deg); }
+        .face-right  { transform: translateX( 218px) rotateY(0deg); }
+        .face-back   { transform: translateX( 436px) rotateY(0deg); background: #fafafa; }
+
+        /* STATE 2: FOLDED INTO SOLID 3D CUBE (206px / 2 = 103px) */
+        .cube.folded .face-front  { transform: rotateY(  0deg) translateZ(103px); }
+        .cube.folded .face-top    { transform: rotateX( 90deg) translateZ(103px); }
+        .cube.folded .face-bottom { transform: rotateX(-90deg) translateZ(103px); }
+        .cube.folded .face-left   { transform: rotateY(-90deg) translateZ(103px); }
+        .cube.folded .face-right  { transform: rotateY( 90deg) translateZ(103px); }
+        .cube.folded .face-back   { transform: rotateY(180deg) translateZ(103px); }
 
         .face-tag {
             position: absolute;
@@ -396,16 +354,18 @@
             position: absolute;
             inset: -12px;
             z-index: 20;
-            display: grid;
+            display: none;
             grid-template-columns: 1fr 1fr 1fr;
             grid-template-rows: 1fr 1fr 1fr;
         }
 
-        .zone {
-            cursor: pointer;
+        .cube-stage.folded .touch-overlay {
+            display: grid;
         }
 
-        /* 4. TRUE CROSS-SHAPED (3x3) D-PAD CONTROLS */
+        .zone { cursor: pointer; }
+
+        /* CROSS-SHAPED (3x3) D-PAD CONTROLS */
         .cross-dpad {
             display: grid;
             grid-template-columns: 36px 36px 36px;
@@ -415,12 +375,14 @@
             justify-items: center;
             opacity: 0;
             transform: translateY(10px);
-            transition: opacity 0.6s ease 0.5s, transform 0.6s ease 0.5s;
+            pointer-events: none;
+            transition: opacity 0.6s ease, transform 0.6s ease;
         }
 
-        .cube-stage.assembled .cross-dpad {
+        .cube-stage.folded .cross-dpad {
             opacity: 1;
             transform: translateY(0);
+            pointer-events: auto;
         }
 
         .circle-btn {
@@ -429,51 +391,22 @@
             border-radius: 50%;
             border: 1.5px solid rgba(17, 17, 17, 0.22);
             cursor: pointer;
-            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.2s;
+            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
             box-shadow: 0 3px 8px rgba(0, 0, 0, 0.04);
             backdrop-filter: blur(4px);
         }
 
-        .circle-btn:active {
-            transform: scale(0.84);
-        }
+        .circle-btn:active { transform: scale(0.84); }
 
-        /* Top (Row 1, Col 2) */
-        .btn-up {
-            grid-column: 2;
-            grid-row: 1;
-            background: rgba(147, 197, 253, 0.45);
-            border-color: rgba(59, 130, 246, 0.35);
-        }
-
-        /* Left (Row 2, Col 1) */
-        .btn-left {
-            grid-column: 1;
-            grid-row: 2;
-            background: rgba(196, 181, 253, 0.45);
-            border-color: rgba(139, 92, 246, 0.35);
-        }
-
-        /* Right (Row 2, Col 3) */
-        .btn-right {
-            grid-column: 3;
-            grid-row: 2;
-            background: rgba(253, 186, 116, 0.45);
-            border-color: rgba(249, 115, 22, 0.35);
-        }
-
-        /* Bottom (Row 3, Col 2) */
-        .btn-down {
-            grid-column: 2;
-            grid-row: 3;
-            background: rgba(134, 239, 172, 0.45);
-            border-color: rgba(34, 197, 94, 0.35);
-        }
+        .btn-up    { grid-column: 2; grid-row: 1; background: rgba(147, 197, 253, 0.45); border-color: rgba(59, 130, 246, 0.35); }
+        .btn-left  { grid-column: 1; grid-row: 2; background: rgba(196, 181, 253, 0.45); border-color: rgba(139, 92, 246, 0.35); }
+        .btn-right { grid-column: 3; grid-row: 2; background: rgba(253, 186, 116, 0.45); border-color: rgba(249, 115, 22, 0.35); }
+        .btn-down  { grid-column: 2; grid-row: 3; background: rgba(134, 239, 172, 0.45); border-color: rgba(34, 197, 94, 0.35); }
     </style>
 </head>
 <body>
 
-    <div class="main-container" id="mainContainer">
+    <div class="main-container">
 
         <!-- Intro Narrative -->
         <div class="narrative-box" id="narrativeBox">
@@ -492,7 +425,7 @@
             </div>
 
             <div class="cards-grid" id="cardsGrid">
-                <div class="card-slot" data-index="0" data-correct="false">
+                <div class="card-slot" data-correct="false">
                     <div class="card-press" onclick="handleCardTap(this.parentElement)">
                         <div class="card-inner">
                             <div class="card-face card-front">
@@ -506,7 +439,7 @@
                     </div>
                 </div>
 
-                <div class="card-slot" data-index="1" data-correct="false">
+                <div class="card-slot" data-correct="false">
                     <div class="card-press" onclick="handleCardTap(this.parentElement)">
                         <div class="card-inner">
                             <div class="card-face card-front">
@@ -520,7 +453,7 @@
                     </div>
                 </div>
 
-                <div class="card-slot" data-index="2" data-correct="false">
+                <div class="card-slot" data-correct="false">
                     <div class="card-press" onclick="handleCardTap(this.parentElement)">
                         <div class="card-inner">
                             <div class="card-face card-front">
@@ -534,7 +467,7 @@
                     </div>
                 </div>
 
-                <div class="card-slot" data-index="3" data-correct="true">
+                <div class="card-slot" data-correct="true">
                     <div class="card-press" onclick="handleCardTap(this.parentElement)">
                         <div class="card-inner">
                             <div class="card-face card-front">
@@ -553,59 +486,52 @@
             <button class="btn-action" id="actionBtn" onclick="transformToCube()">Store in Memory</button>
         </div>
 
-        <!-- 3D CUBE STAGE -->
+        <!-- 3D ORIGAMI CUBE STAGE -->
         <div class="cube-stage" id="cubeStage">
             <div class="success-banner">Stored in Ship's Memory ✓</div>
 
-            <div class="cube-wrapper">
-                <!-- Interactive Thirds Overlay -->
+            <div class="cube-wrapper" id="cubeWrapper">
                 <div class="touch-overlay">
-                    <div class="zone" onclick="tiltUp()" aria-label="Flip Up"></div>
-                    <div class="zone" onclick="tiltUp()" aria-label="Flip Up"></div>
-                    <div class="zone" onclick="tiltUp()" aria-label="Flip Up"></div>
+                    <div class="zone" onclick="tiltUp()"></div>
+                    <div class="zone" onclick="tiltUp()"></div>
+                    <div class="zone" onclick="tiltUp()"></div>
 
-                    <div class="zone" onclick="turnLeft()" aria-label="Turn Left"></div>
-                    <div class="zone" onclick="turnBack()" aria-label="Turn Around"></div>
-                    <div class="zone" onclick="turnRight()" aria-label="Turn Right"></div>
+                    <div class="zone" onclick="turnLeft()"></div>
+                    <div class="zone" onclick="turnBack()"></div>
+                    <div class="zone" onclick="turnRight()"></div>
 
-                    <div class="zone" onclick="tiltDown()" aria-label="Flip Down"></div>
-                    <div class="zone" onclick="tiltDown()" aria-label="Flip Down"></div>
-                    <div class="zone" onclick="tiltDown()" aria-label="Flip Down"></div>
+                    <div class="zone" onclick="tiltDown()"></div>
+                    <div class="zone" onclick="tiltDown()"></div>
+                    <div class="zone" onclick="tiltDown()"></div>
                 </div>
 
                 <div class="cube" id="cube">
-                    <!-- Face 1: Visual (Default front-facing) -->
                     <div class="cube-face face-front">
                         <span class="face-tag">Visual</span>
                         <div style="font-size: 68px;">🍎</div>
                     </div>
 
-                    <!-- Face 2: Term -->
                     <div class="cube-face face-back">
                         <span class="face-tag">Term</span>
                         <div style="font-size: 26px; font-weight: 700; letter-spacing: 0.08em;">APPLE</div>
                         <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">/ˈæp.əl/</div>
                     </div>
 
-                    <!-- Face 3: Example 1 -->
                     <div class="cube-face face-right">
                         <span class="face-tag">Example</span>
                         <div class="face-content-text">I eat a fresh <b>apple</b> every morning.</div>
                     </div>
 
-                    <!-- Face 4: Example 2 -->
                     <div class="cube-face face-left">
                         <span class="face-tag">Example</span>
                         <div class="face-content-text">She cut the <b>apple</b> into four equal pieces.</div>
                     </div>
 
-                    <!-- Face 5: Definition -->
                     <div class="cube-face face-top">
                         <span class="face-tag">Definition</span>
                         <div class="face-content-text">The fruit that fell on Newton’s head</div>
                     </div>
 
-                    <!-- Face 6: Example 3 -->
                     <div class="cube-face face-bottom">
                         <span class="face-tag">Example</span>
                         <div class="face-content-text">This green <b>apple</b> tastes quite sour.</div>
@@ -626,7 +552,6 @@
 
     <script>
         let isSolved = false;
-        // Start strictly square facing Visual front face (0, 0)
         let rotX = 0;
         let rotY = 0;
 
@@ -696,34 +621,34 @@
         function transformToCube() {
             const scanBtn = document.getElementById('scanBtn');
             const workspace = document.getElementById('scanWorkspace');
-            const riddleBox = document.getElementById('riddleBox');
-            const actionBtn = document.getElementById('actionBtn');
-            const slots = document.querySelectorAll('.card-slot');
             const cubeStage = document.getElementById('cubeStage');
+            const cube = document.getElementById('cube');
+            const wrapper = document.getElementById('cubeWrapper');
 
             scanBtn.style.opacity = '0';
-            actionBtn.style.opacity = '0';
-            actionBtn.style.pointerEvents = 'none';
+            workspace.style.opacity = '0';
 
-            // 1. Fold all blocks into the center cube shape simultaneously
-            riddleBox.classList.add('morph-to-cube');
-            slots.forEach((slot, i) => {
-                slot.classList.add(`morph-${i}`);
-            });
-
-            // 2. Reveal the assembled 3D cube in place as cards fold into it
             setTimeout(() => {
                 scanBtn.style.display = 'none';
                 workspace.style.display = 'none';
-                
-                rotX = 0;
-                rotY = 0;
-                applyCubeTransform();
 
+                // Show the 6 flat faces arranged as an open 3D origami net
                 cubeStage.style.display = 'flex';
-                cubeStage.offsetHeight;
-                cubeStage.classList.add('assembled');
-            }, 620);
+                cube.offsetHeight; // Force layout reflow
+
+                // Fold all 6 faces by 90 degrees into a solid cube right in front of the user
+                requestAnimationFrame(() => {
+                    cube.classList.add('folded');
+                    cube.style.transform = `translateZ(-103px) rotateX(0deg) rotateY(0deg)`;
+                });
+
+                // After folding completes, unlock controls & levitation
+                setTimeout(() => {
+                    cubeStage.classList.add('folded');
+                    cube.classList.add('interactive');
+                    wrapper.classList.add('levitating');
+                }, 1150);
+            }, 350);
         }
 
         const cube = document.getElementById('cube');
@@ -732,22 +657,18 @@
             cube.style.transform = `translateZ(-103px) rotateX(${rotX}deg) rotateY(${rotY}deg)`;
         }
 
-        // Helper: Always snap Y to nearest full 360° turn before showing Top/Bottom
-        // This guarantees Top & Bottom faces are NEVER upside down!
         function alignYToUprightFront() {
             rotY = Math.round(rotY / 360) * 360;
         }
 
         function tiltUp() {
             alignYToUprightFront();
-            // If currently on bottom (+90), return to front (0); otherwise go to top (-90)
             rotX = rotX > 0 ? 0 : -90;
             applyCubeTransform();
         }
 
         function tiltDown() {
             alignYToUprightFront();
-            // If currently on top (-90), return to front (0); otherwise go to bottom (+90)
             rotX = rotX < 0 ? 0 : 90;
             applyCubeTransform();
         }
