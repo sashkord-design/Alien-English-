@@ -6,11 +6,11 @@
     <title>Alien Memory Scanner</title>
     <style>
         :root {
-            --bg-color: #fcfcfc;
+            --bg-color: #f7f6f2; /* Теплий фон скетчбука */
             --text-main: #111111;
             --text-muted: #555555;
-            --card-bg: #ffffff;
-            --border-color: #c7c7cc;
+            --card-bg: #faf9f5;  /* Кремовий колір фактурного паперу */
+            --border-color: #b8b8b0; /* Олівцевий сірий контур */
             --wrong-bg: #f3e8ff;
             --wrong-border: #a855f7;
             --correct-bg: #f0fdf4;
@@ -92,8 +92,7 @@
             background: var(--card-bg);
             color: var(--text-main);
             border: 1.5px solid var(--text-main);
-            /* Hand-drawn organic border radius */
-            border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
+            border-radius: 12px;
             padding: 10px 20px;
             margin-top: 4px;
             font-size: 11px;
@@ -101,14 +100,14 @@
             letter-spacing: 0.12em;
             text-transform: uppercase;
             cursor: pointer;
-            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.04);
+            box-shadow: 2px 2px 0px rgba(0,0,0,0.06);
             transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.2s;
             user-select: none;
         }
 
         .scan-btn.pressed {
             transform: scale(0.92);
-            background-color: #f4f4f5;
+            background-color: #f0eee6;
         }
 
         /* 2. SCAN WORKSPACE */
@@ -123,15 +122,17 @@
             width: 100%;
             background: var(--card-bg);
             border: 1.5px solid var(--border-color);
-            /* Hand-drawn organic border radius */
-            border-radius: 235px 20px 215px 18px / 18px 215px 20px 235px;
+            border-radius: 14px;
             padding: 14px 18px;
             text-align: center;
             margin-bottom: 14px;
             opacity: 0;
             transform: translateY(10px);
             transition: opacity 0.9s ease, transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.02);
+            box-shadow: 2px 3px 12px rgba(0, 0, 0, 0.03);
+            /* Ефект зернистого паперу */
+            background-image: radial-gradient(rgba(0,0,0,0.03) 1px, transparent 0);
+            background-size: 4px 4px;
         }
 
         .riddle-box.revealed {
@@ -197,8 +198,7 @@
             height: 100%;
             backface-visibility: hidden;
             -webkit-backface-visibility: hidden;
-            /* Hand-drawn organic border radius for cards */
-            border-radius: 240px 18px 220px 15px / 15px 220px 18px 240px;
+            border-radius: 14px;
             border: 1.5px solid var(--border-color);
             background: var(--card-bg);
             display: flex;
@@ -206,7 +206,10 @@
             align-items: center;
             justify-content: center;
             padding: 12px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+            box-shadow: 2px 3px 10px rgba(0, 0, 0, 0.03);
+            /* Ефект фактурного паперу */
+            background-image: radial-gradient(rgba(0,0,0,0.025) 1px, transparent 0);
+            background-size: 4px 4px;
         }
 
         .card-emoji { font-size: 32px; margin-bottom: 6px; }
@@ -240,8 +243,7 @@
             background: var(--card-bg);
             color: var(--text-main);
             border: 1.5px solid var(--text-main);
-            /* Hand-drawn organic border radius */
-            border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
+            border-radius: 12px;
             padding: 14px 28px;
             font-size: 14px;
             font-weight: 600;
@@ -252,7 +254,10 @@
             transform: translateY(10px);
             pointer-events: none;
             transition: opacity 0.35s ease, transform 0.35s ease, background-color 0.2s;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+            box-shadow: 2px 3px 10px rgba(0, 0, 0, 0.04);
+            /* Фактура паперу */
+            background-image: radial-gradient(rgba(0,0,0,0.025) 1px, transparent 0);
+            background-size: 4px 4px;
         }
 
         .btn-action.visible {
@@ -263,10 +268,10 @@
 
         .btn-action:active {
             transform: scale(0.97);
-            background-color: #f4f4f5;
+            background-color: #f0eee6;
         }
 
-        /* 3. SKETCHY 3D CUBE STAGE */
+        /* 3. PENCIL SKETCH PAPER 3D CUBE STAGE */
         .cube-stage {
             display: none;
             flex-direction: column;
@@ -325,17 +330,16 @@
             transition: none;
         }
 
-        /* Hand-drawn sketchy cube faces */
+        /* Грані куба з ефектом фактурного паперу та олівцевого штрихування */
         .cube-face {
             position: absolute;
             top: 0;
             left: 0;
             width: 170px;
             height: 170px;
-            background: #ffffff;
-            /* Hand-drawn organic border radius making lines slightly uneven like pencil sketches */
-            border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
-            border: 1.5px solid #b0b0b5;
+            background: #faf9f5;
+            border: 1.5px solid #a8a8a0;
+            border-radius: 12px;
             padding: 14px;
             display: flex;
             flex-direction: column;
@@ -344,11 +348,16 @@
             text-align: center;
             backface-visibility: hidden;
             -webkit-backface-visibility: hidden;
-            box-shadow: inset 0 0 12px rgba(0, 0, 0, 0.03);
+            /* Текстура зернистого паперу + легке олівцеве штрихування по діагоналі */
+            background-image: 
+                radial-gradient(rgba(0,0,0,0.035) 1px, transparent 0),
+                linear-gradient(135deg, rgba(255,255,255,0.4) 25%, transparent 25%, transparent 50%, rgba(255,255,255,0.4) 50%, rgba(255,255,255,0.4) 75%, transparent 75%, transparent);
+            background-size: 4px 4px, 12px 12px;
+            box-shadow: 2px 4px 14px rgba(0, 0, 0, 0.05);
             transition: opacity 0.3s ease;
         }
 
-        /* Hide text during auto-spin to keep motion clean */
+        /* Приховати текст при автообертанні */
         .cube.spinning-mode .face-content-element {
             opacity: 0;
         }
@@ -374,18 +383,18 @@
         .cube.folded .face-bottom { transform: rotateX(-90deg) translateZ(85px); }
         .cube.folded .face-left   { transform: rotateY(-90deg) translateZ(85px); }
         .cube.folded .face-right  { transform: rotateY( 90deg) translateZ(85px); }
-        .cube.folded .face-back   { transform: rotateY(180deg) translateZ(85px); background: #fafafa; }
+        .cube.folded .face-back   { transform: rotateY(180deg) translateZ(85px); background-color: #f2f0ea; }
 
         .face-tag {
             position: absolute;
-            top: 10px;
-            left: 14px;
+            top: 8px;
+            left: 10px;
             font-size: 7.5px;
             font-weight: 700;
             letter-spacing: 0.08em;
             text-transform: uppercase;
-            color: #8e8e93;
-            opacity: 0.7;
+            color: #7a7a80;
+            opacity: 0.8;
         }
 
         .face-content-text {
@@ -485,7 +494,7 @@
             width: 30px;
             height: 26px;
         }
-        .line-left::after { width: 24px; height: 2px; }
+        .line-left::after { width: 26px; height: 2px; }
 
         .line-right {
             right: 0;
@@ -494,7 +503,7 @@
             width: 30px;
             height: 26px;
         }
-        .line-right::after { width: 24px; height: 2px; }
+        .line-right::after { width: 26px; height: 2px; }
     </style>
 </head>
 <body>
@@ -581,7 +590,7 @@
             <button class="btn-action" id="actionBtn" onclick="transformToCube()">Store in Memory</button>
         </div>
 
-        <!-- Screen 3: Sketchy 3D Cube Stage -->
+        <!-- Screen 3: Sketchbook Paper 3D Cube Stage -->
         <div class="cube-stage" id="cubeStage">
             <div class="success-banner">Stored in Ship's Memory ✓</div>
 
@@ -646,7 +655,7 @@
                         <span class="face-tag">Term</span>
                         <div class="face-content-element">
                             <div style="font-size: 22px; font-weight: 700; letter-spacing: 0.08em;">APPLE</div>
-                            <div style="font-size: 11px; color: #6b7280; margin-top: 3px;">/ˈæp.əl/</div>
+                            <div style="font-size: 11px; color: #7a7a80; margin-top: 3px;">/ˈæp.əl/</div>
                         </div>
                     </div>
                 </div>
@@ -876,11 +885,11 @@
             applyCubeTransform();
         }
 
-        function interactAndTiltUp() { stopAutoSpinAndAlign(); tiltUp(); }
-        function interactAndTiltDown() { stopAutoSpinAndAlign(); tiltDown(); }
-        function interactAndTurnLeft() { stopAutoSpinAndAlign(); turnLeft(); }
-        function interactAndTurnRight() { stopAutoSpinAndAlign(); turnRight(); }
-        function interactAndTurnBack() { stopAutoSpinAndAlign(); turnBack(); }
+        function interactAndTiltUp() { if (!stopAutoSpinAndAlign()) tiltUp(); }
+        function interactAndTiltDown() { if (!stopAutoSpinAndAlign()) tiltDown(); }
+        function interactAndTurnLeft() { if (!stopAutoSpinAndAlign()) turnLeft(); }
+        function interactAndTurnRight() { if (!stopAutoSpinAndAlign()) turnRight(); }
+        function interactAndTurnBack() { if (!stopAutoSpinAndAlign()) turnBack(); }
     </script>
 </body>
 </html>
