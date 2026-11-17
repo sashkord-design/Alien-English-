@@ -262,13 +262,15 @@
             background-color: #f4f4f5;
         }
 
-        /* 3. FLICKER-FREE CENTERED & LOWERED 3D CUBE STAGE */
+        /* 3. CLEAN, ARTIFACT-FREE 3D CUBE STAGE */
         .cube-stage {
             display: none;
             flex-direction: column;
             align-items: center;
             width: 100%;
             margin-top: 34px;
+            user-select: none;
+            -webkit-user-select: none;
         }
 
         .success-banner {
@@ -297,35 +299,20 @@
             position: relative;
         }
 
-        /* Dedicated ambient pulsing blue aura behind the cube (prevents text repaint flicker) */
-        .cube-aura {
-            position: absolute;
-            inset: 12px;
-            border-radius: 28px;
-            background: radial-gradient(circle, rgba(59, 130, 246, 0.45) 0%, rgba(59, 130, 246, 0) 72%);
-            filter: blur(14px);
-            pointer-events: none;
-            opacity: 0;
-            transition: opacity 0.8s ease;
-        }
-
-        .cube-stage.assembled .cube-aura {
-            opacity: 1;
-            animation: auraPulse 3.2s ease-in-out infinite;
-        }
-
-        @keyframes auraPulse {
-            0%, 100% { transform: scale(1.05); opacity: 0.55; }
-            50% { transform: scale(1.28); opacity: 0.95; }
-        }
-
+        /* Levitation + subtle pulsing blue drop-shadow around the entire 3D cube */
         .cube-wrapper.levitating {
-            animation: levitate 4s ease-in-out infinite;
+            animation: levitateAndGlow 3.8s ease-in-out infinite;
         }
 
-        @keyframes levitate {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-6px); }
+        @keyframes levitateAndGlow {
+            0%, 100% {
+                transform: translateY(0px);
+                filter: drop-shadow(0 0 10px rgba(59, 130, 246, 0.28));
+            }
+            50% {
+                transform: translateY(-6px);
+                filter: drop-shadow(0 0 18px rgba(59, 130, 246, 0.58));
+            }
         }
 
         .cube {
@@ -341,7 +328,7 @@
             transition: none;
         }
 
-        /* Static, flicker-free GPU-cached cube faces */
+        /* Clean, flat GPU faces with zero sub-layer Z-fighting */
         .cube-face {
             position: absolute;
             top: 0;
@@ -349,8 +336,7 @@
             width: 170px;
             height: 170px;
             background: #ffffff;
-            border: 1.5px solid #bfdbfe;
-            outline: 1px solid transparent;
+            border: 1.5px solid #93c5fd;
             border-radius: 12px;
             padding: 14px;
             display: flex;
@@ -360,18 +346,7 @@
             text-align: center;
             backface-visibility: hidden;
             -webkit-backface-visibility: hidden;
-            box-shadow: inset 0 0 14px rgba(59, 130, 246, 0.14), 0 0 16px rgba(59, 130, 246, 0.35);
-        }
-
-        /* Inner text layer lifted slightly forward in 3D to stop z-fighting flicker */
-        .face-inner {
-            transform: translateZ(1px);
-            -webkit-transform: translateZ(1px);
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
+            box-shadow: inset 0 0 14px rgba(59, 130, 246, 0.12);
         }
 
         .cube.animating .cube-face {
@@ -396,7 +371,6 @@
             text-transform: uppercase;
             color: #9ca3af;
             opacity: 0.7;
-            transform: translateZ(1px);
         }
 
         .face-content-text {
@@ -419,9 +393,13 @@
             display: grid;
         }
 
-        .zone { cursor: pointer; }
+        .zone {
+            cursor: pointer;
+            background: transparent;
+            border: none;
+        }
 
-        /* Lowered Crosshair Controls */
+        /* Crosshair Controls */
         .crosshair-pad {
             position: relative;
             width: 78px;
@@ -443,6 +421,7 @@
             position: absolute;
             background: transparent;
             border: none;
+            outline: none;
             cursor: pointer;
             display: flex;
             align-items: center;
@@ -587,13 +566,11 @@
             <button class="btn-action" id="actionBtn" onclick="transformToCube()">Store in Memory</button>
         </div>
 
-        <!-- Screen 3: Flicker-Free 3D Cube Stage -->
+        <!-- Screen 3: Artifact-Free 3D Cube Stage -->
         <div class="cube-stage" id="cubeStage">
             <div class="success-banner">Stored in Ship's Memory ✓</div>
 
             <div class="cube-wrapper" id="cubeWrapper">
-                <div class="cube-aura"></div>
-
                 <div class="touch-overlay">
                     <div class="zone" onclick="interactAndTiltUp()"></div>
                     <div class="zone" onclick="interactAndTiltUp()"></div>
@@ -612,55 +589,43 @@
                     <!-- Front: Apple Image -->
                     <div class="cube-face face-front" id="faceFront">
                         <span class="face-tag">Visual</span>
-                        <div class="face-inner">
-                            <div style="font-size: 56px;">🍎</div>
-                        </div>
+                        <div style="font-size: 56px;">🍎</div>
                     </div>
 
                     <!-- Back: Example 3 -->
                     <div class="cube-face face-back" id="faceBack">
                         <span class="face-tag">Example 3</span>
-                        <div class="face-inner">
-                            <div class="face-content-text">This green <b>apple</b> tastes quite sour.</div>
-                        </div>
+                        <div class="face-content-text">This green <b>apple</b> tastes quite sour.</div>
                     </div>
 
                     <!-- Right: Example 1 -->
                     <div class="cube-face face-right" id="faceRight">
                         <span class="face-tag">Example 1</span>
-                        <div class="face-inner">
-                            <div class="face-content-text">I eat a fresh <b>apple</b> every morning.</div>
-                        </div>
+                        <div class="face-content-text">I eat a fresh <b>apple</b> every morning.</div>
                     </div>
 
                     <!-- Left: Example 2 -->
                     <div class="cube-face face-left" id="faceLeft">
                         <span class="face-tag">Example 2</span>
-                        <div class="face-inner">
-                            <div class="face-content-text">She cut the <b>apple</b> into four equal pieces.</div>
-                        </div>
+                        <div class="face-content-text">She cut the <b>apple</b> into four equal pieces.</div>
                     </div>
 
                     <!-- Top: Definition -->
                     <div class="cube-face face-top" id="faceTop">
                         <span class="face-tag">Definition</span>
-                        <div class="face-inner">
-                            <div class="face-content-text">The fruit that fell on Igor’s head</div>
-                        </div>
+                        <div class="face-content-text">The fruit that fell on Igor’s head</div>
                     </div>
 
                     <!-- Bottom: Term (APPLE) -->
                     <div class="cube-face face-bottom" id="faceBottom">
                         <span class="face-tag">Term</span>
-                        <div class="face-inner">
-                            <div style="font-size: 22px; font-weight: 700; letter-spacing: 0.08em;">APPLE</div>
-                            <div style="font-size: 11px; color: #6b7280; margin-top: 3px;">/ˈæp.əl/</div>
-                        </div>
+                        <div style="font-size: 22px; font-weight: 700; letter-spacing: 0.08em;">APPLE</div>
+                        <div style="font-size: 11px; color: #6b7280; margin-top: 3px;">/ˈæp.əl/</div>
                     </div>
                 </div>
             </div>
 
-            <!-- Lowered Crosshair Controls -->
+            <!-- Crosshair Controls -->
             <div class="crosshair-pad">
                 <button class="line-btn line-up" onclick="interactAndTiltUp()" aria-label="Top Face"></button>
                 <button class="line-btn line-left" onclick="interactAndTurnLeft()" aria-label="Left Face"></button>
