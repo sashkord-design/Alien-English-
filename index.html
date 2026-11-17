@@ -28,18 +28,18 @@
         body {
             background-color: var(--bg-color);
             color: var(--text-main);
-            min-height: 100dvh;
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 16px 20px;
+            padding: 20px;
             overflow: hidden;
         }
 
         .main-container {
             width: 100%;
-            max-width: 400px;
+            max-width: 420px;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -47,13 +47,12 @@
             position: relative;
         }
 
-        /* 1. INTRO SCREEN (Illustration + Compact Narrative + Smaller Button) */
+        /* 1. INTRO SCREEN */
         .intro-screen {
             width: 100%;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
             transition: opacity 0.45s ease, transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
@@ -76,7 +75,8 @@
 
         .narrative-box {
             width: 100%;
-            padding: 0 12px 18px;
+            text-align: justify;
+            padding: 12px 16px 20px;
         }
 
         .narrative-text {
@@ -94,7 +94,6 @@
             border: 1.5px solid var(--text-main);
             border-radius: 10px;
             padding: 10px 20px;
-            margin-top: 4px;
             font-size: 11px;
             font-weight: 600;
             letter-spacing: 0.12em;
@@ -302,14 +301,29 @@
             50% { transform: translateY(-7px); }
         }
 
+        /* Combined Slow Spin + Levitation + Pulsing Blue Glow */
+        .cube-container-spin {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            animation: autoSpin 22s linear infinite;
+        }
+
+        .cube-container-spin.paused {
+            animation-play-state: paused;
+        }
+
+        @keyframes autoSpin {
+            0% { transform: rotateY(35deg); }
+            100% { transform: rotateY(395deg); }
+        }
+
         .cube {
             width: 100%;
             height: 100%;
             position: relative;
             transform-style: preserve-3d;
-        }
-
-        .cube.interactive {
             transition: transform 0.95s cubic-bezier(0.65, 0, 0.35, 1);
         }
 
@@ -326,20 +340,28 @@
             justify-content: center;
             align-items: center;
             text-align: center;
-            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.02), 0 8px 24px rgba(0, 0, 0, 0.05);
+            /* Pulsing blue neon glow effect */
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.02), 0 8px 24px rgba(59, 130, 246, 0.22);
+            animation: pulseGlow 3.5s ease-in-out infinite;
             backface-visibility: hidden;
+        }
+
+        @keyframes pulseGlow {
+            0%, 100% { box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.02), 0 6px 20px rgba(59, 130, 246, 0.16); }
+            50% { box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.02), 0 10px 32px rgba(59, 130, 246, 0.38); }
         }
 
         .cube.animating .cube-face {
             transition: transform 1.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.9s ease;
         }
 
-        .cube.folded .face-front  { transform: rotateY(  0deg) translateZ(103px); }
-        .cube.folded .face-top    { transform: rotateX( 90deg) translateZ(103px); }
-        .cube.folded .face-bottom { transform: rotateX(-90deg) translateZ(103px); }
-        .cube.folded .face-left   { transform: rotateY(-90deg) translateZ(103px); }
-        .cube.folded .face-right  { transform: rotateY( 90deg) translateZ(103px); }
-        .cube.folded .face-back   { transform: rotateY(180deg) translateZ(103px); background: #fafafa; }
+        /* Face positioning matching requested schema */
+        .cube.folded .face-front  { transform: rotateY(  0deg) translateZ(103px); } /* Apple Image */
+        .cube.folded .face-top    { transform: rotateX( 90deg) translateZ(103px); } /* Definition */
+        .cube.folded .face-bottom { transform: rotateX(-90deg) translateZ(103px); } /* Term (APPLE) */
+        .cube.folded .face-left   { transform: rotateY(-90deg) translateZ(103px); } /* Example 2 */
+        .cube.folded .face-right  { transform: rotateY( 90deg) translateZ(103px); } /* Example 1 */
+        .cube.folded .face-back   { transform: rotateY(180deg) translateZ(103px); background: #fafafa; } /* Example 3 */
 
         .face-tag {
             position: absolute;
@@ -547,59 +569,67 @@
 
             <div class="cube-wrapper" id="cubeWrapper">
                 <div class="touch-overlay">
-                    <div class="zone" onclick="tiltUp()"></div>
-                    <div class="zone" onclick="tiltUp()"></div>
-                    <div class="zone" onclick="tiltUp()"></div>
+                    <div class="zone" onclick="interactAndTiltUp()"></div>
+                    <div class="zone" onclick="interactAndTiltUp()"></div>
+                    <div class="zone" onclick="interactAndTiltUp()"></div>
 
-                    <div class="zone" onclick="turnLeft()"></div>
-                    <div class="zone" onclick="turnBack()"></div>
-                    <div class="zone" onclick="turnRight()"></div>
+                    <div class="zone" onclick="interactAndTurnLeft()"></div>
+                    <div class="zone" onclick="interactAndTurnBack()"></div>
+                    <div class="zone" onclick="interactAndTurnRight()"></div>
 
-                    <div class="zone" onclick="tiltDown()"></div>
-                    <div class="zone" onclick="tiltDown()"></div>
-                    <div class="zone" onclick="tiltDown()"></div>
+                    <div class="zone" onclick="interactAndTiltDown()"></div>
+                    <div class="zone" onclick="interactAndTiltDown()"></div>
+                    <div class="zone" onclick="interactAndTiltDown()"></div>
                 </div>
 
-                <div class="cube" id="cube">
-                    <div class="cube-face face-front" id="faceFront">
-                        <span class="face-tag">Visual</span>
-                        <div style="font-size: 68px;">🍎</div>
-                    </div>
+                <div class="cube-container-spin" id="spinContainer">
+                    <div class="cube" id="cube">
+                        <!-- Front: Apple Image -->
+                        <div class="cube-face face-front" id="faceFront">
+                            <span class="face-tag">Visual</span>
+                            <div style="font-size: 68px;">🍎</div>
+                        </div>
 
-                    <div class="cube-face face-back" id="faceBack">
-                        <span class="face-tag">Term</span>
-                        <div style="font-size: 26px; font-weight: 700; letter-spacing: 0.08em;">APPLE</div>
-                        <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">/ˈæp.əl/</div>
-                    </div>
+                        <!-- Back: Example 3 -->
+                        <div class="cube-face face-back" id="faceBack">
+                            <span class="face-tag">Example 3</span>
+                            <div class="face-content-text">This green <b>apple</b> tastes quite sour.</div>
+                        </div>
 
-                    <div class="cube-face face-right" id="faceRight">
-                        <span class="face-tag">Example</span>
-                        <div class="face-content-text">I eat a fresh <b>apple</b> every morning.</div>
-                    </div>
+                        <!-- Right: Example 1 -->
+                        <div class="cube-face face-right" id="faceRight">
+                            <span class="face-tag">Example 1</span>
+                            <div class="face-content-text">I eat a fresh <b>apple</b> every morning.</div>
+                        </div>
 
-                    <div class="cube-face face-left" id="faceLeft">
-                        <span class="face-tag">Example</span>
-                        <div class="face-content-text">She cut the <b>apple</b> into four equal pieces.</div>
-                    </div>
+                        <!-- Left: Example 2 -->
+                        <div class="cube-face face-left" id="faceLeft">
+                            <span class="face-tag">Example 2</span>
+                            <div class="face-content-text">She cut the <b>apple</b> into four equal pieces.</div>
+                        </div>
 
-                    <div class="cube-face face-top" id="faceTop">
-                        <span class="face-tag">Definition</span>
-                        <div class="face-content-text">The fruit that fell on Igor’s head</div>
-                    </div>
+                        <!-- Top: Definition -->
+                        <div class="cube-face face-top" id="faceTop">
+                            <span class="face-tag">Definition</span>
+                            <div class="face-content-text">The fruit that fell on Igor’s head</div>
+                        </div>
 
-                    <div class="cube-face face-bottom" id="faceBottom">
-                        <span class="face-tag">Example</span>
-                        <div class="face-content-text">This green <b>apple</b> tastes quite sour.</div>
+                        <!-- Bottom: Term (APPLE) -->
+                        <div class="cube-face face-bottom" id="faceBottom">
+                            <span class="face-tag">Term</span>
+                            <div style="font-size: 26px; font-weight: 700; letter-spacing: 0.08em;">APPLE</div>
+                            <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">/ˈæp.əl/</div>
+                        </div>
                     </div>
                 </div>
             </div>
 
             <!-- Crosshair Controls -->
             <div class="crosshair-pad">
-                <button class="line-btn line-up" onclick="tiltUp()" aria-label="Top Face"></button>
-                <button class="line-btn line-left" onclick="turnLeft()" aria-label="Left Face"></button>
-                <button class="line-btn line-right" onclick="turnRight()" aria-label="Right Face"></button>
-                <button class="line-btn line-down" onclick="tiltDown()" aria-label="Bottom Face"></button>
+                <button class="line-btn line-up" onclick="interactAndTiltUp()" aria-label="Top Face"></button>
+                <button class="line-btn line-left" onclick="interactAndTurnLeft()" aria-label="Left Face"></button>
+                <button class="line-btn line-right" onclick="interactAndTurnRight()" aria-label="Right Face"></button>
+                <button class="line-btn line-down" onclick="interactAndTiltDown()" aria-label="Bottom Face"></button>
             </div>
         </div>
 
@@ -607,8 +637,9 @@
 
     <script>
         let isSolved = false;
-        let rotX = 0;
-        let rotY = 0;
+        let rotX = -15; // Initial camera angle matching user snapshot
+        let rotY = 35;
+        let userInteracted = false;
 
         function startScan() {
             const btn = document.getElementById('scanBtn');
@@ -686,7 +717,7 @@
 
             workspace.style.display = 'none';
             cubeStage.style.display = 'flex';
-            cube.style.transform = `translateZ(-103px) rotateX(0deg) rotateY(0deg)`;
+            cube.style.transform = `translateZ(-103px) rotateX(${rotX}deg) rotateY(${rotY}deg)`;
 
             const targetRect = cubeWrapper.getBoundingClientRect();
             const targetCX = targetRect.left + targetRect.width / 2;
@@ -740,6 +771,7 @@
                 cube.classList.add('interactive');
                 cubeStage.classList.add('assembled');
                 cubeWrapper.classList.add('levitating');
+                applyCubeTransform();
             }, 1250);
         }
 
@@ -749,18 +781,20 @@
             cube.style.transform = `translateZ(-103px) rotateX(${rotX}deg) rotateY(${rotY}deg)`;
         }
 
-        function alignYToUprightFront() {
-            rotY = Math.round(rotY / 360) * 360;
+        function triggerUserInteraction() {
+            if (!userInteracted) {
+                userInteracted = true;
+                const spinContainer = document.getElementById('spinContainer');
+                spinContainer.classList.add('paused');
+            }
         }
 
         function tiltUp() {
-            alignYToUprightFront();
             rotX = rotX > 0 ? 0 : -90;
             applyCubeTransform();
         }
 
         function tiltDown() {
-            alignYToUprightFront();
             rotX = rotX < 0 ? 0 : 90;
             applyCubeTransform();
         }
@@ -782,6 +816,12 @@
             rotY += 180;
             applyCubeTransform();
         }
+
+        function interactAndTiltUp() { triggerUserInteraction(); tiltUp(); }
+        function interactAndTiltDown() { triggerUserInteraction(); tiltDown(); }
+        function interactAndTurnLeft() { triggerUserInteraction(); turnLeft(); }
+        function interactAndTurnRight() { triggerUserInteraction(); turnRight(); }
+        function interactAndTurnBack() { triggerUserInteraction(); turnBack(); }
     </script>
 </body>
 </html>
