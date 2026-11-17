@@ -213,7 +213,6 @@
             color: #14532d;
         }
 
-        /* 4. Store in Memory Button (Clean light bg, solid black text) */
         .btn-action {
             background: var(--card-bg);
             color: var(--text-main);
@@ -243,15 +242,13 @@
             background-color: #f4f4f5;
         }
 
-        /* =========================================================
-           3. ENHANCED SEAMLESS 3D CUBE STAGE (Lowered + Better Morph)
-           ========================================================= */
+        /* 3. CUBE STAGE */
         .cube-stage {
             display: none;
             flex-direction: column;
             align-items: center;
             width: 100%;
-            margin-top: 14px; /* Lowered position */
+            margin-top: 14px;
         }
 
         .success-banner {
@@ -317,12 +314,10 @@
             backface-visibility: hidden;
         }
 
-        /* Butter-smooth cinematic morph transition */
         .cube.animating .cube-face {
             transition: transform 1.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.9s ease;
         }
 
-        /* Final Folded Cube Faces */
         .cube.folded .face-front  { transform: rotateY(  0deg) translateZ(103px); }
         .cube.folded .face-top    { transform: rotateX( 90deg) translateZ(103px); }
         .cube.folded .face-bottom { transform: rotateX(-90deg) translateZ(103px); }
@@ -349,7 +344,6 @@
             font-weight: 400;
         }
 
-        /* Invisible Thirds Touch Overlay */
         .touch-overlay {
             position: absolute;
             inset: -12px;
@@ -365,7 +359,7 @@
 
         .zone { cursor: pointer; }
 
-        /* 2. SLIGHTLY SMALLER & LOWERED CROSSHAIR CONTROLS */
+        /* Crosshair Controls */
         .crosshair-pad {
             position: relative;
             width: 82px;
@@ -455,7 +449,7 @@
         <div class="intro-screen" id="introScreen">
             <div class="narrative-box">
                 <p class="narrative-text">
-                    Ігор зайшов у фруктовий сад і побачив різні плоди, що лежали на землі. Поки він їх розглядав, йому на голову щось впало. Воно було червоним і твердим. І це було…
+                    Igor wandered into an orchard and saw various fruits lying on the ground. While looking around, something suddenly fell on his head. It was red and firm. And it was...
                 </p>
             </div>
             <button class="scan-btn" id="scanBtn" onclick="startScan()">Object Scanning</button>
@@ -582,7 +576,7 @@
                 </div>
             </div>
 
-            <!-- Lowered & Smaller Crosshair Controls -->
+            <!-- Crosshair Controls -->
             <div class="crosshair-pad">
                 <button class="line-btn line-up" onclick="tiltUp()" aria-label="Top Face"></button>
                 <button class="line-btn line-left" onclick="turnLeft()" aria-label="Left Face"></button>
