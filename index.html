@@ -47,7 +47,7 @@
             position: relative;
         }
 
-        /* 1. INTRO SCREEN (Narrative + Scan Button) */
+        /* 1. INTRO SCREEN */
         .intro-screen {
             width: 100%;
             display: flex;
@@ -68,7 +68,6 @@
             padding: 12px 16px 28px;
         }
 
-        /* Reduced font size by 2 steps (17px -> 15px) */
         .narrative-text {
             font-size: 15px;
             line-height: 1.6;
@@ -97,7 +96,7 @@
             background-color: #f4f4f5;
         }
 
-        /* 2. SCAN WORKSPACE (Clean second screen without Object Scanning button) */
+        /* 2. SCAN WORKSPACE */
         .scan-workspace {
             width: 100%;
             display: none;
@@ -214,22 +213,23 @@
             color: #14532d;
         }
 
+        /* 4. Store in Memory Button (Clean light bg, solid black text) */
         .btn-action {
-            background: var(--text-main);
-            color: #ffffff;
-            border: none;
+            background: var(--card-bg);
+            color: var(--text-main);
+            border: 1.5px solid var(--text-main);
             border-radius: 12px;
             padding: 14px 28px;
             font-size: 14px;
-            font-weight: 500;
+            font-weight: 600;
             letter-spacing: 0.03em;
             cursor: pointer;
             width: 100%;
             opacity: 0;
             transform: translateY(10px);
             pointer-events: none;
-            transition: opacity 0.35s ease, transform 0.35s ease;
-            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+            transition: opacity 0.35s ease, transform 0.35s ease, background-color 0.2s;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
         }
 
         .btn-action.visible {
@@ -238,19 +238,25 @@
             pointer-events: auto;
         }
 
+        .btn-action:active {
+            transform: scale(0.97);
+            background-color: #f4f4f5;
+        }
+
         /* =========================================================
-           3. SEAMLESS 3D CUBE STAGE (FLIP Morph from Cards)
+           3. ENHANCED SEAMLESS 3D CUBE STAGE (Lowered + Better Morph)
            ========================================================= */
         .cube-stage {
             display: none;
             flex-direction: column;
             align-items: center;
             width: 100%;
+            margin-top: 14px; /* Lowered position */
         }
 
         .success-banner {
             text-align: center;
-            margin-bottom: 18px;
+            margin-bottom: 14px;
             font-size: 12px;
             color: var(--correct-border);
             font-weight: 600;
@@ -267,10 +273,10 @@
         }
 
         .cube-wrapper {
-            perspective: 1100px;
+            perspective: 1200px;
             width: 206px;
             height: 206px;
-            margin: 8px auto 30px;
+            margin: 4px auto 22px;
             position: relative;
         }
 
@@ -311,8 +317,9 @@
             backface-visibility: hidden;
         }
 
+        /* Butter-smooth cinematic morph transition */
         .cube.animating .cube-face {
-            transition: transform 1.15s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.8s ease;
+            transition: transform 1.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.9s ease;
         }
 
         /* Final Folded Cube Faces */
@@ -358,11 +365,12 @@
 
         .zone { cursor: pointer; }
 
-        /* 4. CROSSHAIR LINE CONTROLS (4 Thin Lines with Open Center) */
+        /* 2. SLIGHTLY SMALLER & LOWERED CROSSHAIR CONTROLS */
         .crosshair-pad {
             position: relative;
-            width: 96px;
-            height: 96px;
+            width: 82px;
+            height: 82px;
+            margin-top: 4px;
             opacity: 0;
             transform: translateY(8px);
             pointer-events: none;
@@ -389,7 +397,7 @@
         .line-btn::after {
             content: '';
             display: block;
-            background-color: rgba(17, 17, 17, 0.65);
+            background-color: rgba(17, 17, 17, 0.6);
             border-radius: 2px;
             transition: transform 0.18s ease, background-color 0.2s ease;
         }
@@ -402,57 +410,41 @@
             transform: scale(0.82);
         }
 
-        /* Top vertical line */
         .line-up {
             top: 0;
             left: 50%;
             transform: translateX(-50%);
-            width: 32px;
-            height: 38px;
-        }
-        .line-up::after {
-            width: 2px;
+            width: 28px;
             height: 32px;
         }
+        .line-up::after { width: 2px; height: 26px; }
 
-        /* Bottom vertical line */
         .line-down {
             bottom: 0;
             left: 50%;
             transform: translateX(-50%);
-            width: 32px;
-            height: 38px;
-        }
-        .line-down::after {
-            width: 2px;
+            width: 28px;
             height: 32px;
         }
+        .line-down::after { width: 2px; height: 26px; }
 
-        /* Left horizontal line */
         .line-left {
             left: 0;
             top: 50%;
             transform: translateY(-50%);
-            width: 38px;
-            height: 32px;
-        }
-        .line-left::after {
             width: 32px;
-            height: 2px;
+            height: 28px;
         }
+        .line-left::after { width: 26px; height: 2px; }
 
-        /* Right horizontal line */
         .line-right {
             right: 0;
             top: 50%;
             transform: translateY(-50%);
-            width: 38px;
-            height: 32px;
-        }
-        .line-right::after {
             width: 32px;
-            height: 2px;
+            height: 28px;
         }
+        .line-right::after { width: 26px; height: 2px; }
     </style>
 </head>
 <body>
@@ -463,7 +455,7 @@
         <div class="intro-screen" id="introScreen">
             <div class="narrative-box">
                 <p class="narrative-text">
-                    By chance, Igor wandered into an orchard and saw various fruits lying on the ground. One of them, red and firm, caught his attention…
+                    Ігор зайшов у фруктовий сад і побачив різні плоди, що лежали на землі. Поки він їх розглядав, йому на голову щось впало. Воно було червоним і твердим. І це було…
                 </p>
             </div>
             <button class="scan-btn" id="scanBtn" onclick="startScan()">Object Scanning</button>
@@ -472,7 +464,7 @@
         <!-- Screen 2: Clean Scan Workspace -->
         <div class="scan-workspace" id="scanWorkspace">
             <div class="riddle-box" id="riddleBox">
-                <div class="riddle-text">The fruit that fell on Newton’s head</div>
+                <div class="riddle-text">The fruit that fell on Igor’s head</div>
             </div>
 
             <div class="cards-grid" id="cardsGrid">
@@ -537,7 +529,7 @@
             <button class="btn-action" id="actionBtn" onclick="transformToCube()">Store in Memory</button>
         </div>
 
-        <!-- Screen 3: Seamless 3D Cube Stage -->
+        <!-- Screen 3: Enhanced Seamless 3D Cube Stage -->
         <div class="cube-stage" id="cubeStage">
             <div class="success-banner">Stored in Ship's Memory ✓</div>
 
@@ -580,7 +572,7 @@
 
                     <div class="cube-face face-top" id="faceTop">
                         <span class="face-tag">Definition</span>
-                        <div class="face-content-text">The fruit that fell on Newton’s head</div>
+                        <div class="face-content-text">The fruit that fell on Igor’s head</div>
                     </div>
 
                     <div class="cube-face face-bottom" id="faceBottom">
@@ -590,7 +582,7 @@
                 </div>
             </div>
 
-            <!-- Crosshair 4-Line Controls -->
+            <!-- Lowered & Smaller Crosshair Controls -->
             <div class="crosshair-pad">
                 <button class="line-btn line-up" onclick="tiltUp()" aria-label="Top Face"></button>
                 <button class="line-btn line-left" onclick="turnLeft()" aria-label="Left Face"></button>
@@ -668,27 +660,22 @@
             }, 180);
         }
 
-        // SEAMLESS FLIP TRANSFORMATION: Measures exact screen coordinates of cards
-        // and morphs the cube faces directly from those exact spots into a 3D cube
         function transformToCube() {
             const workspace = document.getElementById('scanWorkspace');
             const cubeStage = document.getElementById('cubeStage');
             const cubeWrapper = document.getElementById('cubeWrapper');
             const cube = document.getElementById('cube');
 
-            // 1. Capture exact screen positions of the 5 blocks before hiding workspace
             const rTop = document.getElementById('riddleBox').getBoundingClientRect();
             const rCard0 = document.getElementById('card0').getBoundingClientRect();
             const rCard1 = document.getElementById('card1').getBoundingClientRect();
             const rCard2 = document.getElementById('card2').getBoundingClientRect();
             const rCard3 = document.getElementById('card3').getBoundingClientRect();
 
-            // 2. Switch DOM to cubeStage immediately with zero delay
             workspace.style.display = 'none';
             cubeStage.style.display = 'flex';
             cube.style.transform = `translateZ(-103px) rotateX(0deg) rotateY(0deg)`;
 
-            // Measure target center of the cube wrapper
             const targetRect = cubeWrapper.getBoundingClientRect();
             const targetCX = targetRect.left + targetRect.width / 2;
             const targetCY = targetRect.top + targetRect.height / 2;
@@ -710,7 +697,6 @@
             const oBottom = getOffset(rCard2);
             const oFront = getOffset(rCard3);
 
-            // 3. Place each cube face exactly where the cards just were on screen
             const fTop = document.getElementById('faceTop');
             const fLeft = document.getElementById('faceLeft');
             const fRight = document.getElementById('faceRight');
@@ -723,13 +709,10 @@
             fRight.style.transform  = `translate(${oRight.dx}px, ${oRight.dy}px) scale(${oRight.sx}, ${oRight.sy})`;
             fBottom.style.transform = `translate(${oBottom.dx}px, ${oBottom.dy}px) scale(${oBottom.sx}, ${oBottom.sy})`;
             fFront.style.transform  = `translate(${oFront.dx}px, ${oFront.dy}px) scale(${oFront.sx}, ${oFront.sy})`;
-            fBack.style.transform   = `translate(${oFront.dx}px, ${oFront.dy}px) scale(0.5)`;
+            fBack.style.transform   = `translate(${oFront.dx}px, ${oFront.dy}px) scale(0.4)`;
             fBack.style.opacity     = '0';
 
-            // Force browser layout paint at starting positions
             cube.offsetHeight;
-
-            // 4. Enable smooth transitions and fold every block into the 3D cube
             cube.classList.add('animating');
 
             requestAnimationFrame(() => {
@@ -740,13 +723,12 @@
                 cube.classList.add('folded');
             });
 
-            // 5. Unlock interactive controls & gentle levitation once folded
             setTimeout(() => {
                 cube.classList.remove('animating');
                 cube.classList.add('interactive');
                 cubeStage.classList.add('assembled');
                 cubeWrapper.classList.add('levitating');
-            }, 1150);
+            }, 1250);
         }
 
         const cube = document.getElementById('cube');
