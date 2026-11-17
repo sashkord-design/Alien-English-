@@ -47,28 +47,35 @@
             position: relative;
         }
 
-        /* 1. INTRO NARRATIVE */
-        .narrative-box {
+        /* 1. INTRO SCREEN (Narrative + Scan Button) */
+        .intro-screen {
             width: 100%;
-            text-align: center;
-            padding: 12px 16px 28px;
-            transition: opacity 0.5s ease, transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: opacity 0.45s ease, transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        .narrative-text {
-            font-size: 17px;
-            line-height: 1.6;
-            color: var(--text-main);
-            font-weight: 400;
-        }
-
-        .narrative-box.hidden {
+        .intro-screen.hidden {
             opacity: 0;
             transform: translateY(-10px);
             pointer-events: none;
         }
 
-        /* Scan Trigger Button */
+        .narrative-box {
+            width: 100%;
+            text-align: center;
+            padding: 12px 16px 28px;
+        }
+
+        /* Reduced font size by 2 steps (17px -> 15px) */
+        .narrative-text {
+            font-size: 15px;
+            line-height: 1.6;
+            color: var(--text-main);
+            font-weight: 400;
+        }
+
         .scan-btn {
             background: var(--card-bg);
             color: var(--text-main);
@@ -81,8 +88,7 @@
             text-transform: uppercase;
             cursor: pointer;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
-            transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.4s ease, background-color 0.2s;
-            margin-bottom: 16px;
+            transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.2s;
             user-select: none;
         }
 
@@ -91,18 +97,12 @@
             background-color: #f4f4f5;
         }
 
-        .scan-btn:disabled {
-            cursor: default;
-            opacity: 0.45;
-        }
-
-        /* SCAN WORKSPACE */
+        /* 2. SCAN WORKSPACE (Clean second screen without Object Scanning button) */
         .scan-workspace {
             width: 100%;
             display: none;
             flex-direction: column;
             align-items: center;
-            transition: opacity 0.35s ease;
         }
 
         .riddle-box {
@@ -115,7 +115,7 @@
             margin-bottom: 14px;
             opacity: 0;
             transform: translateY(10px);
-            transition: opacity 0.8s ease, transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+            transition: opacity 0.9s ease, transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
             box-shadow: 0 4px 16px rgba(0, 0, 0, 0.02);
         }
 
@@ -228,7 +228,7 @@
             opacity: 0;
             transform: translateY(10px);
             pointer-events: none;
-            transition: opacity 0.4s ease, transform 0.4s ease;
+            transition: opacity 0.35s ease, transform 0.35s ease;
             box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
         }
 
@@ -239,7 +239,7 @@
         }
 
         /* =========================================================
-           TRUE ORIGAMI 3D FOLDING CUBE STAGE
+           3. SEAMLESS 3D CUBE STAGE (FLIP Morph from Cards)
            ========================================================= */
         .cube-stage {
             display: none;
@@ -257,18 +257,20 @@
             letter-spacing: 0.08em;
             text-transform: uppercase;
             opacity: 0;
-            transition: opacity 0.6s ease;
+            transform: translateY(-6px);
+            transition: opacity 0.6s ease, transform 0.6s ease;
         }
 
-        .cube-stage.folded .success-banner {
+        .cube-stage.assembled .success-banner {
             opacity: 1;
+            transform: translateY(0);
         }
 
         .cube-wrapper {
             perspective: 1100px;
             width: 206px;
             height: 206px;
-            margin: 8px auto 26px;
+            margin: 8px auto 30px;
             position: relative;
         }
 
@@ -286,12 +288,8 @@
             height: 100%;
             position: relative;
             transform-style: preserve-3d;
-            /* Initial unfolded net zooms smoothly into final cube position */
-            transform: translateZ(-280px) scale(0.55);
-            transition: transform 1.15s cubic-bezier(0.22, 1, 0.36, 1);
         }
 
-        /* Once folded, user navigation uses smooth 0.95s ease */
         .cube.interactive {
             transition: transform 0.95s cubic-bezier(0.65, 0, 0.35, 1);
         }
@@ -311,24 +309,19 @@
             text-align: center;
             box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.02), 0 8px 24px rgba(0, 0, 0, 0.05);
             backface-visibility: hidden;
-            transition: transform 1.15s cubic-bezier(0.22, 1, 0.36, 1);
         }
 
-        /* STATE 1: UNFOLDED CROSS NET (Flat 3D panels laid out in space) */
-        .face-front  { transform: translateZ(0px); }
-        .face-top    { transform: translateY(-218px) rotateX(0deg); }
-        .face-bottom { transform: translateY( 218px) rotateX(0deg); }
-        .face-left   { transform: translateX(-218px) rotateY(0deg); }
-        .face-right  { transform: translateX( 218px) rotateY(0deg); }
-        .face-back   { transform: translateX( 436px) rotateY(0deg); background: #fafafa; }
+        .cube.animating .cube-face {
+            transition: transform 1.15s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.8s ease;
+        }
 
-        /* STATE 2: FOLDED INTO SOLID 3D CUBE (206px / 2 = 103px) */
+        /* Final Folded Cube Faces */
         .cube.folded .face-front  { transform: rotateY(  0deg) translateZ(103px); }
         .cube.folded .face-top    { transform: rotateX( 90deg) translateZ(103px); }
         .cube.folded .face-bottom { transform: rotateX(-90deg) translateZ(103px); }
         .cube.folded .face-left   { transform: rotateY(-90deg) translateZ(103px); }
         .cube.folded .face-right  { transform: rotateY( 90deg) translateZ(103px); }
-        .cube.folded .face-back   { transform: rotateY(180deg) translateZ(103px); }
+        .cube.folded .face-back   { transform: rotateY(180deg) translateZ(103px); background: #fafafa; }
 
         .face-tag {
             position: absolute;
@@ -359,73 +352,131 @@
             grid-template-rows: 1fr 1fr 1fr;
         }
 
-        .cube-stage.folded .touch-overlay {
+        .cube-stage.assembled .touch-overlay {
             display: grid;
         }
 
         .zone { cursor: pointer; }
 
-        /* CROSS-SHAPED (3x3) D-PAD CONTROLS */
-        .cross-dpad {
-            display: grid;
-            grid-template-columns: 36px 36px 36px;
-            grid-template-rows: 36px 36px 36px;
-            gap: 4px;
-            align-items: center;
-            justify-items: center;
+        /* 4. CROSSHAIR LINE CONTROLS (4 Thin Lines with Open Center) */
+        .crosshair-pad {
+            position: relative;
+            width: 96px;
+            height: 96px;
             opacity: 0;
-            transform: translateY(10px);
+            transform: translateY(8px);
             pointer-events: none;
             transition: opacity 0.6s ease, transform 0.6s ease;
         }
 
-        .cube-stage.folded .cross-dpad {
+        .cube-stage.assembled .crosshair-pad {
             opacity: 1;
             transform: translateY(0);
             pointer-events: auto;
         }
 
-        .circle-btn {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            border: 1.5px solid rgba(17, 17, 17, 0.22);
+        .line-btn {
+            position: absolute;
+            background: transparent;
+            border: none;
             cursor: pointer;
-            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
-            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.04);
-            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
         }
 
-        .circle-btn:active { transform: scale(0.84); }
+        .line-btn::after {
+            content: '';
+            display: block;
+            background-color: rgba(17, 17, 17, 0.65);
+            border-radius: 2px;
+            transition: transform 0.18s ease, background-color 0.2s ease;
+        }
 
-        .btn-up    { grid-column: 2; grid-row: 1; background: rgba(147, 197, 253, 0.45); border-color: rgba(59, 130, 246, 0.35); }
-        .btn-left  { grid-column: 1; grid-row: 2; background: rgba(196, 181, 253, 0.45); border-color: rgba(139, 92, 246, 0.35); }
-        .btn-right { grid-column: 3; grid-row: 2; background: rgba(253, 186, 116, 0.45); border-color: rgba(249, 115, 22, 0.35); }
-        .btn-down  { grid-column: 2; grid-row: 3; background: rgba(134, 239, 172, 0.45); border-color: rgba(34, 197, 94, 0.35); }
+        .line-btn:hover::after {
+            background-color: rgba(17, 17, 17, 1);
+        }
+
+        .line-btn:active::after {
+            transform: scale(0.82);
+        }
+
+        /* Top vertical line */
+        .line-up {
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 32px;
+            height: 38px;
+        }
+        .line-up::after {
+            width: 2px;
+            height: 32px;
+        }
+
+        /* Bottom vertical line */
+        .line-down {
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 32px;
+            height: 38px;
+        }
+        .line-down::after {
+            width: 2px;
+            height: 32px;
+        }
+
+        /* Left horizontal line */
+        .line-left {
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 38px;
+            height: 32px;
+        }
+        .line-left::after {
+            width: 32px;
+            height: 2px;
+        }
+
+        /* Right horizontal line */
+        .line-right {
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 38px;
+            height: 32px;
+        }
+        .line-right::after {
+            width: 32px;
+            height: 2px;
+        }
     </style>
 </head>
 <body>
 
     <div class="main-container">
 
-        <!-- Intro Narrative -->
-        <div class="narrative-box" id="narrativeBox">
-            <p class="narrative-text">
-                By chance, Igor wandered into an orchard and saw many fruits lying on the ground. He scanned them with his device. One of them caught his attention, and he decided to learn more about it.
-            </p>
+        <!-- Screen 1: Intro Narrative + Scan Trigger -->
+        <div class="intro-screen" id="introScreen">
+            <div class="narrative-box">
+                <p class="narrative-text">
+                    By chance, Igor wandered into an orchard and saw various fruits lying on the ground. One of them, red and firm, caught his attention…
+                </p>
+            </div>
+            <button class="scan-btn" id="scanBtn" onclick="startScan()">Object Scanning</button>
         </div>
 
-        <!-- Scan Trigger Button -->
-        <button class="scan-btn" id="scanBtn" onclick="startScan()">Object Scanning</button>
-
-        <!-- Scan Workspace -->
+        <!-- Screen 2: Clean Scan Workspace -->
         <div class="scan-workspace" id="scanWorkspace">
             <div class="riddle-box" id="riddleBox">
                 <div class="riddle-text">The fruit that fell on Newton’s head</div>
             </div>
 
             <div class="cards-grid" id="cardsGrid">
-                <div class="card-slot" data-correct="false">
+                <div class="card-slot" id="card0" data-correct="false">
                     <div class="card-press" onclick="handleCardTap(this.parentElement)">
                         <div class="card-inner">
                             <div class="card-face card-front">
@@ -439,7 +490,7 @@
                     </div>
                 </div>
 
-                <div class="card-slot" data-correct="false">
+                <div class="card-slot" id="card1" data-correct="false">
                     <div class="card-press" onclick="handleCardTap(this.parentElement)">
                         <div class="card-inner">
                             <div class="card-face card-front">
@@ -453,7 +504,7 @@
                     </div>
                 </div>
 
-                <div class="card-slot" data-correct="false">
+                <div class="card-slot" id="card2" data-correct="false">
                     <div class="card-press" onclick="handleCardTap(this.parentElement)">
                         <div class="card-inner">
                             <div class="card-face card-front">
@@ -467,7 +518,7 @@
                     </div>
                 </div>
 
-                <div class="card-slot" data-correct="true">
+                <div class="card-slot" id="card3" data-correct="true">
                     <div class="card-press" onclick="handleCardTap(this.parentElement)">
                         <div class="card-inner">
                             <div class="card-face card-front">
@@ -486,7 +537,7 @@
             <button class="btn-action" id="actionBtn" onclick="transformToCube()">Store in Memory</button>
         </div>
 
-        <!-- 3D ORIGAMI CUBE STAGE -->
+        <!-- Screen 3: Seamless 3D Cube Stage -->
         <div class="cube-stage" id="cubeStage">
             <div class="success-banner">Stored in Ship's Memory ✓</div>
 
@@ -506,45 +557,45 @@
                 </div>
 
                 <div class="cube" id="cube">
-                    <div class="cube-face face-front">
+                    <div class="cube-face face-front" id="faceFront">
                         <span class="face-tag">Visual</span>
                         <div style="font-size: 68px;">🍎</div>
                     </div>
 
-                    <div class="cube-face face-back">
+                    <div class="cube-face face-back" id="faceBack">
                         <span class="face-tag">Term</span>
                         <div style="font-size: 26px; font-weight: 700; letter-spacing: 0.08em;">APPLE</div>
                         <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">/ˈæp.əl/</div>
                     </div>
 
-                    <div class="cube-face face-right">
+                    <div class="cube-face face-right" id="faceRight">
                         <span class="face-tag">Example</span>
                         <div class="face-content-text">I eat a fresh <b>apple</b> every morning.</div>
                     </div>
 
-                    <div class="cube-face face-left">
+                    <div class="cube-face face-left" id="faceLeft">
                         <span class="face-tag">Example</span>
                         <div class="face-content-text">She cut the <b>apple</b> into four equal pieces.</div>
                     </div>
 
-                    <div class="cube-face face-top">
+                    <div class="cube-face face-top" id="faceTop">
                         <span class="face-tag">Definition</span>
                         <div class="face-content-text">The fruit that fell on Newton’s head</div>
                     </div>
 
-                    <div class="cube-face face-bottom">
+                    <div class="cube-face face-bottom" id="faceBottom">
                         <span class="face-tag">Example</span>
                         <div class="face-content-text">This green <b>apple</b> tastes quite sour.</div>
                     </div>
                 </div>
             </div>
 
-            <!-- Cross-Shaped 4-Circle D-Pad -->
-            <div class="cross-dpad">
-                <button class="circle-btn btn-up" onclick="tiltUp()" aria-label="Top Face"></button>
-                <button class="circle-btn btn-left" onclick="turnLeft()" aria-label="Left Face"></button>
-                <button class="circle-btn btn-right" onclick="turnRight()" aria-label="Right Face"></button>
-                <button class="circle-btn btn-down" onclick="tiltDown()" aria-label="Bottom Face"></button>
+            <!-- Crosshair 4-Line Controls -->
+            <div class="crosshair-pad">
+                <button class="line-btn line-up" onclick="tiltUp()" aria-label="Top Face"></button>
+                <button class="line-btn line-left" onclick="turnLeft()" aria-label="Left Face"></button>
+                <button class="line-btn line-right" onclick="turnRight()" aria-label="Right Face"></button>
+                <button class="line-btn line-down" onclick="tiltDown()" aria-label="Bottom Face"></button>
             </div>
         </div>
 
@@ -557,7 +608,7 @@
 
         function startScan() {
             const btn = document.getElementById('scanBtn');
-            const narrative = document.getElementById('narrativeBox');
+            const intro = document.getElementById('introScreen');
             const workspace = document.getElementById('scanWorkspace');
             const riddle = document.getElementById('riddleBox');
             const grid = document.getElementById('cardsGrid');
@@ -566,17 +617,16 @@
 
             setTimeout(() => {
                 btn.classList.remove('pressed');
-                btn.disabled = true;
-                narrative.classList.add('hidden');
+                intro.classList.add('hidden');
 
                 setTimeout(() => {
-                    narrative.style.display = 'none';
+                    intro.style.display = 'none';
                     workspace.style.display = 'flex';
                     riddle.offsetHeight;
                     riddle.classList.add('revealed');
                     grid.classList.add('revealed');
                 }, 400);
-            }, 200);
+            }, 180);
         }
 
         function handleCardTap(slot) {
@@ -618,37 +668,85 @@
             }, 180);
         }
 
+        // SEAMLESS FLIP TRANSFORMATION: Measures exact screen coordinates of cards
+        // and morphs the cube faces directly from those exact spots into a 3D cube
         function transformToCube() {
-            const scanBtn = document.getElementById('scanBtn');
             const workspace = document.getElementById('scanWorkspace');
             const cubeStage = document.getElementById('cubeStage');
+            const cubeWrapper = document.getElementById('cubeWrapper');
             const cube = document.getElementById('cube');
-            const wrapper = document.getElementById('cubeWrapper');
 
-            scanBtn.style.opacity = '0';
-            workspace.style.opacity = '0';
+            // 1. Capture exact screen positions of the 5 blocks before hiding workspace
+            const rTop = document.getElementById('riddleBox').getBoundingClientRect();
+            const rCard0 = document.getElementById('card0').getBoundingClientRect();
+            const rCard1 = document.getElementById('card1').getBoundingClientRect();
+            const rCard2 = document.getElementById('card2').getBoundingClientRect();
+            const rCard3 = document.getElementById('card3').getBoundingClientRect();
 
-            setTimeout(() => {
-                scanBtn.style.display = 'none';
-                workspace.style.display = 'none';
+            // 2. Switch DOM to cubeStage immediately with zero delay
+            workspace.style.display = 'none';
+            cubeStage.style.display = 'flex';
+            cube.style.transform = `translateZ(-103px) rotateX(0deg) rotateY(0deg)`;
 
-                // Show the 6 flat faces arranged as an open 3D origami net
-                cubeStage.style.display = 'flex';
-                cube.offsetHeight; // Force layout reflow
+            // Measure target center of the cube wrapper
+            const targetRect = cubeWrapper.getBoundingClientRect();
+            const targetCX = targetRect.left + targetRect.width / 2;
+            const targetCY = targetRect.top + targetRect.height / 2;
 
-                // Fold all 6 faces by 90 degrees into a solid cube right in front of the user
-                requestAnimationFrame(() => {
-                    cube.classList.add('folded');
-                    cube.style.transform = `translateZ(-103px) rotateX(0deg) rotateY(0deg)`;
+            function getOffset(rect) {
+                const cx = rect.left + rect.width / 2;
+                const cy = rect.top + rect.height / 2;
+                return {
+                    dx: cx - targetCX,
+                    dy: cy - targetCY,
+                    sx: rect.width / 206,
+                    sy: rect.height / 206
+                };
+            }
+
+            const oTop = getOffset(rTop);
+            const oLeft = getOffset(rCard0);
+            const oRight = getOffset(rCard1);
+            const oBottom = getOffset(rCard2);
+            const oFront = getOffset(rCard3);
+
+            // 3. Place each cube face exactly where the cards just were on screen
+            const fTop = document.getElementById('faceTop');
+            const fLeft = document.getElementById('faceLeft');
+            const fRight = document.getElementById('faceRight');
+            const fBottom = document.getElementById('faceBottom');
+            const fFront = document.getElementById('faceFront');
+            const fBack = document.getElementById('faceBack');
+
+            fTop.style.transform    = `translate(${oTop.dx}px, ${oTop.dy}px) scale(${oTop.sx}, ${oTop.sy})`;
+            fLeft.style.transform   = `translate(${oLeft.dx}px, ${oLeft.dy}px) scale(${oLeft.sx}, ${oLeft.sy})`;
+            fRight.style.transform  = `translate(${oRight.dx}px, ${oRight.dy}px) scale(${oRight.sx}, ${oRight.sy})`;
+            fBottom.style.transform = `translate(${oBottom.dx}px, ${oBottom.dy}px) scale(${oBottom.sx}, ${oBottom.sy})`;
+            fFront.style.transform  = `translate(${oFront.dx}px, ${oFront.dy}px) scale(${oFront.sx}, ${oFront.sy})`;
+            fBack.style.transform   = `translate(${oFront.dx}px, ${oFront.dy}px) scale(0.5)`;
+            fBack.style.opacity     = '0';
+
+            // Force browser layout paint at starting positions
+            cube.offsetHeight;
+
+            // 4. Enable smooth transitions and fold every block into the 3D cube
+            cube.classList.add('animating');
+
+            requestAnimationFrame(() => {
+                [fTop, fLeft, fRight, fBottom, fFront, fBack].forEach(el => {
+                    el.style.transform = '';
+                    el.style.opacity = '';
                 });
+                cube.classList.add('folded');
+            });
 
-                // After folding completes, unlock controls & levitation
-                setTimeout(() => {
-                    cubeStage.classList.add('folded');
-                    cube.classList.add('interactive');
-                    wrapper.classList.add('levitating');
-                }, 1150);
-            }, 350);
+            // 5. Unlock interactive controls & gentle levitation once folded
+            setTimeout(() => {
+                cube.classList.remove('animating');
+                cube.classList.add('interactive');
+                cubeStage.classList.add('assembled');
+                cubeWrapper.classList.add('levitating');
+            }, 1150);
         }
 
         const cube = document.getElementById('cube');
