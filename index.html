@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="uk">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,10 +8,14 @@
         :root {
             --bg-color: #fcfcfc;
             --text-main: #111111;
-            --text-muted: #666666;
+            --text-muted: #555555;
             --card-bg: #ffffff;
-            --border-color: #e0e0e0;
+            --border-color: #d4d4d8;
             --accent: #2563eb;
+            --wrong-bg: #f3e8ff;
+            --wrong-border: #a855f7;
+            --correct-bg: #f0fdf4;
+            --correct-border: #16a34a;
         }
 
         * {
@@ -19,6 +23,7 @@
             margin: 0;
             padding: 0;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
@@ -28,45 +33,73 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: space-between;
+            justify-content: center;
             padding: 24px;
             overflow-x: hidden;
         }
 
-        header {
-            width: 100%;
-            max-width: 480px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 14px;
-            color: var(--text-muted);
-            letter-spacing: 0.05em;
-            text-transform: uppercase;
-        }
-
         .main-container {
             width: 100%;
-            max-width: 480px;
+            max-width: 440px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            flex-grow: 1;
-            justify-content: center;
-            transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
         }
 
-        /* Riddle section */
+        /* 1. SCAN TRIGGER BUTTON */
+        .scan-btn {
+            background: var(--card-bg);
+            color: var(--text-main);
+            border: 1.5px solid var(--text-main);
+            border-radius: 12px;
+            padding: 14px 28px;
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+            transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.4s ease, background-color 0.2s;
+            margin-bottom: 24px;
+            user-select: none;
+        }
+
+        .scan-btn.pressed {
+            transform: scale(0.92);
+            background-color: #f4f4f5;
+        }
+
+        .scan-btn:disabled {
+            cursor: default;
+            opacity: 0.5;
+        }
+
+        /* 2. RIDDLE BOX (IN BORDER) */
         .riddle-box {
+            width: 100%;
+            background: var(--card-bg);
+            border: 1.5px solid var(--border-color);
+            border-radius: 16px;
+            padding: 20px 24px;
             text-align: center;
-            margin-bottom: 32px;
+            margin-bottom: 24px;
+            opacity: 0;
+            transform: translateY(12px);
+            pointer-events: none;
+            transition: opacity 1s ease, transform 1s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.02);
+        }
+
+        .riddle-box.revealed {
             opacity: 1;
-            transition: opacity 0.4s ease;
+            transform: translateY(0);
+            pointer-events: auto;
         }
 
         .riddle-label {
-            font-size: 12px;
-            color: var(--accent);
+            font-size: 11px;
+            color: var(--text-muted);
             text-transform: uppercase;
             letter-spacing: 0.1em;
             margin-bottom: 8px;
@@ -74,56 +107,83 @@
         }
 
         .riddle-text {
-            font-size: 20px;
-            line-height: 1.4;
+            font-size: 18px;
+            line-height: 1.45;
             font-weight: 500;
             color: var(--text-main);
         }
 
-        /* Cards grid */
+        /* 3. CARDS GRID WITH TACTILE FLIP */
         .cards-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
             gap: 16px;
             width: 100%;
-            margin-bottom: 32px;
+            margin-bottom: 28px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.8s ease 0.3s;
         }
 
-        .card {
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 16px;
-            padding: 20px;
-            text-align: center;
+        .cards-grid.revealed {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .card-slot {
+            perspective: 1000px;
+            height: 132px;
+            transition: transform 0.65s cubic-bezier(0.55, 0.05, 0.68, 0.19), opacity 0.65s ease;
+        }
+
+        /* Tactile press wrapper */
+        .card-press {
+            width: 100%;
+            height: 100%;
+            transition: transform 0.22s cubic-bezier(0.25, 0.46, 0.45, 0.94);
             cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            user-select: none;
+        }
+
+        .card-press.pressing {
+            transform: scale(0.91);
+        }
+
+        .card-inner {
+            width: 100%;
+            height: 100%;
             position: relative;
-            min-height: 120px;
+            transform-style: preserve-3d;
+            transition: transform 0.55s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .card-slot.flipped .card-inner {
+            transform: rotateY(180deg);
+        }
+
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 16px;
+            border: 1.5px solid var(--border-color);
+            background: var(--card-bg);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+            padding: 16px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+            transition: background-color 0.3s ease, border-color 0.3s ease;
         }
 
-        .card:hover {
+        .card-front:hover {
             border-color: var(--text-main);
-            transform: translateY(-2px);
-        }
-
-        .card.selected {
-            border-color: #16a34a;
-            background-color: #f0fdf4;
-        }
-
-        .card.wrong {
-            border-color: #dc2626;
-            background-color: #fef2f2;
-            opacity: 0.7;
         }
 
         .card-emoji {
-            font-size: 36px;
+            font-size: 38px;
             margin-bottom: 8px;
         }
 
@@ -132,47 +192,47 @@
             font-weight: 500;
         }
 
-        .card-content {
-            transition: transform 0.6s;
-            transform-style: preserve-3d;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        /* Example state on cards */
-        .card.flipped .card-front {
-            display: none;
-        }
-        .card .card-back {
-            display: none;
+        .card-back {
+            transform: rotateY(180deg);
             font-size: 13px;
-            line-height: 1.3;
-            color: var(--text-muted);
-            text-align: left;
-        }
-        .card.flipped .card-back {
-            display: block;
+            line-height: 1.35;
+            text-align: center;
+            color: var(--text-main);
         }
 
-        /* Action Button */
+        /* Wrong choice -> Light Purple */
+        .card-slot.wrong .card-front,
+        .card-slot.wrong .card-back {
+            background-color: var(--wrong-bg);
+            border-color: var(--wrong-border);
+            color: #4c1d95;
+        }
+
+        /* Correct choice -> Green */
+        .card-slot.correct .card-front,
+        .card-slot.correct .card-back {
+            background-color: var(--correct-bg);
+            border-color: var(--correct-border);
+            color: #14532d;
+        }
+
+        /* STORE IN MEMORY BUTTON */
         .btn-action {
             background: var(--text-main);
-            color: #fff;
+            color: #ffffff;
             border: none;
             border-radius: 12px;
             padding: 16px 32px;
             font-size: 15px;
             font-weight: 500;
+            letter-spacing: 0.03em;
             cursor: pointer;
             width: 100%;
             opacity: 0;
             transform: translateY(10px);
             pointer-events: none;
-            transition: all 0.4s ease;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transition: opacity 0.4s ease, transform 0.4s ease;
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
         }
 
         .btn-action.visible {
@@ -182,21 +242,57 @@
         }
 
         .btn-action:active {
-            transform: scale(0.98);
+            transform: scale(0.97);
         }
 
-        /* 3D CUBE VIEWER */
-        .cube-wrapper {
-            perspective: 1000px;
-            width: 220px;
-            height: 220px;
+        /* CONVERGENCE ANIMATION TO CUBE */
+        .riddle-box.merging {
+            transform: translateY(160px) scale(0.25) rotateX(60deg);
+            opacity: 0;
+            transition: transform 0.65s cubic-bezier(0.55, 0.05, 0.68, 0.19), opacity 0.55s ease 0.1s;
+        }
+
+        .card-slot.merging-0 { transform: translate(65px, 35px) scale(0.3) rotateY(45deg); opacity: 0; }
+        .card-slot.merging-1 { transform: translate(-65px, 35px) scale(0.3) rotateY(-45deg); opacity: 0; }
+        .card-slot.merging-2 { transform: translate(65px, -65px) scale(0.3) rotateX(45deg); opacity: 0; }
+        .card-slot.merging-3 { transform: translate(-65px, -65px) scale(0.3) rotateX(-45deg); opacity: 0; }
+
+        /* 4. 3D CUBE VIEWER */
+        .cube-stage {
             display: none;
-            margin: 40px auto;
-            cursor: grab;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            animation: cubeAppear 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
 
-        .cube-wrapper:active {
-            cursor: grabbing;
+        @keyframes cubeAppear {
+            0% {
+                opacity: 0;
+                transform: scale(0.35);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .success-banner {
+            text-align: center;
+            margin-bottom: 24px;
+            font-size: 13px;
+            color: var(--correct-border);
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+
+        .cube-wrapper {
+            perspective: 1100px;
+            width: 230px;
+            height: 230px;
+            margin: 16px auto 32px;
+            position: relative;
         }
 
         .cube {
@@ -204,244 +300,369 @@
             height: 100%;
             position: relative;
             transform-style: preserve-3d;
-            transform: translateZ(-110px);
-            transition: transform 0.1s ease-out;
+            /* 1s duration: smooth start -> fast middle -> smooth end */
+            transition: transform 1s cubic-bezier(0.65, 0, 0.35, 1);
         }
 
         .cube-face {
             position: absolute;
-            width: 220px;
-            height: 220px;
+            width: 230px;
+            height: 230px;
             background: #ffffff;
-            border: 1px solid #d1d5db;
-            border-radius: 12px;
-            padding: 16px;
+            border: 1.5px solid #d4d4d8;
+            border-radius: 16px;
+            padding: 20px;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             text-align: center;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            box-shadow: inset 0 0 24px rgba(0, 0, 0, 0.02), 0 10px 30px rgba(0, 0, 0, 0.06);
             backface-visibility: hidden;
         }
 
-        /* Cube faces positions */
-        .face-front  { transform: rotateY(  0deg) translateZ(110px); background: #fafafa; }
-        .face-right  { transform: rotateY( 90deg) translateZ(110px); font-size: 12px; line-height: 1.3; text-align: left; align-items: flex-start; }
-        .face-back   { transform: rotateY(180deg) translateZ(110px); font-size: 12px; line-height: 1.3; text-align: left; align-items: flex-start; }
-        .face-left   { transform: rotateY(-90deg) translateZ(110px); font-size: 12px; line-height: 1.3; text-align: left; align-items: flex-start; }
-        .face-top    { transform: rotateX( 90deg) translateZ(110px); }
-        .face-bottom { transform: rotateX(-90deg) translateZ(110px); color: var(--text-muted); font-size: 12px; }
+        .face-tag {
+            position: absolute;
+            top: 12px;
+            left: 14px;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #9ca3af;
+        }
+
+        /* 6 Faces Geometry (230px / 2 = 115px) */
+        .face-front  { transform: rotateY(  0deg) translateZ(115px); }
+        .face-back   { transform: rotateY(180deg) translateZ(115px); background: #fafafa; }
+        .face-right  { transform: rotateY( 90deg) translateZ(115px); }
+        .face-left   { transform: rotateY(-90deg) translateZ(115px); }
+        .face-top    { transform: rotateX( 90deg) translateZ(115px); }
+        .face-bottom { transform: rotateX(-90deg) translateZ(115px); }
+
+        .face-content-text {
+            font-size: 15px;
+            line-height: 1.45;
+            color: var(--text-main);
+            font-weight: 400;
+        }
+
+        /* Invisible Touch Zones over Cube (Top, Bottom, Left, Right thirds) */
+        .touch-overlay {
+            position: absolute;
+            inset: -15px;
+            z-index: 20;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            grid-template-rows: 1fr 1fr 1fr;
+        }
+
+        .zone {
+            cursor: pointer;
+        }
+
+        .cube-hint {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 16px;
+        }
 
         .cube-controls {
-            display: none;
+            display: flex;
             gap: 8px;
-            margin-top: 16px;
             justify-content: center;
             flex-wrap: wrap;
+            max-width: 360px;
         }
 
         .cube-btn {
-            background: #f3f4f6;
+            background: #ffffff;
             border: 1px solid var(--border-color);
-            padding: 8px 12px;
+            padding: 8px 13px;
             border-radius: 8px;
             font-size: 12px;
+            color: var(--text-main);
             cursor: pointer;
             font-weight: 500;
+            transition: background-color 0.2s, transform 0.15s;
         }
 
         .cube-btn:hover {
-            background: #e5e7eb;
+            background: #f4f4f5;
+            border-color: var(--text-main);
         }
 
-        .success-banner {
-            display: none;
-            text-align: center;
-            margin-bottom: 20px;
-            font-size: 13px;
-            color: #16a34a;
-            font-weight: 500;
+        .cube-btn:active {
+            transform: scale(0.95);
         }
     </style>
 </head>
 <body>
 
-    <header>
-        <span>Alien Scanner v0.1</span>
-        <span>#001 Apple</span>
-    </header>
-
     <div class="main-container" id="mainContainer">
-        
-        <div class="success-banner" id="successBanner">Занесено в пам'ять корабля ✓</div>
 
+        <!-- Trigger Button -->
+        <button class="scan-btn" id="scanBtn" onclick="startScan()">Object Scanning</button>
+
+        <!-- Riddle Box -->
         <div class="riddle-box" id="riddleBox">
-            <div class="riddle-label">Сканування об'єкта</div>
-            <div class="riddle-text">«Фрукт, що впав Ньютону на голову»</div>
+            <div class="riddle-label">Signal Decoded</div>
+            <div class="riddle-text">“The fruit that fell on Newton’s head”</div>
         </div>
 
+        <!-- 4 Tactile Cards -->
         <div class="cards-grid" id="cardsGrid">
-            <div class="card" onclick="selectCard(this, false)">
-                <div class="card-content">
-                    <div class="card-front">
-                        <div class="card-emoji">🍑</div>
-                        <div class="card-title">Слива</div>
+            
+            <!-- Card 0: Plum -->
+            <div class="card-slot" data-index="0" data-correct="false">
+                <div class="card-press" onclick="handleCardTap(this.parentElement)">
+                    <div class="card-inner">
+                        <div class="card-face card-front">
+                            <div class="card-emoji">🍑</div>
+                            <div class="card-title">Plum</div>
+                        </div>
+                        <div class="card-face card-back">
+                            <span class="back-text">Not this object.<br>Tap to flip back.</span>
+                        </div>
                     </div>
-                    <div class="card-back">He bought a fresh plum at the local market.</div>
                 </div>
             </div>
-            <div class="card" onclick="selectCard(this, false)">
-                <div class="card-content">
-                    <div class="card-front">
-                        <div class="card-emoji">🍊</div>
-                        <div class="card-title">Апельсин</div>
+
+            <!-- Card 1: Orange -->
+            <div class="card-slot" data-index="1" data-correct="false">
+                <div class="card-press" onclick="handleCardTap(this.parentElement)">
+                    <div class="card-inner">
+                        <div class="card-face card-front">
+                            <div class="card-emoji">🍊</div>
+                            <div class="card-title">Orange</div>
+                        </div>
+                        <div class="card-face card-back">
+                            <span class="back-text">Not this object.<br>Tap to flip back.</span>
+                        </div>
                     </div>
-                    <div class="card-back">She peeled the sweet orange for breakfast.</div>
                 </div>
             </div>
-            <div class="card" onclick="selectCard(this, false)">
-                <div class="card-content">
-                    <div class="card-front">
-                        <div class="card-emoji">🍐</div>
-                        <div class="card-title">Груша</div>
+
+            <!-- Card 2: Pear -->
+            <div class="card-slot" data-index="2" data-correct="false">
+                <div class="card-press" onclick="handleCardTap(this.parentElement)">
+                    <div class="card-inner">
+                        <div class="card-face card-front">
+                            <div class="card-emoji">🍐</div>
+                            <div class="card-title">Pear</div>
+                        </div>
+                        <div class="card-face card-back">
+                            <span class="back-text">Not this object.<br>Tap to flip back.</span>
+                        </div>
                     </div>
-                    <div class="card-back">The ripe pear was sweet and juicy.</div>
                 </div>
             </div>
-            <div class="card" onclick="selectCard(this, true)">
-                <div class="card-content">
-                    <div class="card-front">
-                        <div class="card-emoji">🍎</div>
-                        <div class="card-title">Яблуко</div>
+
+            <!-- Card 3: Apple (Correct) -->
+            <div class="card-slot" data-index="3" data-correct="true">
+                <div class="card-press" onclick="handleCardTap(this.parentElement)">
+                    <div class="card-inner">
+                        <div class="card-face card-front">
+                            <div class="card-emoji">🍎</div>
+                            <div class="card-title">Apple</div>
+                        </div>
+                        <div class="card-face card-back">
+                            <div style="font-weight: 700; font-size: 16px; letter-spacing: 0.05em;">APPLE</div>
+                            <div style="font-size: 12px; margin-top: 4px;">Object Confirmed</div>
+                        </div>
                     </div>
-                    <div class="card-back"><b>APPLE</b><br><span>Яблуко</span></div>
                 </div>
+            </div>
+
+        </div>
+
+        <button class="btn-action" id="actionBtn" onclick="transformToCube()">Store in Memory</button>
+
+        <!-- 3D CUBE STAGE -->
+        <div class="cube-stage" id="cubeStage">
+            <div class="success-banner">Stored in Ship's Memory ✓</div>
+
+            <div class="cube-wrapper">
+                <!-- Interactive Thirds Overlay -->
+                <div class="touch-overlay">
+                    <div class="zone" onclick="stepRotate(-90, 0)" title="Flip Top"></div>
+                    <div class="zone" onclick="stepRotate(-90, 0)" title="Flip Top"></div>
+                    <div class="zone" onclick="stepRotate(-90, 0)" title="Flip Top"></div>
+
+                    <div class="zone" onclick="stepRotate(0, 90)" title="Flip Left"></div>
+                    <div class="zone" onclick="stepRotate(0, 180)" title="Flip Back"></div>
+                    <div class="zone" onclick="stepRotate(0, -90)" title="Flip Right"></div>
+
+                    <div class="zone" onclick="stepRotate(90, 0)" title="Flip Bottom"></div>
+                    <div class="zone" onclick="stepRotate(90, 0)" title="Flip Bottom"></div>
+                    <div class="zone" onclick="stepRotate(90, 0)" title="Flip Bottom"></div>
+                </div>
+
+                <div class="cube" id="cube">
+                    <!-- Face 1: Image Only -->
+                    <div class="cube-face face-front">
+                        <span class="face-tag">Visual</span>
+                        <div style="font-size: 76px;">🍎</div>
+                    </div>
+
+                    <!-- Face 2: Word Name Only -->
+                    <div class="cube-face face-back">
+                        <span class="face-tag">Term</span>
+                        <div style="font-size: 28px; font-weight: 700; letter-spacing: 0.08em;">APPLE</div>
+                        <div style="font-size: 13px; color: #6b7280; margin-top: 6px;">/ˈæp.əl/</div>
+                    </div>
+
+                    <!-- Face 3: Example 1 -->
+                    <div class="cube-face face-right">
+                        <span class="face-tag">Context 01</span>
+                        <div class="face-content-text">I eat a fresh <b>apple</b> every morning.</div>
+                    </div>
+
+                    <!-- Face 4: Example 2 -->
+                    <div class="cube-face face-left">
+                        <span class="face-tag">Context 02</span>
+                        <div class="face-content-text">She cut the <b>apple</b> into four equal pieces.</div>
+                    </div>
+
+                    <!-- Face 5: Description / Riddle -->
+                    <div class="cube-face face-top">
+                        <span class="face-tag">Definition</span>
+                        <div class="face-content-text">“The fruit that fell on Newton’s head”</div>
+                    </div>
+
+                    <!-- Face 6: Example 3 -->
+                    <div class="cube-face face-bottom">
+                        <span class="face-tag">Context 03</span>
+                        <div class="face-content-text">This green <b>apple</b> tastes quite sour.</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="cube-hint">Tap top, bottom, or side edges of the cube to flip</div>
+
+            <div class="cube-controls">
+                <button class="cube-btn" onclick="setExactRotation(0, 0)">Image</button>
+                <button class="cube-btn" onclick="setExactRotation(0, 180)">Word</button>
+                <button class="cube-btn" onclick="setExactRotation(-90, 0)">Definition</button>
+                <button class="cube-btn" onclick="setExactRotation(0, -90)">Ex. 1</button>
+                <button class="cube-btn" onclick="setExactRotation(0, 90)">Ex. 2</button>
+                <button class="cube-btn" onclick="setExactRotation(90, 0)">Ex. 3</button>
             </div>
         </div>
 
-        <button class="btn-action" id="actionBtn" onclick="transformToCube()">Занести в пам'ять</button>
-
-        <!-- 3D CUBE CONTAINER -->
-        <div class="cube-wrapper" id="cubeWrapper">
-            <div class="cube" id="cube">
-                <div class="cube-face face-front">
-                    <div style="font-size: 42px; margin-bottom: 8px;">🍎</div>
-                    <div style="font-weight: 600; font-size: 16px;">APPLE</div>
-                    <div style="font-size: 12px; color: #666;">Яблуко</div>
-                </div>
-                <div class="cube-face face-right">
-                    <b>Приклад 1:</b><br>I eat a fresh apple every morning.
-                </div>
-                <div class="cube-face face-back">
-                    <b>Приклад 2:</b><br>She cut the apple into four pieces.
-                </div>
-                <div class="cube-face face-left">
-                    <b>Приклад 3:</b><br>This green apple is quite sour.
-                </div>
-                <div class="cube-face face-top">
-                    <span style="font-size: 11px; color: #888;">Опис:</span><br>Фрукт Ньютона
-                </div>
-                <div class="cube-face face-bottom">
-                    ID: #001 <br>Мова: Земля
-                </div>
-            </div>
-        </div>
-
-    </div>
-
-    <div class="cube-controls" id="cubeControls">
-        <button class="cube-btn" onclick="rotateCube(0, 0)">Лицьова</button>
-        <button class="cube-btn" onclick="rotateCube(0, -90)">Приклад 1</button>
-        <button class="cube-btn" onclick="rotateCube(0, -180)">Приклад 2</button>
-        <button class="cube-btn" onclick="rotateCube(0, 90)">Приклад 3</button>
-        <button class="cube-btn" onclick="rotateCube(-90, 0)">Згори</button>
     </div>
 
     <script>
-        let isCorrectSelected = false;
+        let isSolved = false;
+        let rotX = -12;
+        let rotY = 20;
 
-        function selectCard(element, isCorrect) {
-            const cards = document.querySelectorAll('.card');
-            
-            if (isCorrect) {
-                element.classList.add('selected');
-                isCorrectSelected = true;
-                
-                // Перевертаємо решту карток
-                cards.forEach(c => {
-                    if (c !== element) {
-                        c.classList.add('flipped', 'wrong');
-                    }
-                });
-
-                document.getElementById('actionBtn').classList.add('visible');
-            } else {
-                element.classList.add('wrong');
-            }
-        }
-
-        function transformToCube() {
-            document.getElementById('riddleBox').style.opacity = '0';
-            document.getElementById('cardsGrid').style.opacity = '0';
-            document.getElementById('actionBtn').style.opacity = '0';
+        // 1. Tactile Scan Button Trigger
+        function startScan() {
+            const btn = document.getElementById('scanBtn');
+            btn.classList.add('pressed');
 
             setTimeout(() => {
-                document.getElementById('riddleBox').style.display = 'none';
+                btn.classList.remove('pressed');
+                btn.disabled = true;
+
+                // Reveal description smoothly over 1s
+                document.getElementById('riddleBox').classList.add('revealed');
+                document.getElementById('cardsGrid').classList.add('revealed');
+            }, 220);
+        }
+
+        // 2. Tactile Card Press & Flip
+        function handleCardTap(slot) {
+            if (isSolved) return;
+
+            const pressWrapper = slot.querySelector('.card-press');
+            const isCorrect = slot.dataset.correct === 'true';
+
+            // Press down animation
+            pressWrapper.classList.add('pressing');
+
+            setTimeout(() => {
+                // Release back to normal scale and flip
+                pressWrapper.classList.remove('pressing');
+
+                if (isCorrect) {
+                    isSolved = true;
+                    slot.classList.add('correct', 'flipped');
+
+                    // Automatically flip the other 3 cards to show example sentences
+                    const otherExamples = [
+                        "I eat a fresh apple every morning.",
+                        "She cut the apple into four equal pieces.",
+                        "This green apple tastes quite sour."
+                    ];
+
+                    let exIdx = 0;
+                    document.querySelectorAll('.card-slot').forEach((otherSlot) => {
+                        if (otherSlot !== slot) {
+                            otherSlot.classList.remove('wrong');
+                            otherSlot.querySelector('.back-text').textContent = otherExamples[exIdx++];
+                            otherSlot.classList.add('flipped');
+                        }
+                    });
+
+                    document.getElementById('actionBtn').classList.add('visible');
+                } else {
+                    // Wrong card: toggle flip and light-purple highlight
+                    const willFlip = !slot.classList.contains('flipped');
+                    slot.classList.toggle('flipped', willFlip);
+                    slot.classList.toggle('wrong', willFlip);
+                }
+            }, 180);
+        }
+
+        // 3. Transform Elements into 3D Cube
+        function transformToCube() {
+            const scanBtn = document.getElementById('scanBtn');
+            const riddleBox = document.getElementById('riddleBox');
+            const actionBtn = document.getElementById('actionBtn');
+            const slots = document.querySelectorAll('.card-slot');
+
+            scanBtn.style.opacity = '0';
+            actionBtn.style.opacity = '0';
+            actionBtn.style.pointerEvents = 'none';
+
+            // Converge description & 4 cards toward center
+            riddleBox.classList.add('merging');
+            slots.forEach((slot, i) => {
+                slot.classList.add(`merging-${i}`);
+            });
+
+            setTimeout(() => {
+                scanBtn.style.display = 'none';
+                riddleBox.style.display = 'none';
                 document.getElementById('cardsGrid').style.display = 'none';
-                document.getElementById('actionBtn').style.display = 'none';
+                actionBtn.style.display = 'none';
 
-                document.getElementById('successBanner').style.display = 'block';
-                document.getElementById('cubeWrapper').style.display = 'block';
-                document.getElementById('cubeControls').style.display = 'flex';
-            }, 400);
+                const cubeStage = document.getElementById('cubeStage');
+                cubeStage.style.display = 'flex';
+                applyCubeTransform();
+            }, 620);
         }
 
-        // Логіка обертання куба мишею / пальцем
+        // 4. Cube Rotation Logic (1s cubic-bezier transition)
         const cube = document.getElementById('cube');
-        const wrapper = document.getElementById('cubeWrapper');
-        
-        let isDragging = false;
-        let startX, startY;
-        let currentX = -15;
-        let currentY = 25;
 
-        function updateCubeRotation() {
-            cube.style.transform = `translateZ(-110px) rotateX(${currentX}deg) rotateY(${currentY}deg)`;
+        function applyCubeTransform() {
+            cube.style.transform = `translateZ(-115px) rotateX(${rotX}deg) rotateY(${rotY}deg)`;
         }
 
-        updateCubeRotation();
+        function stepRotate(deltaX, deltaY) {
+            // Snap slightly angled initial state to clean 90-degree increments
+            rotX = Math.round(rotX / 90) * 90 + deltaX;
+            rotY = Math.round(rotY / 90) * 90 + deltaY;
+            applyCubeTransform();
+        }
 
-        wrapper.addEventListener('pointerdown', (e) => {
-            isDragging = true;
-            startX = e.clientX;
-            startY = e.clientY;
-            wrapper.setPointerCapture(e.pointerId);
-        });
-
-        wrapper.addEventListener('pointermove', (e) => {
-            if (!isDragging) return;
-            const deltaX = e.clientX - startX;
-            const deltaY = e.clientY - startY;
-
-            currentY += deltaX * 0.5;
-            currentX -= deltaY * 0.5;
-
-            startX = e.clientX;
-            startY = e.clientY;
-
-            updateCubeRotation();
-        });
-
-        wrapper.addEventListener('pointerup', (e) => {
-            isDragging = false;
-            wrapper.releasePointerCapture(e.pointerId);
-        });
-
-        function rotateCube(x, y) {
-            currentX = x;
-            currentY = y;
-            updateCubeRotation();
+        function setExactRotation(x, y) {
+            rotX = x;
+            rotY = y;
+            applyCubeTransform();
         }
     </script>
 </body>
