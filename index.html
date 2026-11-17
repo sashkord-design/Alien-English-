@@ -34,7 +34,7 @@
             align-items: center;
             justify-content: center;
             padding: 20px;
-            overflow-x: hidden;
+            overflow: hidden;
         }
 
         .main-container {
@@ -43,7 +43,9 @@
             display: flex;
             flex-direction: column;
             align-items: center;
+            justify-content: center;
             position: relative;
+            min-height: 460px;
         }
 
         /* 1. INTRO NARRATIVE */
@@ -51,7 +53,7 @@
             width: 100%;
             text-align: center;
             padding: 12px 16px 28px;
-            transition: opacity 0.6s ease, transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            transition: opacity 0.5s ease, transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         .narrative-text {
@@ -96,19 +98,28 @@
             opacity: 0.45;
         }
 
-        /* Riddle Box (Compact, no quotes) */
-        .riddle-box {
+        /* SCAN WORKSPACE (Gets morphed into the cube) */
+        .scan-workspace {
+            width: 100%;
             display: none;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            z-index: 10;
+        }
+
+        /* Riddle Box */
+        .riddle-box {
             width: 100%;
             background: var(--card-bg);
             border: 1.5px solid var(--border-color);
             border-radius: 14px;
             padding: 14px 18px;
             text-align: center;
-            margin-bottom: 16px;
+            margin-bottom: 14px;
             opacity: 0;
             transform: translateY(10px);
-            transition: opacity 1s ease, transform 1s cubic-bezier(0.16, 1, 0.3, 1);
+            transition: opacity 0.8s ease, transform 0.8s cubic-bezier(0.22, 1, 0.36, 1), border-radius 0.8s ease;
             box-shadow: 0 4px 16px rgba(0, 0, 0, 0.02);
         }
 
@@ -126,13 +137,13 @@
 
         /* Cards Grid */
         .cards-grid {
-            display: none;
+            display: grid;
             grid-template-columns: repeat(2, 1fr);
             gap: 12px;
             width: 100%;
-            margin-bottom: 20px;
+            margin-bottom: 18px;
             opacity: 0;
-            transition: opacity 0.8s ease 0.25s;
+            transition: opacity 0.7s ease 0.2s;
         }
 
         .cards-grid.revealed {
@@ -141,8 +152,8 @@
 
         .card-slot {
             perspective: 1000px;
-            height: 120px;
-            transition: transform 0.65s cubic-bezier(0.55, 0.05, 0.68, 0.19), opacity 0.65s ease;
+            height: 118px;
+            transition: transform 0.85s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.75s ease 0.15s;
         }
 
         .card-press {
@@ -225,7 +236,6 @@
 
         /* Store in memory button */
         .btn-action {
-            display: none;
             background: var(--text-main);
             color: #ffffff;
             border: none;
@@ -238,6 +248,7 @@
             width: 100%;
             opacity: 0;
             transform: translateY(10px);
+            pointer-events: none;
             transition: opacity 0.4s ease, transform 0.4s ease;
             box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
         }
@@ -245,38 +256,47 @@
         .btn-action.visible {
             opacity: 1;
             transform: translateY(0);
+            pointer-events: auto;
         }
 
         .btn-action:active {
             transform: scale(0.97);
         }
 
-        /* Real Morphing Convergence Animation to Cube */
-        .riddle-box.merging {
-            transform: translate(0px, 85px) scale(0.32) rotateX(90deg);
+        /* VISIBLE MORPHING INTO THE CUBE FACES */
+        .riddle-box.morph-to-cube {
+            transform: translate(0px, 115px) scaleX(0.55) scaleY(1.8) rotateX(75deg);
             opacity: 0;
-            transition: transform 0.75s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.6s ease 0.15s;
         }
 
-        .card-slot.merging-0 { transform: translate(75px, -20px) scale(0.28) rotateY(-90deg); opacity: 0; transition: transform 0.75s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.6s ease; }
-        .card-slot.merging-1 { transform: translate(-75px, -20px) scale(0.28) rotateY(90deg); opacity: 0; transition: transform 0.75s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.6s ease; }
-        .card-slot.merging-2 { transform: translate(0px, -70px) scale(0.28) rotateX(-90deg); opacity: 0; transition: transform 0.75s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.6s ease; }
-        .card-slot.merging-3 { transform: translate(0px, 0px) scale(0.35) rotateY(0deg); opacity: 0; transition: transform 0.75s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.6s ease; }
+        .card-slot.morph-0 {
+            transform: translate(88px, 42px) scale(0.85) rotateY(-65deg);
+            opacity: 0;
+        }
 
-        /* 3D Cube Stage */
+        .card-slot.morph-1 {
+            transform: translate(-88px, 42px) scale(0.85) rotateY(65deg);
+            opacity: 0;
+        }
+
+        .card-slot.morph-2 {
+            transform: translate(88px, -78px) scale(0.85) rotateX(-65deg);
+            opacity: 0;
+        }
+
+        .card-slot.morph-3 {
+            transform: translate(-88px, -78px) scale(0.95) rotateY(0deg);
+            opacity: 0;
+        }
+
+        /* 3D CUBE STAGE */
         .cube-stage {
             display: none;
             flex-direction: column;
             align-items: center;
             width: 100%;
-            opacity: 0;
-            transform: scale(0.85);
-            transition: opacity 0.6s ease, transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        .cube-stage.active {
-            opacity: 1;
-            transform: scale(1);
+            position: relative;
+            z-index: 5;
         }
 
         .success-banner {
@@ -287,15 +307,31 @@
             font-weight: 600;
             letter-spacing: 0.08em;
             text-transform: uppercase;
+            opacity: 0;
+            transform: translateY(-6px);
+            transition: opacity 0.6s ease 0.5s, transform 0.6s ease 0.5s;
+        }
+
+        .cube-stage.assembled .success-banner {
+            opacity: 1;
+            transform: translateY(0);
         }
 
         .cube-wrapper {
             perspective: 1000px;
             width: 206px;
             height: 206px;
-            margin: 10px auto 34px;
+            margin: 8px auto 26px;
             position: relative;
-            animation: levitate 4s ease-in-out infinite;
+            opacity: 0;
+            transform: scale(0.45);
+            transition: opacity 0.75s cubic-bezier(0.22, 1, 0.36, 1), transform 0.85s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        .cube-stage.assembled .cube-wrapper {
+            opacity: 1;
+            transform: scale(1);
+            animation: levitate 4s ease-in-out 0.9s infinite;
         }
 
         @keyframes levitate {
@@ -308,7 +344,7 @@
             height: 100%;
             position: relative;
             transform-style: preserve-3d;
-            transition: transform 1s cubic-bezier(0.65, 0, 0.35, 1);
+            transition: transform 0.95s cubic-bezier(0.65, 0, 0.35, 1);
         }
 
         .cube-face {
@@ -369,62 +405,69 @@
             cursor: pointer;
         }
 
-        /* 4. SKETCH-INSPIRED 4-CIRCLE D-PAD CONTROLS */
-        .circle-dpad {
+        /* 4. TRUE CROSS-SHAPED (3x3) D-PAD CONTROLS */
+        .cross-dpad {
             display: grid;
-            grid-template-columns: 44px 44px 44px;
-            grid-template-rows: 44px 44px;
-            gap: 8px 14px;
+            grid-template-columns: 36px 36px 36px;
+            grid-template-rows: 36px 36px 36px;
+            gap: 4px;
             align-items: center;
             justify-items: center;
-            margin-top: 6px;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: opacity 0.6s ease 0.5s, transform 0.6s ease 0.5s;
+        }
+
+        .cube-stage.assembled .cross-dpad {
+            opacity: 1;
+            transform: translateY(0);
         }
 
         .circle-btn {
-            width: 44px;
-            height: 44px;
+            width: 36px;
+            height: 36px;
             border-radius: 50%;
             border: 1.5px solid rgba(17, 17, 17, 0.22);
             cursor: pointer;
-            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.2s, box-shadow 0.2s;
-            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.04);
+            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.2s;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.04);
             backdrop-filter: blur(4px);
         }
 
         .circle-btn:active {
-            transform: scale(0.86);
+            transform: scale(0.84);
         }
 
-        /* Top Circle - Soft Translucent Sky Blue */
+        /* Top (Row 1, Col 2) */
         .btn-up {
             grid-column: 2;
             grid-row: 1;
-            background: rgba(147, 197, 253, 0.42);
+            background: rgba(147, 197, 253, 0.45);
             border-color: rgba(59, 130, 246, 0.35);
         }
 
-        /* Left Circle - Soft Translucent Lavender */
+        /* Left (Row 2, Col 1) */
         .btn-left {
             grid-column: 1;
             grid-row: 2;
-            background: rgba(196, 181, 253, 0.42);
+            background: rgba(196, 181, 253, 0.45);
             border-color: rgba(139, 92, 246, 0.35);
         }
 
-        /* Bottom Circle - Soft Translucent Mint Green */
-        .btn-down {
-            grid-column: 2;
-            grid-row: 2;
-            background: rgba(134, 239, 172, 0.42);
-            border-color: rgba(34, 197, 94, 0.35);
-        }
-
-        /* Right Circle - Soft Translucent Warm Peach */
+        /* Right (Row 2, Col 3) */
         .btn-right {
             grid-column: 3;
             grid-row: 2;
-            background: rgba(253, 186, 116, 0.42);
+            background: rgba(253, 186, 116, 0.45);
             border-color: rgba(249, 115, 22, 0.35);
+        }
+
+        /* Bottom (Row 3, Col 2) */
+        .btn-down {
+            grid-column: 2;
+            grid-row: 3;
+            background: rgba(134, 239, 172, 0.45);
+            border-color: rgba(34, 197, 94, 0.35);
         }
     </style>
 </head>
@@ -442,81 +485,80 @@
         <!-- Scan Trigger Button -->
         <button class="scan-btn" id="scanBtn" onclick="startScan()">Object Scanning</button>
 
-        <!-- Riddle Box (No quotes) -->
-        <div class="riddle-box" id="riddleBox">
-            <div class="riddle-text">The fruit that fell on Newton’s head</div>
+        <!-- Scan Workspace -->
+        <div class="scan-workspace" id="scanWorkspace">
+            <div class="riddle-box" id="riddleBox">
+                <div class="riddle-text">The fruit that fell on Newton’s head</div>
+            </div>
+
+            <div class="cards-grid" id="cardsGrid">
+                <div class="card-slot" data-index="0" data-correct="false">
+                    <div class="card-press" onclick="handleCardTap(this.parentElement)">
+                        <div class="card-inner">
+                            <div class="card-face card-front">
+                                <div class="card-emoji">🍑</div>
+                                <div class="card-title">Plum</div>
+                            </div>
+                            <div class="card-face card-back">
+                                <span>Not this object.<br>Tap to flip back.</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-slot" data-index="1" data-correct="false">
+                    <div class="card-press" onclick="handleCardTap(this.parentElement)">
+                        <div class="card-inner">
+                            <div class="card-face card-front">
+                                <div class="card-emoji">🍊</div>
+                                <div class="card-title">Orange</div>
+                            </div>
+                            <div class="card-face card-back">
+                                <span>Not this object.<br>Tap to flip back.</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-slot" data-index="2" data-correct="false">
+                    <div class="card-press" onclick="handleCardTap(this.parentElement)">
+                        <div class="card-inner">
+                            <div class="card-face card-front">
+                                <div class="card-emoji">🍐</div>
+                                <div class="card-title">Pear</div>
+                            </div>
+                            <div class="card-face card-back">
+                                <span>Not this object.<br>Tap to flip back.</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-slot" data-index="3" data-correct="true">
+                    <div class="card-press" onclick="handleCardTap(this.parentElement)">
+                        <div class="card-inner">
+                            <div class="card-face card-front">
+                                <div class="card-emoji">🍎</div>
+                                <div class="card-title">Apple</div>
+                            </div>
+                            <div class="card-face card-back">
+                                <div style="font-weight: 700; font-size: 15px; letter-spacing: 0.05em;">APPLE</div>
+                                <div style="font-size: 11px; margin-top: 3px;">Confirmed</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <button class="btn-action" id="actionBtn" onclick="transformToCube()">Store in Memory</button>
         </div>
-
-        <!-- 4 Tactile Cards -->
-        <div class="cards-grid" id="cardsGrid">
-            
-            <div class="card-slot" data-index="0" data-correct="false">
-                <div class="card-press" onclick="handleCardTap(this.parentElement)">
-                    <div class="card-inner">
-                        <div class="card-face card-front">
-                            <div class="card-emoji">🍑</div>
-                            <div class="card-title">Plum</div>
-                        </div>
-                        <div class="card-face card-back">
-                            <span>Not this object.<br>Tap to flip back.</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="card-slot" data-index="1" data-correct="false">
-                <div class="card-press" onclick="handleCardTap(this.parentElement)">
-                    <div class="card-inner">
-                        <div class="card-face card-front">
-                            <div class="card-emoji">🍊</div>
-                            <div class="card-title">Orange</div>
-                        </div>
-                        <div class="card-face card-back">
-                            <span>Not this object.<br>Tap to flip back.</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="card-slot" data-index="2" data-correct="false">
-                <div class="card-press" onclick="handleCardTap(this.parentElement)">
-                    <div class="card-inner">
-                        <div class="card-face card-front">
-                            <div class="card-emoji">🍐</div>
-                            <div class="card-title">Pear</div>
-                        </div>
-                        <div class="card-face card-back">
-                            <span>Not this object.<br>Tap to flip back.</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="card-slot" data-index="3" data-correct="true">
-                <div class="card-press" onclick="handleCardTap(this.parentElement)">
-                    <div class="card-inner">
-                        <div class="card-face card-front">
-                            <div class="card-emoji">🍎</div>
-                            <div class="card-title">Apple</div>
-                        </div>
-                        <div class="card-face card-back">
-                            <div style="font-weight: 700; font-size: 15px; letter-spacing: 0.05em;">APPLE</div>
-                            <div style="font-size: 11px; margin-top: 3px;">Confirmed</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-        </div>
-
-        <button class="btn-action" id="actionBtn" onclick="transformToCube()">Store in Memory</button>
 
         <!-- 3D CUBE STAGE -->
         <div class="cube-stage" id="cubeStage">
             <div class="success-banner">Stored in Ship's Memory ✓</div>
 
             <div class="cube-wrapper">
-                <!-- Upright-locked interactive touch zones -->
+                <!-- Interactive Thirds Overlay -->
                 <div class="touch-overlay">
                     <div class="zone" onclick="tiltUp()" aria-label="Flip Up"></div>
                     <div class="zone" onclick="tiltUp()" aria-label="Flip Up"></div>
@@ -532,7 +574,7 @@
                 </div>
 
                 <div class="cube" id="cube">
-                    <!-- Face 1: Visual -->
+                    <!-- Face 1: Visual (Default front-facing) -->
                     <div class="cube-face face-front">
                         <span class="face-tag">Visual</span>
                         <div style="font-size: 68px;">🍎</div>
@@ -557,7 +599,7 @@
                         <div class="face-content-text">She cut the <b>apple</b> into four equal pieces.</div>
                     </div>
 
-                    <!-- Face 5: Definition (No quotes) -->
+                    <!-- Face 5: Definition -->
                     <div class="cube-face face-top">
                         <span class="face-tag">Definition</span>
                         <div class="face-content-text">The fruit that fell on Newton’s head</div>
@@ -571,12 +613,12 @@
                 </div>
             </div>
 
-            <!-- 4 Translucent Circle Controls -->
-            <div class="circle-dpad">
+            <!-- Cross-Shaped 4-Circle D-Pad -->
+            <div class="cross-dpad">
                 <button class="circle-btn btn-up" onclick="tiltUp()" aria-label="Top Face"></button>
                 <button class="circle-btn btn-left" onclick="turnLeft()" aria-label="Left Face"></button>
-                <button class="circle-btn btn-down" onclick="tiltDown()" aria-label="Bottom Face"></button>
                 <button class="circle-btn btn-right" onclick="turnRight()" aria-label="Right Face"></button>
+                <button class="circle-btn btn-down" onclick="tiltDown()" aria-label="Bottom Face"></button>
             </div>
         </div>
 
@@ -584,34 +626,28 @@
 
     <script>
         let isSolved = false;
-        let rotX = -12;
-        let rotY = 20;
+        // Start strictly square facing Visual front face (0, 0)
+        let rotX = 0;
+        let rotY = 0;
 
         function startScan() {
             const btn = document.getElementById('scanBtn');
             const narrative = document.getElementById('narrativeBox');
+            const workspace = document.getElementById('scanWorkspace');
             const riddle = document.getElementById('riddleBox');
             const grid = document.getElementById('cardsGrid');
-            const actionBtn = document.getElementById('actionBtn');
 
             btn.classList.add('pressed');
 
             setTimeout(() => {
                 btn.classList.remove('pressed');
                 btn.disabled = true;
-
-                // Fade out intro story
                 narrative.classList.add('hidden');
 
                 setTimeout(() => {
                     narrative.style.display = 'none';
-                    riddle.style.display = 'block';
-                    grid.style.display = 'grid';
-                    actionBtn.style.display = 'block';
-
-                    // Trigger reflow for smooth transition
+                    workspace.style.display = 'flex';
                     riddle.offsetHeight;
-
                     riddle.classList.add('revealed');
                     grid.classList.add('revealed');
                 }, 400);
@@ -659,32 +695,35 @@
 
         function transformToCube() {
             const scanBtn = document.getElementById('scanBtn');
+            const workspace = document.getElementById('scanWorkspace');
             const riddleBox = document.getElementById('riddleBox');
             const actionBtn = document.getElementById('actionBtn');
             const slots = document.querySelectorAll('.card-slot');
+            const cubeStage = document.getElementById('cubeStage');
 
             scanBtn.style.opacity = '0';
             actionBtn.style.opacity = '0';
             actionBtn.style.pointerEvents = 'none';
 
-            riddleBox.classList.add('merging');
+            // 1. Fold all blocks into the center cube shape simultaneously
+            riddleBox.classList.add('morph-to-cube');
             slots.forEach((slot, i) => {
-                slot.classList.add(`merging-${i}`);
+                slot.classList.add(`morph-${i}`);
             });
 
+            // 2. Reveal the assembled 3D cube in place as cards fold into it
             setTimeout(() => {
                 scanBtn.style.display = 'none';
-                riddleBox.style.display = 'none';
-                document.getElementById('cardsGrid').style.display = 'none';
-                actionBtn.style.display = 'none';
+                workspace.style.display = 'none';
+                
+                rotX = 0;
+                rotY = 0;
+                applyCubeTransform();
 
-                const cubeStage = document.getElementById('cubeStage');
                 cubeStage.style.display = 'flex';
                 cubeStage.offsetHeight;
-                cubeStage.classList.add('active');
-
-                applyCubeTransform();
-            }, 700);
+                cubeStage.classList.add('assembled');
+            }, 620);
         }
 
         const cube = document.getElementById('cube');
@@ -693,38 +732,41 @@
             cube.style.transform = `translateZ(-103px) rotateX(${rotX}deg) rotateY(${rotY}deg)`;
         }
 
-        // Clamped vertical tilt (-90 to +90) so the cube NEVER flips upside down
+        // Helper: Always snap Y to nearest full 360° turn before showing Top/Bottom
+        // This guarantees Top & Bottom faces are NEVER upside down!
+        function alignYToUprightFront() {
+            rotY = Math.round(rotY / 360) * 360;
+        }
+
         function tiltUp() {
-            const snappedX = Math.round(rotX / 90) * 90;
-            rotY = Math.round(rotY / 90) * 90;
-            // If looking at bottom (90), return to center (0); otherwise show top (-90)
-            rotX = snappedX > 0 ? 0 : -90;
+            alignYToUprightFront();
+            // If currently on bottom (+90), return to front (0); otherwise go to top (-90)
+            rotX = rotX > 0 ? 0 : -90;
             applyCubeTransform();
         }
 
         function tiltDown() {
-            const snappedX = Math.round(rotX / 90) * 90;
-            rotY = Math.round(rotY / 90) * 90;
-            // If looking at top (-90), return to center (0); otherwise show bottom (90)
-            rotX = snappedX < 0 ? 0 : 90;
+            alignYToUprightFront();
+            // If currently on top (-90), return to front (0); otherwise go to bottom (+90)
+            rotX = rotX < 0 ? 0 : 90;
             applyCubeTransform();
         }
 
         function turnLeft() {
-            rotX = 0; // Level horizon so side faces are upright
-            rotY = Math.round(rotY / 90) * 90 + 90;
+            rotX = 0;
+            rotY += 90;
             applyCubeTransform();
         }
 
         function turnRight() {
-            rotX = 0; // Level horizon so side faces are upright
-            rotY = Math.round(rotY / 90) * 90 - 90;
+            rotX = 0;
+            rotY -= 90;
             applyCubeTransform();
         }
 
         function turnBack() {
             rotX = 0;
-            rotY = Math.round(rotY / 90) * 90 + 180;
+            rotY += 180;
             applyCubeTransform();
         }
     </script>
