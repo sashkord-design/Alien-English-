@@ -11,7 +11,6 @@
             --text-muted: #555555;
             --card-bg: #ffffff;
             --border-color: #d4d4d8;
-            --accent: #2563eb;
             --wrong-bg: #f3e8ff;
             --wrong-border: #a855f7;
             --correct-bg: #f0fdf4;
@@ -47,13 +46,35 @@
             position: relative;
         }
 
+        /* 1. INTRO NARRATIVE */
+        .narrative-box {
+            width: 100%;
+            text-align: center;
+            padding: 12px 16px 28px;
+            transition: opacity 0.6s ease, transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .narrative-text {
+            font-size: 17px;
+            line-height: 1.6;
+            color: var(--text-main);
+            font-weight: 400;
+            letter-spacing: -0.01em;
+        }
+
+        .narrative-box.hidden {
+            opacity: 0;
+            transform: translateY(-10px);
+            pointer-events: none;
+        }
+
         /* Scan Trigger Button */
         .scan-btn {
             background: var(--card-bg);
             color: var(--text-main);
             border: 1.5px solid var(--text-main);
             border-radius: 12px;
-            padding: 12px 24px;
+            padding: 13px 26px;
             font-size: 13px;
             font-weight: 600;
             letter-spacing: 0.12em;
@@ -72,11 +93,12 @@
 
         .scan-btn:disabled {
             cursor: default;
-            opacity: 0.5;
+            opacity: 0.45;
         }
 
-        /* Riddle Box (Compact) */
+        /* Riddle Box (Compact, no quotes) */
         .riddle-box {
+            display: none;
             width: 100%;
             background: var(--card-bg);
             border: 1.5px solid var(--border-color);
@@ -86,7 +108,6 @@
             margin-bottom: 16px;
             opacity: 0;
             transform: translateY(10px);
-            pointer-events: none;
             transition: opacity 1s ease, transform 1s cubic-bezier(0.16, 1, 0.3, 1);
             box-shadow: 0 4px 16px rgba(0, 0, 0, 0.02);
         }
@@ -94,7 +115,6 @@
         .riddle-box.revealed {
             opacity: 1;
             transform: translateY(0);
-            pointer-events: auto;
         }
 
         .riddle-text {
@@ -106,19 +126,17 @@
 
         /* Cards Grid */
         .cards-grid {
-            display: grid;
+            display: none;
             grid-template-columns: repeat(2, 1fr);
             gap: 12px;
             width: 100%;
             margin-bottom: 20px;
             opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.8s ease 0.3s;
+            transition: opacity 0.8s ease 0.25s;
         }
 
         .cards-grid.revealed {
             opacity: 1;
-            pointer-events: auto;
         }
 
         .card-slot {
@@ -207,6 +225,7 @@
 
         /* Store in memory button */
         .btn-action {
+            display: none;
             background: var(--text-main);
             color: #ffffff;
             border: none;
@@ -219,7 +238,6 @@
             width: 100%;
             opacity: 0;
             transform: translateY(10px);
-            pointer-events: none;
             transition: opacity 0.4s ease, transform 0.4s ease;
             box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
         }
@@ -227,7 +245,6 @@
         .btn-action.visible {
             opacity: 1;
             transform: translateY(0);
-            pointer-events: auto;
         }
 
         .btn-action:active {
@@ -264,7 +281,7 @@
 
         .success-banner {
             text-align: center;
-            margin-bottom: 20px;
+            margin-bottom: 18px;
             font-size: 12px;
             color: var(--correct-border);
             font-weight: 600;
@@ -274,11 +291,10 @@
 
         .cube-wrapper {
             perspective: 1000px;
-            width: 206px; /* -10% from 230px */
+            width: 206px;
             height: 206px;
-            margin: 12px auto 28px;
+            margin: 10px auto 34px;
             position: relative;
-            /* Subtle floating levitation animation */
             animation: levitate 4s ease-in-out infinite;
         }
 
@@ -320,7 +336,6 @@
         .face-top    { transform: rotateX( 90deg) translateZ(103px); }
         .face-bottom { transform: rotateX(-90deg) translateZ(103px); }
 
-        /* 20% smaller & 30% more transparent tags (-20% font/padding, opacity 0.7) */
         .face-tag {
             position: absolute;
             top: 10px;
@@ -354,33 +369,62 @@
             cursor: pointer;
         }
 
-        .cube-controls {
-            display: flex;
-            gap: 8px;
-            justify-content: center;
-            flex-wrap: wrap;
-            max-width: 340px;
+        /* 4. SKETCH-INSPIRED 4-CIRCLE D-PAD CONTROLS */
+        .circle-dpad {
+            display: grid;
+            grid-template-columns: 44px 44px 44px;
+            grid-template-rows: 44px 44px;
+            gap: 8px 14px;
+            align-items: center;
+            justify-items: center;
+            margin-top: 6px;
         }
 
-        .cube-btn {
-            background: #ffffff;
-            border: 1px solid var(--border-color);
-            padding: 7px 12px;
-            border-radius: 8px;
-            font-size: 12px;
-            color: var(--text-main);
+        .circle-btn {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            border: 1.5px solid rgba(17, 17, 17, 0.22);
             cursor: pointer;
-            font-weight: 500;
-            transition: background-color 0.2s, transform 0.15s;
+            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.2s, box-shadow 0.2s;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.04);
+            backdrop-filter: blur(4px);
         }
 
-        .cube-btn:hover {
-            background: #f4f4f5;
-            border-color: var(--text-main);
+        .circle-btn:active {
+            transform: scale(0.86);
         }
 
-        .cube-btn:active {
-            transform: scale(0.95);
+        /* Top Circle - Soft Translucent Sky Blue */
+        .btn-up {
+            grid-column: 2;
+            grid-row: 1;
+            background: rgba(147, 197, 253, 0.42);
+            border-color: rgba(59, 130, 246, 0.35);
+        }
+
+        /* Left Circle - Soft Translucent Lavender */
+        .btn-left {
+            grid-column: 1;
+            grid-row: 2;
+            background: rgba(196, 181, 253, 0.42);
+            border-color: rgba(139, 92, 246, 0.35);
+        }
+
+        /* Bottom Circle - Soft Translucent Mint Green */
+        .btn-down {
+            grid-column: 2;
+            grid-row: 2;
+            background: rgba(134, 239, 172, 0.42);
+            border-color: rgba(34, 197, 94, 0.35);
+        }
+
+        /* Right Circle - Soft Translucent Warm Peach */
+        .btn-right {
+            grid-column: 3;
+            grid-row: 2;
+            background: rgba(253, 186, 116, 0.42);
+            border-color: rgba(249, 115, 22, 0.35);
         }
     </style>
 </head>
@@ -388,12 +432,19 @@
 
     <div class="main-container" id="mainContainer">
 
+        <!-- Intro Narrative -->
+        <div class="narrative-box" id="narrativeBox">
+            <p class="narrative-text">
+                By chance, Igor wandered into an orchard and saw many fruits lying on the ground. He scanned them with his device. One of them caught his attention, and he decided to learn more about it.
+            </p>
+        </div>
+
         <!-- Scan Trigger Button -->
         <button class="scan-btn" id="scanBtn" onclick="startScan()">Object Scanning</button>
 
-        <!-- Riddle Box -->
+        <!-- Riddle Box (No quotes) -->
         <div class="riddle-box" id="riddleBox">
-            <div class="riddle-text">“The fruit that fell on Newton’s head”</div>
+            <div class="riddle-text">The fruit that fell on Newton’s head</div>
         </div>
 
         <!-- 4 Tactile Cards -->
@@ -465,18 +516,19 @@
             <div class="success-banner">Stored in Ship's Memory ✓</div>
 
             <div class="cube-wrapper">
+                <!-- Upright-locked interactive touch zones -->
                 <div class="touch-overlay">
-                    <div class="zone" onclick="stepRotate(-90, 0)" title="Top"></div>
-                    <div class="zone" onclick="stepRotate(-90, 0)" title="Top"></div>
-                    <div class="zone" onclick="stepRotate(-90, 0)" title="Top"></div>
+                    <div class="zone" onclick="tiltUp()" aria-label="Flip Up"></div>
+                    <div class="zone" onclick="tiltUp()" aria-label="Flip Up"></div>
+                    <div class="zone" onclick="tiltUp()" aria-label="Flip Up"></div>
 
-                    <div class="zone" onclick="stepRotate(0, 90)" title="Left"></div>
-                    <div class="zone" onclick="stepRotate(0, 180)" title="Back"></div>
-                    <div class="zone" onclick="stepRotate(0, -90)" title="Right"></div>
+                    <div class="zone" onclick="turnLeft()" aria-label="Turn Left"></div>
+                    <div class="zone" onclick="turnBack()" aria-label="Turn Around"></div>
+                    <div class="zone" onclick="turnRight()" aria-label="Turn Right"></div>
 
-                    <div class="zone" onclick="stepRotate(90, 0)" title="Bottom"></div>
-                    <div class="zone" onclick="stepRotate(90, 0)" title="Bottom"></div>
-                    <div class="zone" onclick="stepRotate(90, 0)" title="Bottom"></div>
+                    <div class="zone" onclick="tiltDown()" aria-label="Flip Down"></div>
+                    <div class="zone" onclick="tiltDown()" aria-label="Flip Down"></div>
+                    <div class="zone" onclick="tiltDown()" aria-label="Flip Down"></div>
                 </div>
 
                 <div class="cube" id="cube">
@@ -493,7 +545,7 @@
                         <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">/ˈæp.əl/</div>
                     </div>
 
-                    <!-- Face 3: Example 1 (replaced context) -->
+                    <!-- Face 3: Example 1 -->
                     <div class="cube-face face-right">
                         <span class="face-tag">Example</span>
                         <div class="face-content-text">I eat a fresh <b>apple</b> every morning.</div>
@@ -505,10 +557,10 @@
                         <div class="face-content-text">She cut the <b>apple</b> into four equal pieces.</div>
                     </div>
 
-                    <!-- Face 5: Definition -->
+                    <!-- Face 5: Definition (No quotes) -->
                     <div class="cube-face face-top">
                         <span class="face-tag">Definition</span>
-                        <div class="face-content-text">“The fruit that fell on Newton’s head”</div>
+                        <div class="face-content-text">The fruit that fell on Newton’s head</div>
                     </div>
 
                     <!-- Face 6: Example 3 -->
@@ -519,13 +571,12 @@
                 </div>
             </div>
 
-            <div class="cube-controls">
-                <button class="cube-btn" onclick="setExactRotation(0, 0)">Visual</button>
-                <button class="cube-btn" onclick="setExactRotation(0, 180)">Term</button>
-                <button class="cube-btn" onclick="setExactRotation(-90, 0)">Definition</button>
-                <button class="cube-btn" onclick="setExactRotation(0, -90)">Ex. 1</button>
-                <button class="cube-btn" onclick="setExactRotation(0, 90)">Ex. 2</button>
-                <button class="cube-btn" onclick="setExactRotation(90, 0)">Ex. 3</button>
+            <!-- 4 Translucent Circle Controls -->
+            <div class="circle-dpad">
+                <button class="circle-btn btn-up" onclick="tiltUp()" aria-label="Top Face"></button>
+                <button class="circle-btn btn-left" onclick="turnLeft()" aria-label="Left Face"></button>
+                <button class="circle-btn btn-down" onclick="tiltDown()" aria-label="Bottom Face"></button>
+                <button class="circle-btn btn-right" onclick="turnRight()" aria-label="Right Face"></button>
             </div>
         </div>
 
@@ -538,13 +589,32 @@
 
         function startScan() {
             const btn = document.getElementById('scanBtn');
+            const narrative = document.getElementById('narrativeBox');
+            const riddle = document.getElementById('riddleBox');
+            const grid = document.getElementById('cardsGrid');
+            const actionBtn = document.getElementById('actionBtn');
+
             btn.classList.add('pressed');
 
             setTimeout(() => {
                 btn.classList.remove('pressed');
                 btn.disabled = true;
-                document.getElementById('riddleBox').classList.add('revealed');
-                document.getElementById('cardsGrid').classList.add('revealed');
+
+                // Fade out intro story
+                narrative.classList.add('hidden');
+
+                setTimeout(() => {
+                    narrative.style.display = 'none';
+                    riddle.style.display = 'block';
+                    grid.style.display = 'grid';
+                    actionBtn.style.display = 'block';
+
+                    // Trigger reflow for smooth transition
+                    riddle.offsetHeight;
+
+                    riddle.classList.add('revealed');
+                    grid.classList.add('revealed');
+                }, 400);
             }, 200);
         }
 
@@ -597,7 +667,6 @@
             actionBtn.style.opacity = '0';
             actionBtn.style.pointerEvents = 'none';
 
-            // Trigger true morphing convergence animation
             riddleBox.classList.add('merging');
             slots.forEach((slot, i) => {
                 slot.classList.add(`merging-${i}`);
@@ -611,11 +680,9 @@
 
                 const cubeStage = document.getElementById('cubeStage');
                 cubeStage.style.display = 'flex';
-                
-                // Force layout reflow before adding active class for smooth entrance
                 cubeStage.offsetHeight;
                 cubeStage.classList.add('active');
-                
+
                 applyCubeTransform();
             }, 700);
         }
@@ -626,16 +693,38 @@
             cube.style.transform = `translateZ(-103px) rotateX(${rotX}deg) rotateY(${rotY}deg)`;
         }
 
-        function stepRotate(deltaX, deltaY) {
-            // Clean snapping to 90-degree multiples to prevent upside-down states
-            rotX = Math.round(rotX / 90) * 90 + deltaX;
-            rotY = Math.round(rotY / 90) * 90 + deltaY;
+        // Clamped vertical tilt (-90 to +90) so the cube NEVER flips upside down
+        function tiltUp() {
+            const snappedX = Math.round(rotX / 90) * 90;
+            rotY = Math.round(rotY / 90) * 90;
+            // If looking at bottom (90), return to center (0); otherwise show top (-90)
+            rotX = snappedX > 0 ? 0 : -90;
             applyCubeTransform();
         }
 
-        function setExactRotation(x, y) {
-            rotX = x;
-            rotY = y;
+        function tiltDown() {
+            const snappedX = Math.round(rotX / 90) * 90;
+            rotY = Math.round(rotY / 90) * 90;
+            // If looking at top (-90), return to center (0); otherwise show bottom (90)
+            rotX = snappedX < 0 ? 0 : 90;
+            applyCubeTransform();
+        }
+
+        function turnLeft() {
+            rotX = 0; // Level horizon so side faces are upright
+            rotY = Math.round(rotY / 90) * 90 + 90;
+            applyCubeTransform();
+        }
+
+        function turnRight() {
+            rotX = 0; // Level horizon so side faces are upright
+            rotY = Math.round(rotY / 90) * 90 - 90;
+            applyCubeTransform();
+        }
+
+        function turnBack() {
+            rotX = 0;
+            rotY = Math.round(rotY / 90) * 90 + 180;
             applyCubeTransform();
         }
     </script>
