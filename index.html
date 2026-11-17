@@ -28,18 +28,18 @@
         body {
             background-color: var(--bg-color);
             color: var(--text-main);
-            min-height: 100vh;
+            min-height: 100dvh;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 20px;
+            padding: 16px 20px;
             overflow: hidden;
         }
 
         .main-container {
             width: 100%;
-            max-width: 420px;
+            max-width: 400px;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -47,12 +47,13 @@
             position: relative;
         }
 
-        /* 1. INTRO SCREEN */
+        /* 1. INTRO SCREEN (Illustration + Compact Narrative + Smaller Button) */
         .intro-screen {
             width: 100%;
             display: flex;
             flex-direction: column;
             align-items: center;
+            justify-content: center;
             transition: opacity 0.45s ease, transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
@@ -62,15 +63,25 @@
             pointer-events: none;
         }
 
+        .intro-illustration {
+            width: auto;
+            max-width: 245px;
+            max-height: 43dvh;
+            height: auto;
+            object-fit: contain;
+            margin-bottom: 12px;
+            user-select: none;
+            -webkit-user-drag: none;
+        }
+
         .narrative-box {
             width: 100%;
-            text-align: justify;
-            padding: 12px 16px 28px;
+            padding: 0 12px 18px;
         }
 
         .narrative-text {
-            font-size: 15px;
-            line-height: 1.6;
+            font-size: 13.5px;
+            line-height: 1.48;
             color: var(--text-main);
             font-weight: 400;
             text-align: justify;
@@ -81,14 +92,15 @@
             background: var(--card-bg);
             color: var(--text-main);
             border: 1.5px solid var(--text-main);
-            border-radius: 12px;
-            padding: 13px 26px;
-            font-size: 13px;
+            border-radius: 10px;
+            padding: 10px 20px;
+            margin-top: 4px;
+            font-size: 11px;
             font-weight: 600;
             letter-spacing: 0.12em;
             text-transform: uppercase;
             cursor: pointer;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.04);
             transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.2s;
             user-select: none;
         }
@@ -449,8 +461,10 @@
 
     <div class="main-container">
 
-        <!-- Screen 1: Intro Narrative + Scan Trigger -->
+        <!-- Screen 1: Illustration + Intro Narrative + Compact Scan Trigger -->
         <div class="intro-screen" id="introScreen">
+            <img src="Igor%20and%20the%20apple.png" alt="Igor in the orchard" class="intro-illustration">
+
             <div class="narrative-box">
                 <p class="narrative-text">
                     Igor wandered into an orchard and saw various fruits lying on the ground. While looking around, something suddenly fell on his head. It was red and firm. And it was...
