@@ -6,17 +6,9 @@
     <title>Alien Memory Scanner</title>
     <style>
         :root {
-            --teal-bg: #1c7c74;
-            --teal-dark: #145e58;
+            --ink-dark: #18181b;
             --cream-paper: #f5e4b7;
-            --cream-light: #faeed0;
-            --cream-shadow: #e2cc96;
-            --ink-dark: #1e1b18;
             --accent-gold: #f59e0b;
-            --wrong-bg: #e9d5ff;
-            --wrong-border: #6b21a8;
-            --correct-bg: #bbf7d0;
-            --correct-border: #15803d;
         }
 
         * {
@@ -29,7 +21,7 @@
         }
 
         body {
-            background-color: var(--teal-dark);
+            background-color: #145359;
             color: var(--ink-dark);
             min-height: 100dvh;
             display: flex;
@@ -40,28 +32,34 @@
             overflow: hidden;
         }
 
-        /* Vintage Card Board Frame with Textured Teal Background */
+        /* Main Vintage Card Container */
         .retro-board {
             width: 100%;
             max-width: 400px;
             min-height: calc(100dvh - 24px);
             max-height: 760px;
-            background-color: var(--teal-bg);
-            /* Subtle vintage print grain via lightweight inline SVG */
-            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.09'/%3E%3C/svg%3E");
-            border: 4px solid var(--cream-paper);
+            /* Screen 1 background: light textured card */
+            background-image: url('background%20first%20page.png');
+            background-size: 100% 100%;
+            background-position: center;
+            background-repeat: no-repeat;
             border-radius: 22px;
-            box-shadow:
-                0 0 0 2px var(--ink-dark),
-                inset 0 0 0 2px var(--ink-dark),
-                inset 0 0 40px rgba(0, 0, 0, 0.22);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 20px 18px;
+            padding: 26px 24px;
             position: relative;
             overflow: hidden;
+            transition: background-image 0.4s ease;
+        }
+
+        /* Screen 2 & 3 background: teal sky with clouds */
+        .retro-board.clouds-bg {
+            background-image: url('Background1.jpg');
+            background-size: cover;
+            border: 3px solid var(--cream-paper);
+            box-shadow: 0 0 0 2px var(--ink-dark), inset 0 0 0 2px var(--ink-dark);
         }
 
         /* 1. INTRO SCREEN */
@@ -79,66 +77,54 @@
             pointer-events: none;
         }
 
-        .intro-illustration-frame {
-            background: var(--cream-paper);
-            border: 2px solid var(--ink-dark);
-            border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
-            padding: 8px;
-            margin-bottom: 14px;
-            box-shadow: 3px 4px 0px var(--ink-dark);
-        }
-
         .intro-illustration {
             width: auto;
-            max-width: 220px;
-            max-height: 36dvh;
+            max-width: 235px;
+            max-height: 41dvh;
             height: auto;
             object-fit: contain;
-            display: block;
-            border-radius: 10px;
+            margin-bottom: 14px;
             user-select: none;
             -webkit-user-drag: none;
         }
 
         .narrative-box {
             width: 100%;
-            background: var(--cream-paper);
-            border: 2px solid var(--ink-dark);
-            border-radius: 240px 16px 225px 14px / 14px 225px 16px 240px;
-            padding: 13px 16px;
-            margin-bottom: 16px;
-            box-shadow: 3px 4px 0px var(--ink-dark);
+            padding: 4px 10px 20px;
         }
 
         .narrative-text {
             font-size: 13.5px;
-            line-height: 1.45;
+            line-height: 1.48;
             color: var(--ink-dark);
             font-weight: 500;
             text-align: justify;
             text-align-last: left;
         }
 
+        /* Small horizontal sprite from Cards.png (bottom-right) */
         .scan-btn {
-            background: var(--accent-gold);
+            background-color: transparent;
+            background-image: url('Cards.png');
+            /* Sliced from bottom-right small horizontal card in Cards.png */
+            background-size: 865% 495%;
+            background-position: 98.2% 85.8%;
+            background-repeat: no-repeat;
+            border: none;
             color: var(--ink-dark);
-            border: 2px solid var(--ink-dark);
-            border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
-            padding: 11px 24px;
-            font-size: 12px;
+            padding: 13px 26px;
+            font-size: 11px;
             font-weight: 800;
             letter-spacing: 0.1em;
             text-transform: uppercase;
             cursor: pointer;
-            box-shadow: 3px 4px 0px var(--ink-dark);
-            transition: transform 0.18s ease, box-shadow 0.18s ease;
+            transition: transform 0.18s ease;
             user-select: none;
         }
 
         .scan-btn:active,
         .scan-btn.pressed {
-            transform: translate(2px, 2px);
-            box-shadow: 1px 2px 0px var(--ink-dark);
+            transform: scale(0.93);
         }
 
         /* 2. SCAN WORKSPACE */
@@ -149,18 +135,24 @@
             align-items: center;
         }
 
+        /* Long horizontal sprite from Cards.png (bottom-left) */
         .riddle-box {
             width: 100%;
-            background: var(--cream-paper);
-            border: 2px solid var(--ink-dark);
-            border-radius: 235px 18px 215px 16px / 16px 215px 18px 235px;
-            padding: 16px 18px;
+            min-height: 82px;
+            background-color: transparent;
+            background-image: url('Cards.png');
+            background-size: 325% 342%;
+            background-position: 2.6% 93.2%;
+            background-repeat: no-repeat;
+            padding: 18px 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             text-align: center;
-            margin-bottom: 16px;
+            margin-bottom: 14px;
             opacity: 0;
             transform: translateY(10px);
             transition: opacity 0.7s ease, transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
-            box-shadow: 3px 4px 0px var(--ink-dark), inset 0 0 14px rgba(139, 108, 42, 0.12);
         }
 
         .riddle-box.revealed {
@@ -169,7 +161,7 @@
         }
 
         .riddle-text {
-            font-size: 17px;
+            font-size: 16.5px;
             line-height: 1.35;
             font-weight: 700;
             color: var(--ink-dark);
@@ -180,7 +172,7 @@
             grid-template-columns: repeat(2, 1fr);
             gap: 12px;
             width: 100%;
-            margin-bottom: 18px;
+            margin-bottom: 16px;
             opacity: 0;
             transition: opacity 0.6s ease 0.15s;
         }
@@ -219,6 +211,7 @@
             transform: rotateY(180deg);
         }
 
+        /* Medium horizontal sprite from Cards.png (bottom row, 3rd card) */
         .card-face {
             position: absolute;
             top: 0;
@@ -227,15 +220,17 @@
             height: 100%;
             backface-visibility: hidden;
             -webkit-backface-visibility: hidden;
-            border-radius: 240px 16px 220px 14px / 14px 220px 16px 240px;
-            border: 2px solid var(--ink-dark);
-            background: var(--cream-paper);
+            border-radius: 14px;
+            background-color: transparent;
+            background-image: url('Cards.png');
+            background-size: 590% 410%;
+            background-position: 67.8% 90.2%;
+            background-repeat: no-repeat;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 10px;
-            box-shadow: 3px 4px 0px var(--ink-dark), inset 0 0 14px rgba(139, 108, 42, 0.12);
+            padding: 12px;
         }
 
         .card-emoji { font-size: 30px; margin-bottom: 4px; }
@@ -247,32 +242,38 @@
             line-height: 1.32;
             font-weight: 600;
             text-align: center;
-            padding: 8px;
+            padding: 10px 12px;
         }
 
+        /* Tint the drawn paper sprite for wrong/correct states while keeping ink border & grain */
         .card-slot.wrong .card-front,
         .card-slot.wrong .card-back {
-            background-color: var(--wrong-bg);
-            border-color: var(--ink-dark);
+            background-color: #d8b4fe;
+            background-blend-mode: multiply;
             color: #3b0764;
-            font-weight: 700;
+            font-weight: 800;
             text-transform: uppercase;
             letter-spacing: 0.04em;
         }
 
         .card-slot.correct .card-front,
         .card-slot.correct .card-back {
-            background-color: var(--correct-bg);
-            border-color: var(--ink-dark);
+            background-color: #86efac;
+            background-blend-mode: multiply;
             color: #14532d;
         }
 
         .btn-action {
-            background: var(--accent-gold);
+            background-color: #fcd34d;
+            background-image: url('Cards.png');
+            background-size: 325% 342%;
+            background-position: 2.6% 93.2%;
+            background-blend-mode: multiply;
+            background-repeat: no-repeat;
+            border: none;
+            border-radius: 14px;
             color: var(--ink-dark);
-            border: 2px solid var(--ink-dark);
-            border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
-            padding: 14px 24px;
+            padding: 16px 24px;
             font-size: 14px;
             font-weight: 800;
             letter-spacing: 0.05em;
@@ -283,7 +284,6 @@
             transform: translateY(10px);
             pointer-events: none;
             transition: opacity 0.35s ease, transform 0.35s ease;
-            box-shadow: 3px 4px 0px var(--ink-dark);
         }
 
         .btn-action.visible {
@@ -293,8 +293,7 @@
         }
 
         .btn-action:active {
-            transform: translate(2px, 2px);
-            box-shadow: 1px 2px 0px var(--ink-dark);
+            transform: scale(0.96);
         }
 
         /* 3. RETRO 3D CUBE STAGE */
@@ -303,24 +302,26 @@
             flex-direction: column;
             align-items: center;
             width: 100%;
-            margin-top: 10px;
+            margin-top: 8px;
             user-select: none;
             -webkit-user-select: none;
         }
 
-        /* Cream header plaque matching the reference */
         .success-banner {
-            background: var(--cream-paper);
-            border: 2px solid var(--ink-dark);
-            border-radius: 235px 16px 215px 14px / 14px 215px 16px 235px;
-            padding: 9px 18px;
-            margin-bottom: 18px;
+            width: 100%;
+            background-color: transparent;
+            background-image: url('Cards.png');
+            background-size: 325% 342%;
+            background-position: 2.6% 93.2%;
+            background-repeat: no-repeat;
+            padding: 13px 18px;
+            text-align: center;
+            margin-bottom: 14px;
             font-size: 12.5px;
             color: var(--ink-dark);
             font-weight: 800;
             letter-spacing: 0.05em;
             text-transform: uppercase;
-            box-shadow: 3px 3px 0px var(--ink-dark);
             opacity: 0;
             transform: translateY(-6px);
             transition: opacity 0.6s ease, transform 0.6s ease;
@@ -331,7 +332,7 @@
             transform: translateY(0);
         }
 
-        /* Retro sunburst rays above the cube */
+        /* 5 Retro Golden Rays above the Cube */
         .sunburst-rays {
             width: 150px;
             height: 36px;
@@ -376,17 +377,19 @@
             transition: none;
         }
 
-        /* Vintage cream paper faces with bold ink edges */
+        /* Hand-drawn square faces sliced from Cub.png (3 columns x 2 rows) */
         .cube-face {
             position: absolute;
             top: 0;
             left: 0;
             width: 170px;
             height: 170px;
-            background: var(--cream-paper);
-            border: 2px solid var(--ink-dark);
-            border-radius: 10px;
-            padding: 14px;
+            background-color: #f3eedf;
+            background-image: url('Cub.png');
+            background-size: 348% 227%;
+            background-repeat: no-repeat;
+            border-radius: 14px;
+            padding: 16px;
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -394,20 +397,16 @@
             text-align: center;
             backface-visibility: hidden;
             -webkit-backface-visibility: hidden;
-            box-shadow: inset 0 0 18px rgba(139, 108, 42, 0.16);
             transition: opacity 0.3s ease;
         }
 
-        /* Different paper shading on side faces for authentic retro 3D depth */
-        .face-left, .face-right {
-            background: #edd7a1;
-        }
-        .face-top {
-            background: #faeed0;
-        }
-        .face-bottom, .face-back {
-            background: #e5cc90;
-        }
+        /* Map each of the 6 squares in Cub.png to a cube face */
+        .face-front  { background-position: 4.1% 3.3%; }
+        .face-right  { background-position: 50.0% 3.3%; }
+        .face-left   { background-position: 95.9% 3.3%; }
+        .face-top    { background-position: 4.1% 96.7%; }
+        .face-bottom { background-position: 50.0% 96.7%; }
+        .face-back   { background-position: 95.9% 96.7%; }
 
         /* Hide text during auto-spin so Safari rendering stays 100% flicker-free */
         .cube.spinning-mode .face-content-element {
@@ -439,8 +438,8 @@
 
         .face-tag {
             position: absolute;
-            top: 9px;
-            left: 11px;
+            top: 11px;
+            left: 13px;
             font-size: 8px;
             font-weight: 800;
             letter-spacing: 0.06em;
@@ -482,7 +481,7 @@
             border: none;
         }
 
-        /* Cream Crosshair Controls matching the board palette */
+        /* Cream Crosshair Controls */
         .crosshair-pad {
             position: relative;
             width: 78px;
@@ -516,7 +515,7 @@
             content: '';
             display: block;
             background-color: var(--cream-paper);
-            border: 1px solid var(--ink-dark);
+            border: 1.5px solid var(--ink-dark);
             border-radius: 3px;
             transition: transform 0.18s ease, background-color 0.2s ease;
         }
@@ -533,7 +532,7 @@
             width: 28px;
             height: 30px;
         }
-        .line-up::after { width: 4px; height: 24px; }
+        .line-up::after { width: 5px; height: 24px; }
 
         .line-down {
             bottom: 0;
@@ -542,7 +541,7 @@
             width: 28px;
             height: 30px;
         }
-        .line-down::after { width: 4px; height: 24px; }
+        .line-down::after { width: 5px; height: 24px; }
 
         .line-left {
             left: 0;
@@ -551,7 +550,7 @@
             width: 30px;
             height: 28px;
         }
-        .line-left::after { width: 24px; height: 4px; }
+        .line-left::after { width: 24px; height: 5px; }
 
         .line-right {
             right: 0;
@@ -560,18 +559,16 @@
             width: 30px;
             height: 28px;
         }
-        .line-right::after { width: 24px; height: 4px; }
+        .line-right::after { width: 24px; height: 5px; }
     </style>
 </head>
 <body>
 
-    <div class="retro-board">
+    <div class="retro-board" id="retroBoard">
 
-        <!-- Screen 1: Intro Narrative + Scan Trigger -->
+        <!-- Screen 1: Light Paper Card + Intro Narrative -->
         <div class="intro-screen" id="introScreen">
-            <div class="intro-illustration-frame">
-                <img src="Igor%20and%20the%20apple.png" alt="Igor in the orchard" class="intro-illustration">
-            </div>
+            <img src="Igor%20and%20the%20apple.png" alt="Igor in the orchard" class="intro-illustration">
 
             <div class="narrative-box">
                 <p class="narrative-text">
@@ -581,7 +578,7 @@
             <button class="scan-btn" id="scanBtn" onclick="startScan()">Object Scanning</button>
         </div>
 
-        <!-- Screen 2: Retro Quiz Cards Workspace -->
+        <!-- Screen 2: Cloudy Teal Sky + Hand-Drawn Cards -->
         <div class="scan-workspace" id="scanWorkspace">
             <div class="riddle-box" id="riddleBox">
                 <div class="riddle-text">The fruit that fell on Igor’s head</div>
@@ -649,17 +646,17 @@
             <button class="btn-action" id="actionBtn" onclick="transformToCube()">Store in Memory</button>
         </div>
 
-        <!-- Screen 3: Retro Ship's Memory 3D Cube Stage -->
+        <!-- Screen 3: Cloudy Teal Sky + Hand-Drawn 3D Cube -->
         <div class="cube-stage" id="cubeStage">
             <div class="success-banner">Stored in Ship's Memory ✓</div>
 
             <!-- 5 Retro Golden Rays above the Cube -->
             <svg class="sunburst-rays" viewBox="0 0 150 36" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <polygon points="22,34 10,12 20,10 28,33" fill="#f59e0b" stroke="#1e1b18" stroke-width="1.5"/>
-                <polygon points="48,30 41,6 51,5 54,29" fill="#f59e0b" stroke="#1e1b18" stroke-width="1.5"/>
-                <polygon points="75,28 71,2 81,2 79,28" fill="#f59e0b" stroke="#1e1b18" stroke-width="1.5"/>
-                <polygon points="101,30 102,5 112,7 106,31" fill="#f59e0b" stroke="#1e1b18" stroke-width="1.5"/>
-                <polygon points="126,34 132,11 142,14 131,35" fill="#f59e0b" stroke="#1e1b18" stroke-width="1.5"/>
+                <polygon points="22,34 10,12 20,10 28,33" fill="#f59e0b" stroke="#18181b" stroke-width="1.5"/>
+                <polygon points="48,30 41,6 51,5 54,29" fill="#f59e0b" stroke="#18181b" stroke-width="1.5"/>
+                <polygon points="75,28 71,2 81,2 79,28" fill="#f59e0b" stroke="#18181b" stroke-width="1.5"/>
+                <polygon points="101,30 102,5 112,7 106,31" fill="#f59e0b" stroke="#18181b" stroke-width="1.5"/>
+                <polygon points="126,34 132,11 142,14 131,35" fill="#f59e0b" stroke="#18181b" stroke-width="1.5"/>
             </svg>
 
             <div class="cube-wrapper" id="cubeWrapper">
@@ -754,6 +751,7 @@
             const workspace = document.getElementById('scanWorkspace');
             const riddle = document.getElementById('riddleBox');
             const grid = document.getElementById('cardsGrid');
+            const board = document.getElementById('retroBoard');
 
             btn.classList.add('pressed');
 
@@ -763,6 +761,7 @@
 
                 setTimeout(() => {
                     intro.style.display = 'none';
+                    board.classList.add('clouds-bg');
                     workspace.style.display = 'flex';
                     riddle.offsetHeight;
                     riddle.classList.add('revealed');
