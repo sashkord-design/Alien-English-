@@ -106,8 +106,8 @@
 
         .intro-illustration {
             width: auto;
-            max-width: 200px;
-            max-height: 36dvh;
+            max-width: 190px;
+            max-height: 34dvh;
             height: auto;
             object-fit: contain;
             margin-bottom: 12px;
@@ -115,7 +115,6 @@
             -webkit-user-drag: none;
         }
 
-        /* Scaled down 15% containers with frame.png */
         .narrative-box {
             width: 100%;
             background-image: url('frame.png');
@@ -138,6 +137,7 @@
             text-align-last: left;
         }
 
+        /* Yellow button for Object Scanning */
         .scan-btn {
             background-image: url('frame.png');
             background-size: cover;
@@ -216,9 +216,10 @@
             opacity: 1;
         }
 
+        /* Reduced card size by another 10% */
         .card-slot {
             perspective: 1000px;
-            height: 102px;
+            height: 92px;
         }
 
         .card-press {
@@ -263,7 +264,7 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 10px;
+            padding: 8px;
             box-shadow: 2px 3px 0px var(--ink-dark);
         }
 
@@ -271,13 +272,13 @@
             transform: rotateY(180deg);
         }
 
-        .card-emoji { font-size: 26px; margin-bottom: 2px; }
-        .card-title { font-size: 14px; font-weight: 700; color: var(--ink-dark); }
+        .card-emoji { font-size: 22px; margin-bottom: 2px; }
+        .card-title { font-size: 13px; font-weight: 700; color: var(--ink-dark); }
 
         .card-slot.wrong .card-back span {
             color: var(--wrong-text);
             font-weight: 800;
-            font-size: 12.5px;
+            font-size: 11.5px;
             text-transform: uppercase;
             letter-spacing: 0.04em;
         }
@@ -286,6 +287,7 @@
             color: var(--correct-text);
         }
 
+        /* Yellow button for Store in Memory */
         .btn-action {
             background-image: url('frame.png');
             background-size: cover;
@@ -365,14 +367,14 @@
         .cube-depth-holder {
             width: 150px;
             height: 150px;
-            margin: 8px auto 20px;
+            margin: 6px auto 16px;
             transform: scale(0.85);
             transition: transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
             position: relative;
         }
 
         .cube-depth-holder.zoomed-in {
-            transform: scale(1.1);
+            transform: scale(1.08);
         }
 
         .cube-wrapper {
@@ -404,7 +406,6 @@
             transition: none;
         }
 
-        /* Solid core to prevent internal transparency */
         .cube-core {
             position: absolute;
             top: 2px;
@@ -684,8 +685,8 @@
                                     <div class="card-title">Apple</div>
                                 </div>
                                 <div class="card-face card-back">
-                                    <div style="font-weight: 800; font-size: 13.5px; letter-spacing: 0.05em;">APPLE</div>
-                                    <div style="font-size: 10px; margin-top: 2px; font-weight: 700;">Confirmed ✓</div>
+                                    <div style="font-weight: 800; font-size: 13px; letter-spacing: 0.05em;">APPLE</div>
+                                    <div style="font-size: 9.5px; margin-top: 2px; font-weight: 700;">Confirmed ✓</div>
                                 </div>
                             </div>
                         </div>
@@ -697,7 +698,7 @@
 
             <!-- Screen 3: Solid Hand-Drawn 3D Cube -->
             <div class="cube-stage" id="cubeStage">
-                <div class="success-banner">Stored in Ship's Memory ✓</div>
+                <div class="success-banner">The fruit that fell on Igor’s head</div>
 
                 <div class="cube-depth-holder" id="cubeDepthHolder">
                     <div class="cube-wrapper" id="cubeWrapper">
