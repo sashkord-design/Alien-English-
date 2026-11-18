@@ -137,7 +137,7 @@
             text-align-last: left;
         }
 
-        /* GUARANTEED YELLOW BUTTON FOR OBJECT SCANNING */
+        /* Yellow button for Object Scanning */
         .scan-btn {
             background-color: #fcd34d !important;
             border: 2px solid var(--ink-dark);
@@ -281,7 +281,7 @@
             color: var(--correct-text);
         }
 
-        /* GUARANTEED YELLOW BUTTON FOR STORE IN MEMORY */
+        /* Yellow button for Store in Memory */
         .btn-action {
             background-color: #fcd34d !important;
             border: 2px solid var(--ink-dark);
@@ -358,12 +358,12 @@
             height: 150px;
             margin: 6px auto 16px;
             transform: scale(0.85);
-            transition: transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+            transition: transform 1s cubic-bezier(0.22, 1, 0.36, 1);
             position: relative;
         }
 
         .cube-depth-holder.zoomed-in {
-            transform: scale(1.08);
+            transform: scale(1);
         }
 
         .cube-wrapper {
@@ -379,7 +379,7 @@
 
         @keyframes levitate {
             0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-6px); }
+            50% { transform: translateY(-7px); }
         }
 
         .cube {
@@ -401,7 +401,7 @@
             left: 2px;
             width: 146px;
             height: 146px;
-            background: #d8cfbe;
+            background: #d8d0c0;
             border-radius: 10px;
             opacity: 0;
             transition: opacity 0.4s ease;
@@ -445,11 +445,11 @@
         }
 
         .cube.folded .face-front  { transform: rotateY(  0deg) translateZ(75px); }
-        .cube.folded .face-right  { transform: rotateY( 90deg) translateZ(75px); }
-        .cube.folded .face-back   { transform: rotateY(180deg) translateZ(75px); }
-        .cube.folded .face-left   { transform: rotateY(270deg) translateZ(75px); }
         .cube.folded .face-top    { transform: rotateX( 90deg) translateZ(75px); }
         .cube.folded .face-bottom { transform: rotateX(-90deg) translateZ(75px); }
+        .cube.folded .face-left   { transform: rotateY(-90deg) translateZ(75px); }
+        .cube.folded .face-right  { transform: rotateY( 90deg) translateZ(75px); }
+        .cube.folded .face-back   { transform: rotateY(180deg) translateZ(75px); }
 
         .face-tag {
             position: absolute;
@@ -697,7 +697,7 @@
                             <div class="zone" onclick="interactAndTiltUp()"></div>
 
                             <div class="zone" onclick="interactAndTurnLeft()"></div>
-                            <div class="zone" onclick="interactAndCenterFront()"></div>
+                            <div class="zone" onclick="interactAndTurnBack()"></div>
                             <div class="zone" onclick="interactAndTurnRight()"></div>
 
                             <div class="zone" onclick="interactAndTiltDown()"></div>
@@ -706,7 +706,7 @@
                         </div>
 
                         <div class="cube spinning-mode" id="cube">
-                            <!-- Internal solid core planes to seal cube interior completely -->
+                            <!-- Internal solid core planes to seal cube interior -->
                             <div class="cube-core core-x"></div>
                             <div class="cube-core core-y"></div>
                             <div class="cube-core core-z"></div>
@@ -724,14 +724,6 @@
                                 <span class="face-tag">Example 1</span>
                                 <div class="face-content-element">
                                     <div class="face-content-text">I eat a fresh <b>apple</b> every morning.</div>
-                                </div>
-                            </div>
-
-                            <!-- Back: Example 3 -->
-                            <div class="cube-face face-back" id="faceBack">
-                                <span class="face-tag">Example 3</span>
-                                <div class="face-content-element">
-                                    <div class="face-content-text">This green <b>apple</b> tastes quite sour.</div>
                                 </div>
                             </div>
 
@@ -759,6 +751,14 @@
                                     <div style="font-size: 10px; color: #44403c; font-weight: 600; margin-top: 2px;">/ˈæp.əl/</div>
                                 </div>
                             </div>
+
+                            <!-- Back: Example 3 -->
+                            <div class="cube-face face-back" id="faceBack">
+                                <span class="face-tag">Example 3</span>
+                                <div class="face-content-element">
+                                    <div class="face-content-text">This green <b>apple</b> tastes quite sour.</div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -777,9 +777,11 @@
 
     <script>
         let isSolved = false;
-        let rotX = -22;
-        let rotY = 38;
-        let isFocused = false;
+        let rotX = -15;
+        let rotY = 35;
+        let autoSpinning = true;
+        let spinRaf = null;
+        let currentSpinAngle = 35;
 
         function startScan() {
             const btn = document.getElementById('scanBtn');
@@ -912,18 +914,31 @@
                 cube.classList.remove('animating');
                 cubeStage.classList.add('assembled');
                 cubeWrapper.classList.add('levitating');
+                startAutoSpin();
             }, 1100);
         }
 
         const cube = document.getElementById('cube');
 
-        function applyCubeTransform() {
-            cube.style.transform = `translateZ(-75px) rotateX(${rotX}deg) rotateY(${rotY}deg)`;
+        function startAutoSpin() {
+            cube.classList.add('spinning-mode');
+            let lastTime = performance.now();
+            function spinLoop(time) {
+                if (!autoSpinning) return;
+                const delta = time - lastTime;
+                lastTime = time;
+                currentSpinAngle = (currentSpinAngle + delta * 0.018) % 360;
+                cube.style.transform = `translateZ(-75px) rotateX(${rotX}deg) rotateY(${currentSpinAngle.toFixed(1)}deg)`;
+                spinRaf = requestAnimationFrame(spinLoop);
+            }
+            spinRaf = requestAnimationFrame(spinLoop);
         }
 
-        function focusAndZoomIn() {
-            if (!isFocused) {
-                isFocused = true;
+        function stopAutoSpinAndZoomIn() {
+            if (autoSpinning) {
+                autoSpinning = false;
+                cancelAnimationFrame(spinRaf);
+                cube.classList.remove('spinning-mode');
                 document.getElementById('cubeDepthHolder').classList.add('zoomed-in');
                 rotX = 0;
                 rotY = 0;
@@ -933,15 +948,23 @@
             return false;
         }
 
+        function applyCubeTransform() {
+            cube.style.transform = `translateZ(-75px) rotateX(${rotX}deg) rotateY(${rotY}deg)`;
+        }
+
+        function alignYToUprightFront() {
+            rotY = Math.round(rotY / 360) * 360;
+        }
+
         function tiltUp() {
-            rotX = -90;
-            rotY = 0;
+            alignYToUprightFront();
+            rotX = rotX > 0 ? 0 : -90;
             applyCubeTransform();
         }
 
         function tiltDown() {
-            rotX = 90;
-            rotY = 0;
+            alignYToUprightFront();
+            rotX = rotX < 0 ? 0 : 90;
             applyCubeTransform();
         }
 
@@ -957,18 +980,17 @@
             applyCubeTransform();
         }
 
-        function interactAndCenterFront() {
-            if (!focusAndZoomIn()) {
-                rotX = 0;
-                rotY = 0;
-                applyCubeTransform();
-            }
+        function turnBack() {
+            rotX = 0;
+            rotY += 180;
+            applyCubeTransform();
         }
 
-        function interactAndTiltUp() { focusAndZoomIn(); tiltUp(); }
-        function interactAndTiltDown() { focusAndZoomIn(); tiltDown(); }
-        function interactAndTurnLeft() { focusAndZoomIn(); turnLeft(); }
-        function interactAndTurnRight() { focusAndZoomIn(); turnRight(); }
+        function interactAndTiltUp() { if (!stopAutoSpinAndZoomIn()) tiltUp(); }
+        function interactAndTiltDown() { if (!stopAutoSpinAndZoomIn()) tiltDown(); }
+        function interactAndTurnLeft() { if (!stopAutoSpinAndZoomIn()) turnLeft(); }
+        function interactAndTurnRight() { if (!stopAutoSpinAndZoomIn()) turnRight(); }
+        function interactAndTurnBack() { if (!stopAutoSpinAndZoomIn()) turnBack(); }
     </script>
 </body>
 </html>
