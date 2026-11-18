@@ -2,13 +2,14 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Alien Memory Scanner</title>
     <style>
         :root {
             --ink-dark: #18181b;
             --cream-paper: #f5e4b7;
-            --accent-gold: #f59e0b;
+            --wrong-text: #7e22ce;
+            --correct-text: #15803d;
         }
 
         * {
@@ -20,46 +21,86 @@
             -webkit-font-smoothing: antialiased;
         }
 
-        body {
-            background-color: #145359;
+        html, body {
+            width: 100%;
+            height: 100%;
+            background-color: #f4efe4;
             color: var(--ink-dark);
-            min-height: 100dvh;
+            overflow: hidden;
+        }
+
+        /* Full-screen framed board (no teal outer background) */
+        .retro-board {
+            width: 100vw;
+            height: 100dvh;
+            background-color: #f4efe4;
+            border: 6px solid #ffffff;
+            box-shadow: inset 0 0 0 2px var(--ink-dark);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 12px;
+            padding: 20px 18px;
+            position: relative;
             overflow: hidden;
         }
 
-        /* Main Vintage Card Container */
-        .retro-board {
-            width: 100%;
-            max-width: 400px;
-            min-height: calc(100dvh - 24px);
-            max-height: 760px;
-            /* Screen 1 background: light textured card */
+        /* Background layers */
+        .bg-layer {
+            position: absolute;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+            transition: opacity 0.45s ease;
+        }
+
+        .bg-first-page {
             background-image: url('background%20first%20page.png');
             background-size: 100% 100%;
             background-position: center;
             background-repeat: no-repeat;
-            border-radius: 22px;
+            opacity: 1;
+        }
+
+        /* Desaturated & slightly defocused cloudy sky for screens 2 & 3 */
+        .bg-clouds-page {
+            background-image: url('Background1.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            filter: blur(3.5px) saturate(0.65) brightness(1.04);
+            transform: scale(1.04);
+            opacity: 0;
+        }
+
+        .retro-board.clouds-bg .bg-first-page {
+            opacity: 0;
+        }
+
+        .retro-board.clouds-bg .bg-clouds-page {
+            opacity: 1;
+        }
+
+        .content-wrap {
+            width: 100%;
+            max-width: 390px;
+            z-index: 2;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 26px 24px;
             position: relative;
-            overflow: hidden;
-            transition: background-image 0.4s ease;
         }
 
-        /* Screen 2 & 3 background: teal sky with clouds */
-        .retro-board.clouds-bg {
-            background-image: url('Background1.jpg');
-            background-size: cover;
-            border: 3px solid var(--cream-paper);
-            box-shadow: 0 0 0 2px var(--ink-dark), inset 0 0 0 2px var(--ink-dark);
+        /* Reusable SVG sprite background layer */
+        .sprite-bg {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+            display: block;
         }
 
         /* 1. INTRO SCREEN */
@@ -90,7 +131,7 @@
 
         .narrative-box {
             width: 100%;
-            padding: 4px 10px 20px;
+            padding: 4px 12px 22px;
         }
 
         .narrative-text {
@@ -102,29 +143,40 @@
             text-align-last: left;
         }
 
-        /* Small horizontal sprite from Cards.png (bottom-right) */
+        /* Styled identically to Store in Memory button */
         .scan-btn {
-            background-color: transparent;
-            background-image: url('Cards.png');
-            /* Sliced from bottom-right small horizontal card in Cards.png */
-            background-size: 865% 495%;
-            background-position: 98.2% 85.8%;
-            background-repeat: no-repeat;
+            position: relative;
+            background: transparent;
             border: none;
             color: var(--ink-dark);
-            padding: 13px 26px;
-            font-size: 11px;
+            padding: 15px 28px;
+            width: 100%;
+            max-width: 320px;
+            font-size: 14px;
             font-weight: 800;
-            letter-spacing: 0.1em;
+            letter-spacing: 0.05em;
             text-transform: uppercase;
             cursor: pointer;
             transition: transform 0.18s ease;
             user-select: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .scan-btn .btn-label,
+        .btn-action .btn-label {
+            position: relative;
+            z-index: 1;
+        }
+
+        .gold-tint {
+            mix-blend-mode: multiply;
         }
 
         .scan-btn:active,
         .scan-btn.pressed {
-            transform: scale(0.93);
+            transform: scale(0.96);
         }
 
         /* 2. SCAN WORKSPACE */
@@ -135,15 +187,10 @@
             align-items: center;
         }
 
-        /* Long horizontal sprite from Cards.png (bottom-left) */
         .riddle-box {
+            position: relative;
             width: 100%;
-            min-height: 82px;
-            background-color: transparent;
-            background-image: url('Cards.png');
-            background-size: 325% 342%;
-            background-position: 2.6% 93.2%;
-            background-repeat: no-repeat;
+            min-height: 84px;
             padding: 18px 22px;
             display: flex;
             align-items: center;
@@ -161,6 +208,8 @@
         }
 
         .riddle-text {
+            position: relative;
+            z-index: 1;
             font-size: 16.5px;
             line-height: 1.35;
             font-weight: 700;
@@ -183,7 +232,7 @@
 
         .card-slot {
             perspective: 1000px;
-            height: 116px;
+            height: 118px;
         }
 
         .card-press {
@@ -211,7 +260,6 @@
             transform: rotateY(180deg);
         }
 
-        /* Medium horizontal sprite from Cards.png (bottom row, 3rd card) */
         .card-face {
             position: absolute;
             top: 0;
@@ -220,17 +268,20 @@
             height: 100%;
             backface-visibility: hidden;
             -webkit-backface-visibility: hidden;
-            border-radius: 14px;
-            background-color: transparent;
-            background-image: url('Cards.png');
-            background-size: 590% 410%;
-            background-position: 67.8% 90.2%;
-            background-repeat: no-repeat;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 12px;
+            padding: 12px 14px;
+        }
+
+        .card-face-content {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
         }
 
         .card-emoji { font-size: 30px; margin-bottom: 4px; }
@@ -238,42 +289,32 @@
 
         .card-back {
             transform: rotateY(180deg);
-            font-size: 12px;
+            font-size: 12.5px;
             line-height: 1.32;
             font-weight: 600;
             text-align: center;
-            padding: 10px 12px;
+            padding: 12px 14px;
+            color: var(--ink-dark);
         }
 
-        /* Tint the drawn paper sprite for wrong/correct states while keeping ink border & grain */
-        .card-slot.wrong .card-front,
+        /* Only text color changes on wrong/correct card, card stays natural cream paper */
         .card-slot.wrong .card-back {
-            background-color: #d8b4fe;
-            background-blend-mode: multiply;
-            color: #3b0764;
+            color: var(--wrong-text);
             font-weight: 800;
             text-transform: uppercase;
             letter-spacing: 0.04em;
         }
 
-        .card-slot.correct .card-front,
         .card-slot.correct .card-back {
-            background-color: #86efac;
-            background-blend-mode: multiply;
-            color: #14532d;
+            color: var(--correct-text);
         }
 
         .btn-action {
-            background-color: #fcd34d;
-            background-image: url('Cards.png');
-            background-size: 325% 342%;
-            background-position: 2.6% 93.2%;
-            background-blend-mode: multiply;
-            background-repeat: no-repeat;
+            position: relative;
+            background: transparent;
             border: none;
-            border-radius: 14px;
             color: var(--ink-dark);
-            padding: 16px 24px;
+            padding: 15px 24px;
             font-size: 14px;
             font-weight: 800;
             letter-spacing: 0.05em;
@@ -284,6 +325,9 @@
             transform: translateY(10px);
             pointer-events: none;
             transition: opacity 0.35s ease, transform 0.35s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .btn-action.visible {
@@ -302,21 +346,17 @@
             flex-direction: column;
             align-items: center;
             width: 100%;
-            margin-top: 8px;
+            margin-top: 4px;
             user-select: none;
             -webkit-user-select: none;
         }
 
         .success-banner {
+            position: relative;
             width: 100%;
-            background-color: transparent;
-            background-image: url('Cards.png');
-            background-size: 325% 342%;
-            background-position: 2.6% 93.2%;
-            background-repeat: no-repeat;
-            padding: 13px 18px;
+            padding: 14px 18px;
             text-align: center;
-            margin-bottom: 14px;
+            margin-bottom: 18px;
             font-size: 12.5px;
             color: var(--ink-dark);
             font-weight: 800;
@@ -327,23 +367,27 @@
             transition: opacity 0.6s ease, transform 0.6s ease;
         }
 
+        .success-banner span {
+            position: relative;
+            z-index: 1;
+        }
+
         .cube-stage.assembled .success-banner {
             opacity: 1;
             transform: translateY(0);
         }
 
-        /* 5 Retro Golden Rays above the Cube */
-        .sunburst-rays {
-            width: 150px;
-            height: 36px;
-            margin-bottom: 6px;
-            opacity: 0;
-            transform: scale(0.85);
-            transition: opacity 0.6s ease 0.2s, transform 0.6s ease 0.2s;
+        /* Depth container: starts far away (scale 0.66) and zooms to 1.0 in 1s on first tap */
+        .cube-depth-holder {
+            width: 170px;
+            height: 170px;
+            margin: 14px auto 32px;
+            transform: scale(0.66);
+            transition: transform 1s cubic-bezier(0.22, 1, 0.36, 1);
+            position: relative;
         }
 
-        .cube-stage.assembled .sunburst-rays {
-            opacity: 1;
+        .cube-depth-holder.zoomed-in {
             transform: scale(1);
         }
 
@@ -351,7 +395,6 @@
             perspective: 1400px;
             width: 170px;
             height: 170px;
-            margin: 6px auto 28px;
             position: relative;
         }
 
@@ -361,7 +404,7 @@
 
         @keyframes levitate {
             0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-6px); }
+            50% { transform: translateY(-7px); }
         }
 
         .cube {
@@ -377,18 +420,37 @@
             transition: none;
         }
 
-        /* Hand-drawn square faces sliced from Cub.png (3 columns x 2 rows) */
+        /* Solid inner core planes so rounded cube corners never look hollow */
+        .cube-core {
+            position: absolute;
+            top: 4px;
+            left: 4px;
+            width: 162px;
+            height: 162px;
+            background: #ded9cc;
+            border-radius: 18px;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            pointer-events: none;
+        }
+
+        .cube.folded .cube-core {
+            opacity: 1;
+        }
+
+        .core-x { transform: rotateY(90deg); }
+        .core-y { transform: rotateX(90deg); }
+        .core-z { transform: rotateY(0deg); }
+
+        /* Cube faces rendered cleanly via exact SVG crop from Cub.png (zero white edge gaps) */
         .cube-face {
             position: absolute;
             top: 0;
             left: 0;
             width: 170px;
             height: 170px;
-            background-color: #f3eedf;
-            background-image: url('Cub.png');
-            background-size: 348% 227%;
-            background-repeat: no-repeat;
-            border-radius: 14px;
+            border-radius: 15px;
+            overflow: hidden;
             padding: 16px;
             display: flex;
             flex-direction: column;
@@ -400,20 +462,15 @@
             transition: opacity 0.3s ease;
         }
 
-        /* Map each of the 6 squares in Cub.png to a cube face */
-        .face-front  { background-position: 4.1% 3.3%; }
-        .face-right  { background-position: 50.0% 3.3%; }
-        .face-left   { background-position: 95.9% 3.3%; }
-        .face-top    { background-position: 4.1% 96.7%; }
-        .face-bottom { background-position: 50.0% 96.7%; }
-        .face-back   { background-position: 95.9% 96.7%; }
-
         /* Hide text during auto-spin so Safari rendering stays 100% flicker-free */
-        .cube.spinning-mode .face-content-element {
+        .cube.spinning-mode .face-content-element,
+        .cube.spinning-mode .face-tag {
             opacity: 0;
         }
 
         .face-content-element {
+            position: relative;
+            z-index: 1;
             opacity: 1;
             transition: opacity 0.4s ease;
             width: 100%;
@@ -440,12 +497,14 @@
             position: absolute;
             top: 11px;
             left: 13px;
+            z-index: 1;
             font-size: 8px;
             font-weight: 800;
             letter-spacing: 0.06em;
             text-transform: uppercase;
             color: var(--ink-dark);
             opacity: 0.72;
+            transition: opacity 0.3s ease;
         }
 
         .face-content-text {
@@ -464,7 +523,7 @@
 
         .touch-overlay {
             position: absolute;
-            inset: -12px;
+            inset: -16px;
             z-index: 20;
             display: none;
             grid-template-columns: 1fr 1fr 1fr;
@@ -481,12 +540,12 @@
             border: none;
         }
 
-        /* Cream Crosshair Controls */
+        /* Crosshair Controls */
         .crosshair-pad {
             position: relative;
             width: 78px;
             height: 78px;
-            margin-top: 6px;
+            margin-top: 8px;
             opacity: 0;
             transform: translateY(8px);
             pointer-events: none;
@@ -522,7 +581,7 @@
 
         .line-btn:active::after {
             transform: scale(0.84);
-            background-color: var(--accent-gold);
+            background-color: #fcd34d;
         }
 
         .line-up {
@@ -565,176 +624,263 @@
 <body>
 
     <div class="retro-board" id="retroBoard">
+        <!-- Background Layers -->
+        <div class="bg-layer bg-first-page"></div>
+        <div class="bg-layer bg-clouds-page"></div>
 
-        <!-- Screen 1: Light Paper Card + Intro Narrative -->
-        <div class="intro-screen" id="introScreen">
-            <img src="Igor%20and%20the%20apple.png" alt="Igor in the orchard" class="intro-illustration">
+        <div class="content-wrap">
 
-            <div class="narrative-box">
-                <p class="narrative-text">
-                    Igor wandered into an orchard and saw various fruits lying on the ground. While looking around, something suddenly fell on his head. It was red and firm. And it was...
-                </p>
+            <!-- Screen 1: Intro Narrative -->
+            <div class="intro-screen" id="introScreen">
+                <img src="Igor%20and%20the%20apple.png" alt="Igor in the orchard" class="intro-illustration">
+
+                <div class="narrative-box">
+                    <p class="narrative-text">
+                        Igor wandered into an orchard and saw various fruits lying on the ground. While looking around, something suddenly fell on his head. It was red and firm. And it was...
+                    </p>
+                </div>
+
+                <button class="scan-btn" id="scanBtn" onclick="startScan()">
+                    <svg class="sprite-bg" viewBox="26 575 436 270" preserveAspectRatio="none">
+                        <image href="Cards.png" width="1440" height="864"/>
+                        <rect x="26" y="575" width="436" height="270" rx="28" fill="#fcd34d" class="gold-tint"/>
+                    </svg>
+                    <span class="btn-label">Object Scanning</span>
+                </button>
             </div>
-            <button class="scan-btn" id="scanBtn" onclick="startScan()">Object Scanning</button>
+
+            <!-- Screen 2: Hand-Drawn Quiz Cards -->
+            <div class="scan-workspace" id="scanWorkspace">
+                <div class="riddle-box" id="riddleBox">
+                    <svg class="sprite-bg" viewBox="26 575 436 270" preserveAspectRatio="none">
+                        <image href="Cards.png" width="1440" height="864"/>
+                    </svg>
+                    <div class="riddle-text">The fruit that fell on Igor’s head</div>
+                </div>
+
+                <div class="cards-grid" id="cardsGrid">
+                    <!-- Card 0: Plum -->
+                    <div class="card-slot" id="card0" data-correct="false">
+                        <div class="card-press" onclick="handleCardTap(this.parentElement)">
+                            <div class="card-inner">
+                                <div class="card-face card-front">
+                                    <svg class="sprite-bg" viewBox="815 595 245 215" preserveAspectRatio="none">
+                                        <image href="Cards.png" width="1440" height="864"/>
+                                    </svg>
+                                    <div class="card-face-content">
+                                        <div class="card-emoji">🍑</div>
+                                        <div class="card-title">Plum</div>
+                                    </div>
+                                </div>
+                                <div class="card-face card-back">
+                                    <svg class="sprite-bg" viewBox="815 595 245 215" preserveAspectRatio="none">
+                                        <image href="Cards.png" width="1440" height="864"/>
+                                    </svg>
+                                    <div class="card-face-content">
+                                        <span>Scan error</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card 1: Orange -->
+                    <div class="card-slot" id="card1" data-correct="false">
+                        <div class="card-press" onclick="handleCardTap(this.parentElement)">
+                            <div class="card-inner">
+                                <div class="card-face card-front">
+                                    <svg class="sprite-bg" viewBox="815 595 245 215" preserveAspectRatio="none">
+                                        <image href="Cards.png" width="1440" height="864"/>
+                                    </svg>
+                                    <div class="card-face-content">
+                                        <div class="card-emoji">🍊</div>
+                                        <div class="card-title">Orange</div>
+                                    </div>
+                                </div>
+                                <div class="card-face card-back">
+                                    <svg class="sprite-bg" viewBox="815 595 245 215" preserveAspectRatio="none">
+                                        <image href="Cards.png" width="1440" height="864"/>
+                                    </svg>
+                                    <div class="card-face-content">
+                                        <span>Scan error</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card 2: Pear -->
+                    <div class="card-slot" id="card2" data-correct="false">
+                        <div class="card-press" onclick="handleCardTap(this.parentElement)">
+                            <div class="card-inner">
+                                <div class="card-face card-front">
+                                    <svg class="sprite-bg" viewBox="815 595 245 215" preserveAspectRatio="none">
+                                        <image href="Cards.png" width="1440" height="864"/>
+                                    </svg>
+                                    <div class="card-face-content">
+                                        <div class="card-emoji">🍐</div>
+                                        <div class="card-title">Pear</div>
+                                    </div>
+                                </div>
+                                <div class="card-face card-back">
+                                    <svg class="sprite-bg" viewBox="815 595 245 215" preserveAspectRatio="none">
+                                        <image href="Cards.png" width="1440" height="864"/>
+                                    </svg>
+                                    <div class="card-face-content">
+                                        <span>Scan error</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card 3: Apple -->
+                    <div class="card-slot" id="card3" data-correct="true">
+                        <div class="card-press" onclick="handleCardTap(this.parentElement)">
+                            <div class="card-inner">
+                                <div class="card-face card-front">
+                                    <svg class="sprite-bg" viewBox="815 595 245 215" preserveAspectRatio="none">
+                                        <image href="Cards.png" width="1440" height="864"/>
+                                    </svg>
+                                    <div class="card-face-content">
+                                        <div class="card-emoji">🍎</div>
+                                        <div class="card-title">Apple</div>
+                                    </div>
+                                </div>
+                                <div class="card-face card-back">
+                                    <svg class="sprite-bg" viewBox="815 595 245 215" preserveAspectRatio="none">
+                                        <image href="Cards.png" width="1440" height="864"/>
+                                    </svg>
+                                    <div class="card-face-content">
+                                        <div style="font-weight: 800; font-size: 15px; letter-spacing: 0.05em;">APPLE</div>
+                                        <div style="font-size: 11px; margin-top: 2px; font-weight: 700;">Confirmed ✓</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="btn-action" id="actionBtn" onclick="transformToCube()">
+                    <svg class="sprite-bg" viewBox="26 575 436 270" preserveAspectRatio="none">
+                        <image href="Cards.png" width="1440" height="864"/>
+                        <rect x="26" y="575" width="436" height="270" rx="28" fill="#fcd34d" class="gold-tint"/>
+                    </svg>
+                    <span class="btn-label">Store in Memory</span>
+                </button>
+            </div>
+
+            <!-- Screen 3: Solid Hand-Drawn 3D Cube -->
+            <div class="cube-stage" id="cubeStage">
+                <div class="success-banner">
+                    <svg class="sprite-bg" viewBox="26 575 436 270" preserveAspectRatio="none">
+                        <image href="Cards.png" width="1440" height="864"/>
+                    </svg>
+                    <span>Stored in Ship's Memory ✓</span>
+                </div>
+
+                <div class="cube-depth-holder" id="cubeDepthHolder">
+                    <div class="cube-wrapper" id="cubeWrapper">
+                        <div class="touch-overlay">
+                            <div class="zone" onclick="interactAndTiltUp()"></div>
+                            <div class="zone" onclick="interactAndTiltUp()"></div>
+                            <div class="zone" onclick="interactAndTiltUp()"></div>
+
+                            <div class="zone" onclick="interactAndTurnLeft()"></div>
+                            <div class="zone" onclick="interactAndTurnBack()"></div>
+                            <div class="zone" onclick="interactAndTurnRight()"></div>
+
+                            <div class="zone" onclick="interactAndTiltDown()"></div>
+                            <div class="zone" onclick="interactAndTiltDown()"></div>
+                            <div class="zone" onclick="interactAndTiltDown()"></div>
+                        </div>
+
+                        <div class="cube spinning-mode" id="cube">
+                            <!-- Internal 3D core planes to seal rounded cube corners completely -->
+                            <div class="cube-core core-x"></div>
+                            <div class="cube-core core-y"></div>
+                            <div class="cube-core core-z"></div>
+
+                            <!-- Front: Apple Image (Top-Left square of Cub.png) -->
+                            <div class="cube-face face-front" id="faceFront">
+                                <svg class="sprite-bg" viewBox="56 30 416 446" preserveAspectRatio="none">
+                                    <image href="Cub.png" width="1440" height="994"/>
+                                </svg>
+                                <span class="face-tag">Visual</span>
+                                <div class="face-content-element">
+                                    <div style="font-size: 56px;">🍎</div>
+                                </div>
+                            </div>
+
+                            <!-- Right: Example 1 (Top-Center square of Cub.png) -->
+                            <div class="cube-face face-right" id="faceRight">
+                                <svg class="sprite-bg" viewBox="521 30 403 446" preserveAspectRatio="none">
+                                    <image href="Cub.png" width="1440" height="994"/>
+                                </svg>
+                                <span class="face-tag">Example 1</span>
+                                <div class="face-content-element">
+                                    <div class="face-content-text">I eat a fresh <b>apple</b> every morning.</div>
+                                </div>
+                            </div>
+
+                            <!-- Left: Example 2 (Top-Right square of Cub.png) -->
+                            <div class="cube-face face-left" id="faceLeft">
+                                <svg class="sprite-bg" viewBox="970 30 416 446" preserveAspectRatio="none">
+                                    <image href="Cub.png" width="1440" height="994"/>
+                                </svg>
+                                <span class="face-tag">Example 2</span>
+                                <div class="face-content-element">
+                                    <div class="face-content-text">She cut the <b>apple</b> into four equal pieces.</div>
+                                </div>
+                            </div>
+
+                            <!-- Top: Definition (Bottom-Left square of Cub.png) -->
+                            <div class="cube-face face-top" id="faceTop">
+                                <svg class="sprite-bg" viewBox="56 520 416 446" preserveAspectRatio="none">
+                                    <image href="Cub.png" width="1440" height="994"/>
+                                </svg>
+                                <span class="face-tag">Definition</span>
+                                <div class="face-content-element">
+                                    <div class="face-content-text">The fruit that fell on Igor’s head</div>
+                                </div>
+                            </div>
+
+                            <!-- Bottom: Term (Bottom-Center square of Cub.png) -->
+                            <div class="cube-face face-bottom" id="faceBottom">
+                                <svg class="sprite-bg" viewBox="521 520 403 446" preserveAspectRatio="none">
+                                    <image href="Cub.png" width="1440" height="994"/>
+                                </svg>
+                                <span class="face-tag">Term</span>
+                                <div class="face-content-element">
+                                    <div class="term-sketch">APPLE</div>
+                                    <div style="font-size: 11px; color: #44403c; font-weight: 600; margin-top: 3px;">/ˈæp.əl/</div>
+                                </div>
+                            </div>
+
+                            <!-- Back: Example 3 (Bottom-Right square of Cub.png) -->
+                            <div class="cube-face face-back" id="faceBack">
+                                <svg class="sprite-bg" viewBox="970 520 416 446" preserveAspectRatio="none">
+                                    <image href="Cub.png" width="1440" height="994"/>
+                                </svg>
+                                <span class="face-tag">Example 3</span>
+                                <div class="face-content-element">
+                                    <div class="face-content-text">This green <b>apple</b> tastes quite sour.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Crosshair Controls -->
+                <div class="crosshair-pad">
+                    <button class="line-btn line-up" onclick="interactAndTiltUp()" aria-label="Top Face"></button>
+                    <button class="line-btn line-left" onclick="interactAndTurnLeft()" aria-label="Left Face"></button>
+                    <button class="line-btn line-right" onclick="interactAndTurnRight()" aria-label="Right Face"></button>
+                    <button class="line-btn line-down" onclick="interactAndTiltDown()" aria-label="Bottom Face"></button>
+                </div>
+            </div>
+
         </div>
-
-        <!-- Screen 2: Cloudy Teal Sky + Hand-Drawn Cards -->
-        <div class="scan-workspace" id="scanWorkspace">
-            <div class="riddle-box" id="riddleBox">
-                <div class="riddle-text">The fruit that fell on Igor’s head</div>
-            </div>
-
-            <div class="cards-grid" id="cardsGrid">
-                <div class="card-slot" id="card0" data-correct="false">
-                    <div class="card-press" onclick="handleCardTap(this.parentElement)">
-                        <div class="card-inner">
-                            <div class="card-face card-front">
-                                <div class="card-emoji">🍑</div>
-                                <div class="card-title">Plum</div>
-                            </div>
-                            <div class="card-face card-back">
-                                <span>scan error</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="card-slot" id="card1" data-correct="false">
-                    <div class="card-press" onclick="handleCardTap(this.parentElement)">
-                        <div class="card-inner">
-                            <div class="card-face card-front">
-                                <div class="card-emoji">🍊</div>
-                                <div class="card-title">Orange</div>
-                            </div>
-                            <div class="card-face card-back">
-                                <span>scan error</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="card-slot" id="card2" data-correct="false">
-                    <div class="card-press" onclick="handleCardTap(this.parentElement)">
-                        <div class="card-inner">
-                            <div class="card-face card-front">
-                                <div class="card-emoji">🍐</div>
-                                <div class="card-title">Pear</div>
-                            </div>
-                            <div class="card-face card-back">
-                                <span>scan error</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="card-slot" id="card3" data-correct="true">
-                    <div class="card-press" onclick="handleCardTap(this.parentElement)">
-                        <div class="card-inner">
-                            <div class="card-face card-front">
-                                <div class="card-emoji">🍎</div>
-                                <div class="card-title">Apple</div>
-                            </div>
-                            <div class="card-face card-back">
-                                <div style="font-weight: 800; font-size: 15px; letter-spacing: 0.05em;">APPLE</div>
-                                <div style="font-size: 11px; margin-top: 2px;">Confirmed ✓</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <button class="btn-action" id="actionBtn" onclick="transformToCube()">Store in Memory</button>
-        </div>
-
-        <!-- Screen 3: Cloudy Teal Sky + Hand-Drawn 3D Cube -->
-        <div class="cube-stage" id="cubeStage">
-            <div class="success-banner">Stored in Ship's Memory ✓</div>
-
-            <!-- 5 Retro Golden Rays above the Cube -->
-            <svg class="sunburst-rays" viewBox="0 0 150 36" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <polygon points="22,34 10,12 20,10 28,33" fill="#f59e0b" stroke="#18181b" stroke-width="1.5"/>
-                <polygon points="48,30 41,6 51,5 54,29" fill="#f59e0b" stroke="#18181b" stroke-width="1.5"/>
-                <polygon points="75,28 71,2 81,2 79,28" fill="#f59e0b" stroke="#18181b" stroke-width="1.5"/>
-                <polygon points="101,30 102,5 112,7 106,31" fill="#f59e0b" stroke="#18181b" stroke-width="1.5"/>
-                <polygon points="126,34 132,11 142,14 131,35" fill="#f59e0b" stroke="#18181b" stroke-width="1.5"/>
-            </svg>
-
-            <div class="cube-wrapper" id="cubeWrapper">
-                <div class="touch-overlay">
-                    <div class="zone" onclick="interactAndTiltUp()"></div>
-                    <div class="zone" onclick="interactAndTiltUp()"></div>
-                    <div class="zone" onclick="interactAndTiltUp()"></div>
-
-                    <div class="zone" onclick="interactAndTurnLeft()"></div>
-                    <div class="zone" onclick="interactAndTurnBack()"></div>
-                    <div class="zone" onclick="interactAndTurnRight()"></div>
-
-                    <div class="zone" onclick="interactAndTiltDown()"></div>
-                    <div class="zone" onclick="interactAndTiltDown()"></div>
-                    <div class="zone" onclick="interactAndTiltDown()"></div>
-                </div>
-
-                <div class="cube spinning-mode" id="cube">
-                    <!-- Front: Apple Image -->
-                    <div class="cube-face face-front" id="faceFront">
-                        <span class="face-tag">Visual</span>
-                        <div class="face-content-element">
-                            <div style="font-size: 56px;">🍎</div>
-                        </div>
-                    </div>
-
-                    <!-- Back: Example 3 -->
-                    <div class="cube-face face-back" id="faceBack">
-                        <span class="face-tag">Example 3</span>
-                        <div class="face-content-element">
-                            <div class="face-content-text">This green <b>apple</b> tastes quite sour.</div>
-                        </div>
-                    </div>
-
-                    <!-- Right: Example 1 -->
-                    <div class="cube-face face-right" id="faceRight">
-                        <span class="face-tag">Example 1</span>
-                        <div class="face-content-element">
-                            <div class="face-content-text">I eat a fresh <b>apple</b> every morning.</div>
-                        </div>
-                    </div>
-
-                    <!-- Left: Example 2 -->
-                    <div class="cube-face face-left" id="faceLeft">
-                        <span class="face-tag">Example 2</span>
-                        <div class="face-content-element">
-                            <div class="face-content-text">She cut the <b>apple</b> into four equal pieces.</div>
-                        </div>
-                    </div>
-
-                    <!-- Top: Definition -->
-                    <div class="cube-face face-top" id="faceTop">
-                        <span class="face-tag">Definition</span>
-                        <div class="face-content-element">
-                            <div class="face-content-text">The fruit that fell on Igor’s head</div>
-                        </div>
-                    </div>
-
-                    <!-- Bottom: Term (APPLE) -->
-                    <div class="cube-face face-bottom" id="faceBottom">
-                        <span class="face-tag">Term</span>
-                        <div class="face-content-element">
-                            <div class="term-sketch">APPLE</div>
-                            <div style="font-size: 11px; color: #44403c; font-weight: 600; margin-top: 3px;">/ˈæp.əl/</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Crosshair Controls -->
-            <div class="crosshair-pad">
-                <button class="line-btn line-up" onclick="interactAndTiltUp()" aria-label="Top Face"></button>
-                <button class="line-btn line-left" onclick="interactAndTurnLeft()" aria-label="Left Face"></button>
-                <button class="line-btn line-right" onclick="interactAndTurnRight()" aria-label="Right Face"></button>
-                <button class="line-btn line-down" onclick="interactAndTiltDown()" aria-label="Bottom Face"></button>
-            </div>
-        </div>
-
     </div>
 
     <script>
@@ -896,11 +1042,12 @@
             spinRaf = requestAnimationFrame(spinLoop);
         }
 
-        function stopAutoSpinAndAlign() {
+        function stopAutoSpinAndZoomIn() {
             if (autoSpinning) {
                 autoSpinning = false;
                 cancelAnimationFrame(spinRaf);
                 cube.classList.remove('spinning-mode');
+                document.getElementById('cubeDepthHolder').classList.add('zoomed-in');
                 rotX = 0;
                 rotY = 0;
                 applyCubeTransform();
@@ -918,45 +1065,40 @@
         }
 
         function tiltUp() {
-            stopAutoSpinAndAlign();
             alignYToUprightFront();
             rotX = rotX > 0 ? 0 : -90;
             applyCubeTransform();
         }
 
         function tiltDown() {
-            stopAutoSpinAndAlign();
             alignYToUprightFront();
             rotX = rotX < 0 ? 0 : 90;
             applyCubeTransform();
         }
 
         function turnLeft() {
-            stopAutoSpinAndAlign();
             rotX = 0;
             rotY += 90;
             applyCubeTransform();
         }
 
         function turnRight() {
-            stopAutoSpinAndAlign();
             rotX = 0;
             rotY -= 90;
             applyCubeTransform();
         }
 
         function turnBack() {
-            stopAutoSpinAndAlign();
             rotX = 0;
             rotY += 180;
             applyCubeTransform();
         }
 
-        function interactAndTiltUp() { if (!stopAutoSpinAndAlign()) tiltUp(); }
-        function interactAndTiltDown() { if (!stopAutoSpinAndAlign()) tiltDown(); }
-        function interactAndTurnLeft() { if (!stopAutoSpinAndAlign()) turnLeft(); }
-        function interactAndTurnRight() { if (!stopAutoSpinAndAlign()) turnRight(); }
-        function interactAndTurnBack() { if (!stopAutoSpinAndAlign()) turnBack(); }
+        function interactAndTiltUp() { if (!stopAutoSpinAndZoomIn()) tiltUp(); }
+        function interactAndTiltDown() { if (!stopAutoSpinAndZoomIn()) tiltDown(); }
+        function interactAndTurnLeft() { if (!stopAutoSpinAndZoomIn()) turnLeft(); }
+        function interactAndTurnRight() { if (!stopAutoSpinAndZoomIn()) turnRight(); }
+        function interactAndTurnBack() { if (!stopAutoSpinAndZoomIn()) turnBack(); }
     </script>
 </body>
 </html>
