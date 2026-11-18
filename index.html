@@ -137,12 +137,12 @@
             text-align-last: left;
         }
 
-        /* Yellow button for Object Scanning */
+        /* Explicit Yellow button style for Object Scanning */
         .scan-btn {
+            background-color: #fcd34d;
             background-image: url('frame.png');
             background-size: cover;
             background-position: center;
-            background-color: #fcd34d;
             background-blend-mode: multiply;
             border: 2px solid var(--ink-dark);
             border-radius: 14px;
@@ -216,10 +216,10 @@
             opacity: 1;
         }
 
-        /* Reduced card size by another 10% */
+        /* Cards size reduced by another 10% */
         .card-slot {
             perspective: 1000px;
-            height: 92px;
+            height: 83px;
         }
 
         .card-press {
@@ -272,13 +272,13 @@
             transform: rotateY(180deg);
         }
 
-        .card-emoji { font-size: 22px; margin-bottom: 2px; }
-        .card-title { font-size: 13px; font-weight: 700; color: var(--ink-dark); }
+        .card-emoji { font-size: 20px; margin-bottom: 2px; }
+        .card-title { font-size: 12px; font-weight: 700; color: var(--ink-dark); }
 
         .card-slot.wrong .card-back span {
             color: var(--wrong-text);
             font-weight: 800;
-            font-size: 11.5px;
+            font-size: 11px;
             text-transform: uppercase;
             letter-spacing: 0.04em;
         }
@@ -287,12 +287,12 @@
             color: var(--correct-text);
         }
 
-        /* Yellow button for Store in Memory */
+        /* Explicit Yellow button style for Store in Memory */
         .btn-action {
+            background-color: #fcd34d;
             background-image: url('frame.png');
             background-size: cover;
             background-position: center;
-            background-color: #fcd34d;
             background-blend-mode: multiply;
             border: 2px solid var(--ink-dark);
             border-radius: 14px;
@@ -337,6 +337,7 @@
             -webkit-user-select: none;
         }
 
+        /* Top banner with definition description */
         .success-banner {
             width: 100%;
             background-image: url('frame.png');
@@ -347,12 +348,11 @@
             overflow: hidden;
             padding: 10px 14px;
             text-align: center;
-            margin-bottom: 12px;
-            font-size: 11px;
+            margin-bottom: 10px;
+            font-size: 12px;
             color: var(--ink-dark);
-            font-weight: 800;
-            letter-spacing: 0.05em;
-            text-transform: uppercase;
+            font-weight: 700;
+            line-height: 1.3;
             box-shadow: 2px 2px 0px var(--ink-dark);
             opacity: 0;
             transform: translateY(-6px);
@@ -456,11 +456,11 @@
         }
 
         .cube.folded .face-front  { transform: rotateY(  0deg) translateZ(75px); }
-        .cube.folded .face-top    { transform: rotateX( 90deg) translateZ(75px); }
-        .cube.folded .face-bottom { transform: rotateX(-90deg) translateZ(75px); }
-        .cube.folded .face-left   { transform: rotateY(-90deg) translateZ(75px); }
         .cube.folded .face-right  { transform: rotateY( 90deg) translateZ(75px); }
         .cube.folded .face-back   { transform: rotateY(180deg) translateZ(75px); }
+        .cube.folded .face-left   { transform: rotateY(270deg) translateZ(75px); }
+        .cube.folded .face-top    { transform: rotateX( 90deg) translateZ(75px); }
+        .cube.folded .face-bottom { transform: rotateX(-90deg) translateZ(75px); }
 
         .face-tag {
             position: absolute;
@@ -738,6 +738,14 @@
                                 </div>
                             </div>
 
+                            <!-- Back: Example 3 -->
+                            <div class="cube-face face-back" id="faceBack">
+                                <span class="face-tag">Example 3</span>
+                                <div class="face-content-element">
+                                    <div class="face-content-text">This green <b>apple</b> tastes quite sour.</div>
+                                </div>
+                            </div>
+
                             <!-- Left: Example 2 -->
                             <div class="cube-face face-left" id="faceLeft">
                                 <span class="face-tag">Example 2</span>
@@ -760,14 +768,6 @@
                                 <div class="face-content-element">
                                     <div class="term-sketch">APPLE</div>
                                     <div style="font-size: 10px; color: #44403c; font-weight: 600; margin-top: 2px;">/ˈæp.əl/</div>
-                                </div>
-                            </div>
-
-                            <!-- Back: Example 3 -->
-                            <div class="cube-face face-back" id="faceBack">
-                                <span class="face-tag">Example 3</span>
-                                <div class="face-content-element">
-                                    <div class="face-content-text">This green <b>apple</b> tastes quite sour.</div>
                                 </div>
                             </div>
                         </div>
@@ -945,21 +945,25 @@
         }
 
         function tiltUp() {
-            rotX -= 90;
+            rotX = -90;
+            rotY = 0;
             applyCubeTransform();
         }
 
         function tiltDown() {
-            rotX += 90;
+            rotX = 90;
+            rotY = 0;
             applyCubeTransform();
         }
 
         function turnLeft() {
+            rotX = 0;
             rotY += 90;
             applyCubeTransform();
         }
 
         function turnRight() {
+            rotX = 0;
             rotY -= 90;
             applyCubeTransform();
         }
