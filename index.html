@@ -7,7 +7,6 @@
     <style>
         :root {
             --ink-dark: #18181b;
-            --cream-paper: #f5e4b7;
             --wrong-text: #7e22ce;
             --correct-text: #15803d;
         }
@@ -45,10 +44,10 @@
         /* Background layers */
         .bg-layer {
             position: absolute;
-            width: 104vw;
-            height: 104dvh;
-            top: -2dvh;
-            left: -2vw;
+            width: 108vw;
+            height: 108dvh;
+            top: -4dvh;
+            left: -4vw;
             z-index: 0;
             pointer-events: none;
             transition: opacity 0.45s ease;
@@ -116,11 +115,16 @@
             -webkit-user-drag: none;
         }
 
+        /* Pure CSS Paper Container with overflow hidden */
         .narrative-box {
             width: 100%;
-            background-color: var(--cream-paper);
+            background-image: url('Cards.png');
+            background-size: 325% 342%;
+            background-position: 2.6% 93.2%;
+            background-repeat: no-repeat;
             border: 2px solid var(--ink-dark);
             border-radius: 16px;
+            overflow: hidden;
             padding: 16px 18px;
             margin-bottom: 16px;
             box-shadow: 3px 4px 0px var(--ink-dark);
@@ -136,9 +140,15 @@
         }
 
         .scan-btn {
-            background: #fcd34d;
+            background-image: url('Cards.png');
+            background-size: 325% 342%;
+            background-position: 2.6% 93.2%;
+            background-repeat: no-repeat;
+            background-color: #fcd34d;
+            background-blend-mode: multiply;
             border: 2px solid var(--ink-dark);
             border-radius: 16px;
+            overflow: hidden;
             color: var(--ink-dark);
             padding: 15px 28px;
             width: 100%;
@@ -172,9 +182,13 @@
 
         .riddle-box {
             width: 100%;
-            background-color: var(--cream-paper);
+            background-image: url('Cards.png');
+            background-size: 325% 342%;
+            background-position: 2.6% 93.2%;
+            background-repeat: no-repeat;
             border: 2px solid var(--ink-dark);
             border-radius: 16px;
+            overflow: hidden;
             padding: 16px 20px;
             text-align: center;
             margin-bottom: 14px;
@@ -182,11 +196,6 @@
             transform: translateY(10px);
             transition: opacity 0.7s ease, transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
             box-shadow: 3px 4px 0px var(--ink-dark);
-        }
-
-        .riddle-box.revealed {
-            opacity: 1;
-            transform: translateY(0);
         }
 
         .riddle-text {
@@ -240,7 +249,7 @@
             transform: rotateY(180deg);
         }
 
-        /* Clean paper card face without SVG overlap issues */
+        /* Clean CSS background for cards ensuring texture stays strictly inside bounds */
         .card-face {
             position: absolute;
             inset: 0;
@@ -248,9 +257,13 @@
             height: 100%;
             backface-visibility: hidden;
             -webkit-backface-visibility: hidden;
-            background-color: var(--cream-paper);
+            background-image: url('Cards.png');
+            background-size: 590% 410%;
+            background-position: 67.8% 90.2%;
+            background-repeat: no-repeat;
             border: 2px solid var(--ink-dark);
             border-radius: 14px;
+            overflow: hidden;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -279,9 +292,15 @@
         }
 
         .btn-action {
-            background: #fcd34d;
+            background-image: url('Cards.png');
+            background-size: 325% 342%;
+            background-position: 2.6% 93.2%;
+            background-repeat: no-repeat;
+            background-color: #fcd34d;
+            background-blend-mode: multiply;
             border: 2px solid var(--ink-dark);
             border-radius: 16px;
+            overflow: hidden;
             color: var(--ink-dark);
             padding: 15px 24px;
             font-size: 14px;
@@ -324,9 +343,13 @@
 
         .success-banner {
             width: 100%;
-            background-color: var(--cream-paper);
+            background-image: url('Cards.png');
+            background-size: 325% 342%;
+            background-position: 2.6% 93.2%;
+            background-repeat: no-repeat;
             border: 2px solid var(--ink-dark);
             border-radius: 16px;
+            overflow: hidden;
             padding: 14px 18px;
             text-align: center;
             margin-bottom: 18px;
@@ -699,9 +722,6 @@
 
                             <!-- Front: Apple Image -->
                             <div class="cube-face face-front" id="faceFront">
-                                <svg class="sprite-bg" viewBox="56 30 416 446" preserveAspectRatio="none">
-                                    <image href="Cub.png" width="1440" height="994"/>
-                                </svg>
                                 <span class="face-tag">Visual</span>
                                 <div class="face-content-element">
                                     <div style="font-size: 56px;">🍎</div>
@@ -710,9 +730,6 @@
 
                             <!-- Right: Example 1 -->
                             <div class="cube-face face-right" id="faceRight">
-                                <svg class="sprite-bg" viewBox="521 30 403 446" preserveAspectRatio="none">
-                                    <image href="Cub.png" width="1440" height="994"/>
-                                </svg>
                                 <span class="face-tag">Example 1</span>
                                 <div class="face-content-element">
                                     <div class="face-content-text">I eat a fresh <b>apple</b> every morning.</div>
@@ -721,9 +738,6 @@
 
                             <!-- Left: Example 2 -->
                             <div class="cube-face face-left" id="faceLeft">
-                                <svg class="sprite-bg" viewBox="970 30 416 446" preserveAspectRatio="none">
-                                    <image href="Cub.png" width="1440" height="994"/>
-                                </svg>
                                 <span class="face-tag">Example 2</span>
                                 <div class="face-content-element">
                                     <div class="face-content-text">She cut the <b>apple</b> into four equal pieces.</div>
@@ -732,9 +746,6 @@
 
                             <!-- Top: Definition -->
                             <div class="cube-face face-top" id="faceTop">
-                                <svg class="sprite-bg" viewBox="56 520 416 446" preserveAspectRatio="none">
-                                    <image href="Cub.png" width="1440" height="994"/>
-                                </svg>
                                 <span class="face-tag">Definition</span>
                                 <div class="face-content-element">
                                     <div class="face-content-text">The fruit that fell on Igor’s head</div>
@@ -743,9 +754,6 @@
 
                             <!-- Bottom: Term -->
                             <div class="cube-face face-bottom" id="faceBottom">
-                                <svg class="sprite-bg" viewBox="521 520 403 446" preserveAspectRatio="none">
-                                    <image href="Cub.png" width="1440" height="994"/>
-                                </svg>
                                 <span class="face-tag">Term</span>
                                 <div class="face-content-element">
                                     <div class="term-sketch">APPLE</div>
@@ -755,9 +763,6 @@
 
                             <!-- Back: Example 3 -->
                             <div class="cube-face face-back" id="faceBack">
-                                <svg class="sprite-bg" viewBox="970 520 416 446" preserveAspectRatio="none">
-                                    <image href="Cub.png" width="1440" height="994"/>
-                                </svg>
                                 <span class="face-tag">Example 3</span>
                                 <div class="face-content-element">
                                     <div class="face-content-text">This green <b>apple</b> tastes quite sour.</div>
