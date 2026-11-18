@@ -29,13 +29,10 @@
             overflow: hidden;
         }
 
-        /* Full-screen framed board (no teal outer background) */
         .retro-board {
             width: 100vw;
             height: 100dvh;
             background-color: #f4efe4;
-            border: 6px solid #ffffff;
-            box-shadow: inset 0 0 0 2px var(--ink-dark);
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -56,20 +53,19 @@
 
         .bg-first-page {
             background-image: url('background%20first%20page.png');
-            background-size: 100% 100%;
+            background-size: 104% 104%;
             background-position: center;
             background-repeat: no-repeat;
             opacity: 1;
         }
 
-        /* Desaturated & slightly defocused cloudy sky for screens 2 & 3 */
+        /* Clear, sharp cloudy sky with slightly reduced saturation (no blur) */
         .bg-clouds-page {
             background-image: url('Background1.jpg');
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
-            filter: blur(3.5px) saturate(0.65) brightness(1.04);
-            transform: scale(1.04);
+            filter: saturate(0.72) brightness(1.02);
             opacity: 0;
         }
 
@@ -92,7 +88,6 @@
             position: relative;
         }
 
-        /* Reusable SVG sprite background layer */
         .sprite-bg {
             position: absolute;
             inset: 0;
@@ -143,7 +138,6 @@
             text-align-last: left;
         }
 
-        /* Styled identically to Store in Memory button */
         .scan-btn {
             position: relative;
             background: transparent;
@@ -260,10 +254,10 @@
             transform: rotateY(180deg);
         }
 
+        /* Proper 3D card faces separating front & back cleanly */
         .card-face {
             position: absolute;
-            top: 0;
-            left: 0;
+            inset: 0;
             width: 100%;
             height: 100%;
             backface-visibility: hidden;
@@ -273,6 +267,11 @@
             align-items: center;
             justify-content: center;
             padding: 12px 14px;
+            overflow: hidden;
+        }
+
+        .card-back {
+            transform: rotateY(180deg);
         }
 
         .card-face-content {
@@ -287,25 +286,14 @@
         .card-emoji { font-size: 30px; margin-bottom: 4px; }
         .card-title { font-size: 16px; font-weight: 700; color: var(--ink-dark); }
 
-        .card-back {
-            transform: rotateY(180deg);
-            font-size: 12.5px;
-            line-height: 1.32;
-            font-weight: 600;
-            text-align: center;
-            padding: 12px 14px;
-            color: var(--ink-dark);
-        }
-
-        /* Only text color changes on wrong/correct card, card stays natural cream paper */
-        .card-slot.wrong .card-back {
+        .card-slot.wrong .card-back .card-face-content span {
             color: var(--wrong-text);
             font-weight: 800;
             text-transform: uppercase;
             letter-spacing: 0.04em;
         }
 
-        .card-slot.correct .card-back {
+        .card-slot.correct .card-back .card-face-content div {
             color: var(--correct-text);
         }
 
@@ -377,7 +365,6 @@
             transform: translateY(0);
         }
 
-        /* Depth container: starts far away (scale 0.66) and zooms to 1.0 in 1s on first tap */
         .cube-depth-holder {
             width: 170px;
             height: 170px;
@@ -420,15 +407,15 @@
             transition: none;
         }
 
-        /* Solid inner core planes so rounded cube corners never look hollow */
+        /* Solid inner core planes to seal cube interior completely */
         .cube-core {
             position: absolute;
-            top: 4px;
-            left: 4px;
-            width: 162px;
-            height: 162px;
-            background: #ded9cc;
-            border-radius: 18px;
+            top: 2px;
+            left: 2px;
+            width: 166px;
+            height: 166px;
+            background: #d8d0c0;
+            border-radius: 12px;
             opacity: 0;
             transition: opacity 0.4s ease;
             pointer-events: none;
@@ -442,14 +429,14 @@
         .core-y { transform: rotateX(90deg); }
         .core-z { transform: rotateY(0deg); }
 
-        /* Cube faces rendered cleanly via exact SVG crop from Cub.png (zero white edge gaps) */
+        /* Cube faces tightly packed at translateZ(84.2px) to eliminate gap lines */
         .cube-face {
             position: absolute;
             top: 0;
             left: 0;
             width: 170px;
             height: 170px;
-            border-radius: 15px;
+            border-radius: 14px;
             overflow: hidden;
             padding: 16px;
             display: flex;
@@ -462,17 +449,10 @@
             transition: opacity 0.3s ease;
         }
 
-        /* Hide text during auto-spin so Safari rendering stays 100% flicker-free */
-        .cube.spinning-mode .face-content-element,
-        .cube.spinning-mode .face-tag {
-            opacity: 0;
-        }
-
         .face-content-element {
             position: relative;
             z-index: 1;
             opacity: 1;
-            transition: opacity 0.4s ease;
             width: 100%;
             height: 100%;
             display: flex;
@@ -485,13 +465,12 @@
             transition: transform 1.1s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.8s ease;
         }
 
-        /* 170px / 2 = 85px */
-        .cube.folded .face-front  { transform: rotateY(  0deg) translateZ(85px); }
-        .cube.folded .face-top    { transform: rotateX( 90deg) translateZ(85px); }
-        .cube.folded .face-bottom { transform: rotateX(-90deg) translateZ(85px); }
-        .cube.folded .face-left   { transform: rotateY(-90deg) translateZ(85px); }
-        .cube.folded .face-right  { transform: rotateY( 90deg) translateZ(85px); }
-        .cube.folded .face-back   { transform: rotateY(180deg) translateZ(85px); }
+        .cube.folded .face-front  { transform: rotateY(  0deg) translateZ(84.2px); }
+        .cube.folded .face-top    { transform: rotateX( 90deg) translateZ(84.2px); }
+        .cube.folded .face-bottom { transform: rotateX(-90deg) translateZ(84.2px); }
+        .cube.folded .face-left   { transform: rotateY(-90deg) translateZ(84.2px); }
+        .cube.folded .face-right  { transform: rotateY( 90deg) translateZ(84.2px); }
+        .cube.folded .face-back   { transform: rotateY(180deg) translateZ(84.2px); }
 
         .face-tag {
             position: absolute;
@@ -504,7 +483,6 @@
             text-transform: uppercase;
             color: var(--ink-dark);
             opacity: 0.72;
-            transition: opacity 0.3s ease;
         }
 
         .face-content-text {
@@ -663,7 +641,7 @@
                     <div class="card-slot" id="card0" data-correct="false">
                         <div class="card-press" onclick="handleCardTap(this.parentElement)">
                             <div class="card-inner">
-                                <div class="card-face card-front">
+                                <div class="card-face">
                                     <svg class="sprite-bg" viewBox="815 595 245 215" preserveAspectRatio="none">
                                         <image href="Cards.png" width="1440" height="864"/>
                                     </svg>
@@ -688,7 +666,7 @@
                     <div class="card-slot" id="card1" data-correct="false">
                         <div class="card-press" onclick="handleCardTap(this.parentElement)">
                             <div class="card-inner">
-                                <div class="card-face card-front">
+                                <div class="card-face">
                                     <svg class="sprite-bg" viewBox="815 595 245 215" preserveAspectRatio="none">
                                         <image href="Cards.png" width="1440" height="864"/>
                                     </svg>
@@ -713,7 +691,7 @@
                     <div class="card-slot" id="card2" data-correct="false">
                         <div class="card-press" onclick="handleCardTap(this.parentElement)">
                             <div class="card-inner">
-                                <div class="card-face card-front">
+                                <div class="card-face">
                                     <svg class="sprite-bg" viewBox="815 595 245 215" preserveAspectRatio="none">
                                         <image href="Cards.png" width="1440" height="864"/>
                                     </svg>
@@ -738,7 +716,7 @@
                     <div class="card-slot" id="card3" data-correct="true">
                         <div class="card-press" onclick="handleCardTap(this.parentElement)">
                             <div class="card-inner">
-                                <div class="card-face card-front">
+                                <div class="card-face">
                                     <svg class="sprite-bg" viewBox="815 595 245 215" preserveAspectRatio="none">
                                         <image href="Cards.png" width="1440" height="864"/>
                                     </svg>
@@ -796,12 +774,12 @@
                         </div>
 
                         <div class="cube spinning-mode" id="cube">
-                            <!-- Internal 3D core planes to seal rounded cube corners completely -->
+                            <!-- Internal solid core planes to seal cube interior -->
                             <div class="cube-core core-x"></div>
                             <div class="cube-core core-y"></div>
                             <div class="cube-core core-z"></div>
 
-                            <!-- Front: Apple Image (Top-Left square of Cub.png) -->
+                            <!-- Front: Apple Image -->
                             <div class="cube-face face-front" id="faceFront">
                                 <svg class="sprite-bg" viewBox="56 30 416 446" preserveAspectRatio="none">
                                     <image href="Cub.png" width="1440" height="994"/>
@@ -812,7 +790,7 @@
                                 </div>
                             </div>
 
-                            <!-- Right: Example 1 (Top-Center square of Cub.png) -->
+                            <!-- Right: Example 1 -->
                             <div class="cube-face face-right" id="faceRight">
                                 <svg class="sprite-bg" viewBox="521 30 403 446" preserveAspectRatio="none">
                                     <image href="Cub.png" width="1440" height="994"/>
@@ -823,7 +801,7 @@
                                 </div>
                             </div>
 
-                            <!-- Left: Example 2 (Top-Right square of Cub.png) -->
+                            <!-- Left: Example 2 -->
                             <div class="cube-face face-left" id="faceLeft">
                                 <svg class="sprite-bg" viewBox="970 30 416 446" preserveAspectRatio="none">
                                     <image href="Cub.png" width="1440" height="994"/>
@@ -834,7 +812,7 @@
                                 </div>
                             </div>
 
-                            <!-- Top: Definition (Bottom-Left square of Cub.png) -->
+                            <!-- Top: Definition -->
                             <div class="cube-face face-top" id="faceTop">
                                 <svg class="sprite-bg" viewBox="56 520 416 446" preserveAspectRatio="none">
                                     <image href="Cub.png" width="1440" height="994"/>
@@ -845,7 +823,7 @@
                                 </div>
                             </div>
 
-                            <!-- Bottom: Term (Bottom-Center square of Cub.png) -->
+                            <!-- Bottom: Term -->
                             <div class="cube-face face-bottom" id="faceBottom">
                                 <svg class="sprite-bg" viewBox="521 520 403 446" preserveAspectRatio="none">
                                     <image href="Cub.png" width="1440" height="994"/>
@@ -857,7 +835,7 @@
                                 </div>
                             </div>
 
-                            <!-- Back: Example 3 (Bottom-Right square of Cub.png) -->
+                            <!-- Back: Example 3 -->
                             <div class="cube-face face-back" id="faceBack">
                                 <svg class="sprite-bg" viewBox="970 520 416 446" preserveAspectRatio="none">
                                     <image href="Cub.png" width="1440" height="994"/>
@@ -969,7 +947,7 @@
 
             workspace.style.display = 'none';
             cubeStage.style.display = 'flex';
-            cube.style.transform = `translateZ(-85px) rotateX(${rotX}deg) rotateY(${rotY}deg)`;
+            cube.style.transform = `translateZ(-84.2px) rotateX(${rotX}deg) rotateY(${rotY}deg)`;
 
             const targetRect = cubeWrapper.getBoundingClientRect();
             const targetCX = targetRect.left + targetRect.width / 2;
@@ -1036,7 +1014,7 @@
                 const delta = time - lastTime;
                 lastTime = time;
                 currentSpinAngle = (currentSpinAngle + delta * 0.018) % 360;
-                cube.style.transform = `translateZ(-85px) rotateX(${rotX}deg) rotateY(${currentSpinAngle.toFixed(1)}deg)`;
+                cube.style.transform = `translateZ(-84.2px) rotateX(${rotX}deg) rotateY(${currentSpinAngle.toFixed(1)}deg)`;
                 spinRaf = requestAnimationFrame(spinLoop);
             }
             spinRaf = requestAnimationFrame(spinLoop);
@@ -1057,7 +1035,7 @@
         }
 
         function applyCubeTransform() {
-            cube.style.transform = `translateZ(-85px) rotateX(${rotX}deg) rotateY(${rotY}deg)`;
+            cube.style.transform = `translateZ(-84.2px) rotateX(${rotX}deg) rotateY(${rotY}deg)`;
         }
 
         function alignYToUprightFront() {
