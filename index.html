@@ -89,19 +89,34 @@
             position: relative;
         }
 
+        /* Horizontal page slide transitions */
+        .page-slide {
+            transition: transform 0.52s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.42s ease;
+            will-change: transform, opacity;
+        }
+
+        .page-slide.enter-from-right {
+            transform: translateX(120vw);
+            opacity: 0;
+        }
+
+        .page-slide.exit-to-left {
+            transform: translateX(-120vw);
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .page-slide.active-center {
+            transform: translateX(0);
+            opacity: 1;
+        }
+
         /* 1. INTRO SCREEN */
         .intro-screen {
             width: 100%;
             display: flex;
             flex-direction: column;
             align-items: center;
-            transition: opacity 0.45s ease, transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        .intro-screen.hidden {
-            opacity: 0;
-            transform: translateY(-10px);
-            pointer-events: none;
         }
 
         .intro-illustration {
@@ -606,7 +621,7 @@
         <div class="content-wrap">
 
             <!-- Screen 1: Intro Narrative -->
-            <div class="intro-screen" id="introScreen">
+            <div class="intro-screen page-slide active-center" id="introScreen">
                 <img src="Igor%20and%20the%20apple.png" alt="Igor in the orchard" class="intro-illustration">
 
                 <div class="narrative-box">
@@ -619,7 +634,7 @@
             </div>
 
             <!-- Screen 2: Hand-Drawn Mini-Cube Quiz Choices -->
-            <div class="scan-workspace" id="scanWorkspace">
+            <div class="scan-workspace page-slide" id="scanWorkspace">
                 <div class="riddle-box">
                     <div class="riddle-text">The fruit that fell on Igor’s head</div>
                 </div>
@@ -690,7 +705,7 @@
             </div>
 
             <!-- Screen 3: Solid Hand-Drawn 3D Cube -->
-            <div class="cube-stage" id="cubeStage">
+            <div class="cube-stage page-slide" id="cubeStage">
                 <div class="cube-depth-holder" id="cubeDepthHolder">
                     <div class="cube-wrapper" id="cubeWrapper">
                         <div class="touch-overlay">
@@ -785,6 +800,30 @@
         let spinRaf = null;
         let currentSpinAngle = 35;
 
+        function slideBetweenPages(fromEl, toEl, onAfterShow) {
+            fromEl.classList.remove('active-center');
+            fromEl.classList.add('exit-to-left');
+
+            toEl.style.display = 'flex';
+            toEl.classList.remove('exit-to-left', 'active-center');
+            toEl.classList.add('enter-from-right');
+            toEl.offsetHeight;
+
+            requestAnimationFrame(() => {
+                toEl.classList.remove('enter-from-right');
+                toEl.classList.add('active-center');
+            });
+
+            if (typeof onAfterShow === 'function') {
+                onAfterShow();
+            }
+
+            setTimeout(() => {
+                fromEl.style.display = 'none';
+                fromEl.classList.remove('exit-to-left');
+            }, 520);
+        }
+
         function startScan() {
             const btn = document.getElementById('scanBtn');
             const intro = document.getElementById('introScreen');
@@ -796,14 +835,10 @@
 
             setTimeout(() => {
                 btn.classList.remove('pressed');
-                intro.classList.add('hidden');
-
-                setTimeout(() => {
-                    intro.style.display = 'none';
-                    board.classList.add('clouds-bg');
-                    workspace.style.display = 'flex';
+                board.classList.add('clouds-bg');
+                slideBetweenPages(intro, workspace, () => {
                     grid.classList.add('revealed');
-                }, 400);
+                });
             }, 180);
         }
 
@@ -846,14 +881,14 @@
             const cubeWrapper = document.getElementById('cubeWrapper');
             const cube = document.getElementById('cube');
 
-            workspace.style.display = 'none';
-            cubeStage.style.display = 'flex';
             cube.classList.add('folded');
             cube.style.transform = `translateZ(-75px) rotateX(${rotX}deg) rotateY(${rotY}deg)`;
-
             cubeStage.classList.add('assembled');
             cubeWrapper.classList.add('levitating');
-            startAutoSpin();
+
+            slideBetweenPages(workspace, cubeStage, () => {
+                startAutoSpin();
+            });
         }
 
         const cube = document.getElementById('cube');
