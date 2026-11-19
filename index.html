@@ -326,7 +326,7 @@
             color: var(--correct-text);
         }
 
-        /* Paper texture + yellow tint for Memory Cube button (slides in fully opaque from right) */
+        /* Paper texture + yellow tint for Save in Cube button (slides in fully opaque from right) */
         .btn-action {
             position: relative;
             background-image: url('frame.png');
@@ -665,7 +665,7 @@
                     </div>
                 </div>
 
-                <button class="btn-action" id="actionBtn" onclick="transformToCube()"><span>Memory Cube</span></button>
+                <button class="btn-action" id="actionBtn" onclick="transformToCube()"><span>Save in Cube</span></button>
             </div>
 
             <!-- Screen 3: Solid Hand-Drawn 3D Cube -->
@@ -687,10 +687,11 @@
                         </div>
 
                         <div class="cube spinning-mode folded" id="cube">
-                            <!-- Front: Apple Image -->
+                            <!-- Front: Term (APPLE) -->
                             <div class="cube-face face-front" id="faceFront">
                                 <div class="face-content-element">
-                                    <div style="font-size: 46px;">🍎</div>
+                                    <div class="term-sketch">APPLE</div>
+                                    <div style="font-size: 10px; color: #44403c; font-weight: 600; margin-top: 2px;">/ˈæp.əl/</div>
                                 </div>
                             </div>
 
@@ -722,11 +723,10 @@
                                 </div>
                             </div>
 
-                            <!-- Bottom: Term -->
+                            <!-- Bottom: Apple Image -->
                             <div class="cube-face face-bottom" id="faceBottom">
                                 <div class="face-content-element">
-                                    <div class="term-sketch">APPLE</div>
-                                    <div style="font-size: 10px; color: #44403c; font-weight: 600; margin-top: 2px;">/ˈæp.əl/</div>
+                                    <div style="font-size: 46px;">🍎</div>
                                 </div>
                             </div>
                         </div>
