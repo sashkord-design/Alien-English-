@@ -449,10 +449,6 @@
             transition: opacity 0.3s ease;
         }
 
-        .cube.animating .cube-face {
-            transition: transform 1.1s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.8s ease;
-        }
-
         .cube.folded .face-front  { transform: rotateY(  0deg) translateZ(75px); }
         .cube.folded .face-top    { transform: rotateX( 90deg) translateZ(75px); }
         .cube.folded .face-bottom { transform: rotateX(-90deg) translateZ(75px); }
@@ -517,12 +513,12 @@
             border: none;
         }
 
-        /* Crosshair Controls lowered while keeping cube in place */
+        /* Crosshair Controls lowered by an additional 15% while keeping cube in place */
         .crosshair-pad {
             position: relative;
             width: 70px;
             height: 70px;
-            margin-top: 38px;
+            margin-top: calc(38px + 15dvh);
             opacity: 0;
             transform: translateY(8px);
             pointer-events: none;
@@ -711,7 +707,7 @@
                             <div class="zone" onclick="interactAndTiltDown()"></div>
                         </div>
 
-                        <div class="cube spinning-mode" id="cube">
+                        <div class="cube spinning-mode folded" id="cube">
                             <!-- Internal solid core planes to seal cube interior completely -->
                             <div class="cube-core core-x"></div>
                             <div class="cube-core core-y"></div>
@@ -850,61 +846,14 @@
             const cubeWrapper = document.getElementById('cubeWrapper');
             const cube = document.getElementById('cube');
 
-            const rCard3 = document.getElementById('card3').getBoundingClientRect();
-
             workspace.style.display = 'none';
             cubeStage.style.display = 'flex';
+            cube.classList.add('folded');
             cube.style.transform = `translateZ(-75px) rotateX(${rotX}deg) rotateY(${rotY}deg)`;
 
-            const targetRect = cubeWrapper.getBoundingClientRect();
-            const targetCX = targetRect.left + targetRect.width / 2;
-            const targetCY = targetRect.top + targetRect.height / 2;
-
-            function getOffset(rect) {
-                const cx = rect.left + rect.width / 2;
-                const cy = rect.top + rect.height / 2;
-                return {
-                    dx: cx - targetCX,
-                    dy: cy - targetCY,
-                    sx: rect.width / 150,
-                    sy: rect.height / 150
-                };
-            }
-
-            const oFront = getOffset(rCard3);
-
-            const fTop = document.getElementById('faceTop');
-            const fLeft = document.getElementById('faceLeft');
-            const fRight = document.getElementById('faceRight');
-            const fBottom = document.getElementById('faceBottom');
-            const fFront = document.getElementById('faceFront');
-            const fBack = document.getElementById('faceBack');
-
-            fFront.style.transform = `translate(${oFront.dx}px, ${oFront.dy}px) scale(${oFront.sx}, ${oFront.sy})`;
-            [fTop, fLeft, fRight, fBottom, fBack].forEach(el => {
-                if (el !== fFront) {
-                    el.style.transform = `translate(${oFront.dx}px, ${oFront.dy}px) scale(0.4)`;
-                    el.style.opacity = '0';
-                }
-            });
-
-            cube.offsetHeight;
-            cube.classList.add('animating');
-
-            requestAnimationFrame(() => {
-                [fTop, fLeft, fRight, fBottom, fFront, fBack].forEach(el => {
-                    el.style.transform = '';
-                    el.style.opacity = '';
-                });
-                cube.classList.add('folded');
-            });
-
-            setTimeout(() => {
-                cube.classList.remove('animating');
-                cubeStage.classList.add('assembled');
-                cubeWrapper.classList.add('levitating');
-                startAutoSpin();
-            }, 1100);
+            cubeStage.classList.add('assembled');
+            cubeWrapper.classList.add('levitating');
+            startAutoSpin();
         }
 
         const cube = document.getElementById('cube');
