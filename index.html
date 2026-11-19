@@ -137,11 +137,15 @@
             text-align-last: left;
         }
 
-        /* Yellow button for Object Scanning */
+        /* Paper texture + yellow tint for Object Scanning */
         .scan-btn {
-            background-color: #fcd34d !important;
+            position: relative;
+            background-image: url('frame.png');
+            background-size: cover;
+            background-position: center;
             border: 2px solid var(--ink-dark);
             border-radius: 14px;
+            overflow: hidden;
             color: var(--ink-dark);
             padding: 12px 24px;
             width: 100%;
@@ -157,6 +161,22 @@
             display: flex;
             align-items: center;
             justify-content: center;
+        }
+
+        .scan-btn::before,
+        .btn-action::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-color: rgba(252, 211, 77, 0.72);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .scan-btn span,
+        .btn-action span {
+            position: relative;
+            z-index: 1;
         }
 
         .scan-btn:active,
@@ -259,7 +279,8 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 8px;
+            padding: 8px 10px;
+            text-align: center;
             box-shadow: 2px 3px 0px var(--ink-dark);
         }
 
@@ -273,20 +294,34 @@
         .card-slot.wrong .mini-face-back span {
             color: var(--wrong-text);
             font-weight: 800;
-            font-size: 11px;
+            font-size: 10.5px;
+            line-height: 1.25;
+            text-align: center;
             text-transform: uppercase;
             letter-spacing: 0.04em;
+        }
+
+        .card-slot:not(.wrong) .mini-face-back span {
+            font-size: 11px;
+            line-height: 1.3;
+            font-weight: 600;
+            color: var(--ink-dark);
+            text-align: center;
         }
 
         .card-slot.correct .mini-face-back div {
             color: var(--correct-text);
         }
 
-        /* Yellow button for Store in Memory */
+        /* Paper texture + yellow tint for Store in Memory */
         .btn-action {
-            background-color: #fcd34d !important;
+            position: relative;
+            background-image: url('frame.png');
+            background-size: cover;
+            background-position: center;
             border: 2px solid var(--ink-dark);
             border-radius: 14px;
+            overflow: hidden;
             color: var(--ink-dark);
             padding: 12px 20px;
             font-size: 12.5px;
@@ -327,36 +362,10 @@
             -webkit-user-select: none;
         }
 
-        .success-banner {
-            width: 100%;
-            background-image: url('frame.png');
-            background-size: cover;
-            background-position: center;
-            border: 2px solid var(--ink-dark);
-            border-radius: 14px;
-            overflow: hidden;
-            padding: 10px 14px;
-            text-align: center;
-            margin-bottom: 8px;
-            font-size: 12px;
-            color: var(--ink-dark);
-            font-weight: 700;
-            line-height: 1.3;
-            box-shadow: 2px 2px 0px var(--ink-dark);
-            opacity: 0;
-            transform: translateY(-6px);
-            transition: opacity 0.6s ease, transform 0.6s ease;
-        }
-
-        .cube-stage.assembled .success-banner {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
         .cube-depth-holder {
             width: 150px;
             height: 150px;
-            margin: 4px auto 12px;
+            margin: 10px auto 0;
             transform: scale(0.85);
             transition: transform 1s cubic-bezier(0.22, 1, 0.36, 1);
             position: relative;
@@ -508,12 +517,12 @@
             border: none;
         }
 
-        /* Crosshair Controls (pushed down slightly) */
+        /* Crosshair Controls lowered while keeping cube in place */
         .crosshair-pad {
             position: relative;
             width: 70px;
             height: 70px;
-            margin-top: 10px;
+            margin-top: 38px;
             opacity: 0;
             transform: translateY(8px);
             pointer-events: none;
@@ -610,7 +619,7 @@
                     </p>
                 </div>
 
-                <button class="scan-btn" id="scanBtn" onclick="startScan()">Object Scanning</button>
+                <button class="scan-btn" id="scanBtn" onclick="startScan()"><span>Object Scanning</span></button>
             </div>
 
             <!-- Screen 2: Hand-Drawn Mini-Cube Quiz Choices -->
@@ -675,20 +684,17 @@
                                 </div>
                                 <div class="mini-face mini-face-back">
                                     <div style="font-weight: 800; font-size: 13px; letter-spacing: 0.05em;">APPLE</div>
-                                    <div style="font-size: 9.5px; margin-top: 2px; font-weight: 700;">Confirmed ✓</div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <button class="btn-action" id="actionBtn" onclick="transformToCube()">Store in Memory</button>
+                <button class="btn-action" id="actionBtn" onclick="transformToCube()"><span>Store in Memory</span></button>
             </div>
 
             <!-- Screen 3: Solid Hand-Drawn 3D Cube -->
             <div class="cube-stage" id="cubeStage">
-                <div class="success-banner">The fruit that fell on Igor’s head</div>
-
                 <div class="cube-depth-holder" id="cubeDepthHolder">
                     <div class="cube-wrapper" id="cubeWrapper">
                         <div class="touch-overlay">
@@ -697,7 +703,7 @@
                             <div class="zone" onclick="interactAndTiltUp()"></div>
 
                             <div class="zone" onclick="interactAndTurnLeft()"></div>
-                            <div class="zone" onclick="interactAndCenterFront()"></div>
+                            <div class="zone" onclick="interactAndTurnBack()"></div>
                             <div class="zone" onclick="interactAndTurnRight()"></div>
 
                             <div class="zone" onclick="interactAndTiltDown()"></div>
