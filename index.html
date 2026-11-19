@@ -9,6 +9,7 @@
             --ink-dark: #18181b;
             --wrong-text: #7e22ce;
             --correct-text: #15803d;
+            --synapse-yellow: #fcd34d;
         }
 
         * {
@@ -155,7 +156,7 @@
             text-align-last: left;
         }
 
-        /* Paper texture + yellow tint for Object Scanning */
+        /* Paper texture + yellow tint for buttons */
         .scan-btn {
             position: relative;
             background-image: url('frame.png');
@@ -182,7 +183,8 @@
         }
 
         .scan-btn::before,
-        .btn-action::before {
+        .btn-action::before,
+        .back-network-btn::before {
             content: '';
             position: absolute;
             inset: 0;
@@ -191,8 +193,13 @@
             z-index: 0;
         }
 
+        .btn-action.saved-state::before {
+            background-color: rgba(134, 239, 172, 0.78);
+        }
+
         .scan-btn span,
-        .btn-action span {
+        .btn-action span,
+        .back-network-btn span {
             position: relative;
             z-index: 1;
         }
@@ -326,7 +333,7 @@
             color: var(--correct-text);
         }
 
-        /* Dual action row at the bottom of the scan workspace (slides in fully opaque from left) */
+        /* Dual action row at the bottom of the scan workspace */
         .action-row {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -344,7 +351,6 @@
             pointer-events: auto;
         }
 
-        /* Paper texture + yellow tint for action buttons */
         .btn-action {
             position: relative;
             background-image: url('frame.png');
@@ -354,8 +360,8 @@
             border-radius: 14px;
             overflow: hidden;
             color: var(--ink-dark);
-            padding: 12px 12px;
-            font-size: 12px;
+            padding: 12px 10px;
+            font-size: 11.5px;
             font-weight: 800;
             letter-spacing: 0.04em;
             text-transform: uppercase;
@@ -373,27 +379,169 @@
             box-shadow: 1px 1px 0px var(--ink-dark);
         }
 
-        /* 3. RETRO 3D CUBE STAGE */
+        /* 3. MEMORY STORAGE NETWORK (NEURAL CONSTELLATION) */
+        .memory-vault {
+            display: none;
+            flex-direction: column;
+            width: 100%;
+            height: 100%;
+            padding: 6px 0;
+        }
+
+        .vault-scroll {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            overflow-y: auto;
+            overflow-x: hidden;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+            padding: 18px 8px 32px;
+        }
+
+        .vault-scroll::-webkit-scrollbar {
+            display: none;
+        }
+
+        .constellation-canvas {
+            position: relative;
+            width: 100%;
+            min-height: 100%;
+        }
+
+        .synapse-svg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+            overflow: visible;
+        }
+
+        .node-wrapper {
+            position: absolute;
+            width: 82px;
+            height: 82px;
+            z-index: 2;
+            cursor: pointer;
+            perspective: 700px;
+            animation: node-levitate 4.2s ease-in-out infinite;
+        }
+
+        @keyframes node-levitate {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-6px); }
+        }
+
+        .node-cube {
+            width: 82px;
+            height: 82px;
+            position: relative;
+            transform-style: preserve-3d;
+            -webkit-transform-style: preserve-3d;
+            transform: translateZ(-41px) rotateX(-16deg) rotateY(24deg);
+            transition: transform 0.25s ease;
+        }
+
+        .node-wrapper:active .node-cube {
+            transform: translateZ(-41px) rotateX(-10deg) rotateY(15deg) scale(0.94);
+        }
+
+        .node-face {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 82px;
+            height: 82px;
+            border: 2px solid var(--ink-dark);
+            border-radius: 0;
+            background-image: url('frame.png');
+            background-size: cover;
+            background-position: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 6px;
+            text-align: center;
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+        }
+
+        .node-front  { transform: rotateY(  0deg) translateZ(41px); }
+        .node-top    { transform: rotateX( 90deg) translateZ(41px); filter: brightness(1.03); }
+        .node-left   { transform: rotateY(270deg) translateZ(41px); filter: brightness(0.93); }
+        .node-right  { transform: rotateY( 90deg) translateZ(41px); filter: brightness(0.93); }
+        .node-bottom { transform: rotateX(-90deg) translateZ(41px); }
+        .node-back   { transform: rotateY(180deg) translateZ(41px); }
+
+        .node-word {
+            font-size: 11px;
+            font-weight: 900;
+            letter-spacing: 0.04em;
+            color: var(--ink-dark);
+            text-transform: uppercase;
+            word-break: break-word;
+            line-height: 1.15;
+        }
+
+        .node-wrapper.newly-saved .node-front::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-color: rgba(252, 211, 77, 0.22);
+            pointer-events: none;
+        }
+
+        /* 4. INSPECTED 3D CUBE STAGE */
         .cube-stage {
             display: none;
             flex-direction: column;
             align-items: center;
             width: 100%;
+            height: 100%;
+            justify-content: center;
             user-select: none;
             -webkit-user-select: none;
+        }
+
+        .back-network-btn {
+            position: absolute;
+            top: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-image: url('frame.png');
+            background-size: cover;
+            background-position: center;
+            border: 2px solid var(--ink-dark);
+            border-radius: 12px;
+            overflow: hidden;
+            color: var(--ink-dark);
+            padding: 8px 16px;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            cursor: pointer;
+            box-shadow: 2px 2px 0px var(--ink-dark);
+            z-index: 30;
+            white-space: nowrap;
+        }
+
+        .back-network-btn:active {
+            transform: translateX(-50%) translate(2px, 2px);
+            box-shadow: 1px 1px 0px var(--ink-dark);
         }
 
         .cube-depth-holder {
             width: 150px;
             height: 150px;
-            margin: 6px auto 0;
-            transform: scale(0.85);
-            transition: transform 0.75s cubic-bezier(0.22, 1, 0.36, 1);
+            margin: 14px auto 0;
+            transform: scale(1.12);
+            transition: transform 0.65s cubic-bezier(0.22, 1, 0.36, 1);
             position: relative;
-        }
-
-        .cube-depth-holder.zoomed-in {
-            transform: translateY(calc(50dvh - 50% - 46px)) scale(1.12);
         }
 
         .cube-wrapper {
@@ -421,10 +569,6 @@
             transition: transform 0.75s cubic-bezier(0.25, 1, 0.5, 1);
         }
 
-        .cube.spinning-mode {
-            transition: none;
-        }
-
         .cube-face {
             position: absolute;
             top: 0;
@@ -446,7 +590,6 @@
             background-size: cover;
             background-position: center;
             box-shadow: inset 0 0 12px rgba(0,0,0,0.05);
-            transition: opacity 0.3s ease;
         }
 
         .cube.folded .face-front  { transform: rotateY(  0deg) translateZ(75px); }
@@ -485,13 +628,9 @@
             position: absolute;
             inset: -14px;
             z-index: 20;
-            display: none;
+            display: grid;
             grid-template-columns: 1fr 1fr 1fr;
             grid-template-rows: 1fr 1fr 1fr;
-        }
-
-        .cube-stage.assembled .touch-overlay {
-            display: grid;
         }
 
         .zone {
@@ -500,21 +639,13 @@
             border: none;
         }
 
-        /* Crosshair Controls lowered while keeping cube clear of overlap */
+        /* Crosshair Controls */
         .crosshair-pad {
             position: relative;
             width: 70px;
             height: 70px;
-            margin-top: calc(46px + 18dvh);
-            opacity: 0;
-            transform: translateY(8px);
-            pointer-events: none;
-            transition: opacity 0.6s ease, transform 0.6s ease;
-        }
-
-        .cube-stage.assembled .crosshair-pad {
+            margin-top: calc(46px + 12dvh);
             opacity: 1;
-            transform: translateY(0);
             pointer-events: auto;
         }
 
@@ -675,69 +806,80 @@
 
                 <div class="action-row" id="actionRow">
                     <button class="btn-action" id="saveCubeBtn" onclick="saveInCube()"><span>Save in Cube</span></button>
-                    <button class="btn-action" id="goCubeBtn" onclick="transformToCube()"><span>Go to Cube</span></button>
+                    <button class="btn-action" id="goCubeBtn" onclick="openMemoryVault()"><span>Go to Cube</span></button>
                 </div>
             </div>
 
-            <!-- Screen 3: Solid Hand-Drawn 3D Cube -->
+            <!-- Screen 3: Memory Storage Constellation -->
+            <div class="memory-vault page-slide" id="memoryVault">
+                <div class="vault-scroll" id="vaultScroll">
+                    <div class="constellation-canvas" id="constellationCanvas">
+                        <svg class="synapse-svg" id="synapseSvg"></svg>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Screen 4: Solid Hand-Drawn 3D Cube Inspection -->
             <div class="cube-stage page-slide" id="cubeStage">
+                <button class="back-network-btn" onclick="returnToVault()"><span>← Back to Network</span></button>
+
                 <div class="cube-depth-holder" id="cubeDepthHolder">
-                    <div class="cube-wrapper" id="cubeWrapper">
+                    <div class="cube-wrapper levitating" id="cubeWrapper">
                         <div class="touch-overlay">
-                            <div class="zone" onclick="interactAndTiltUp()"></div>
-                            <div class="zone" onclick="interactAndTiltUp()"></div>
-                            <div class="zone" onclick="interactAndTiltUp()"></div>
+                            <div class="zone" onclick="tiltUp()"></div>
+                            <div class="zone" onclick="tiltUp()"></div>
+                            <div class="zone" onclick="tiltUp()"></div>
 
-                            <div class="zone" onclick="interactAndTurnLeft()"></div>
-                            <div class="zone" onclick="interactAndTurnBack()"></div>
-                            <div class="zone" onclick="interactAndTurnRight()"></div>
+                            <div class="zone" onclick="turnLeft()"></div>
+                            <div class="zone" onclick="turnBack()"></div>
+                            <div class="zone" onclick="turnRight()"></div>
 
-                            <div class="zone" onclick="interactAndTiltDown()"></div>
-                            <div class="zone" onclick="interactAndTiltDown()"></div>
-                            <div class="zone" onclick="interactAndTiltDown()"></div>
+                            <div class="zone" onclick="tiltDown()"></div>
+                            <div class="zone" onclick="tiltDown()"></div>
+                            <div class="zone" onclick="tiltDown()"></div>
                         </div>
 
-                        <div class="cube spinning-mode folded" id="cube">
-                            <!-- Front: Term (APPLE) -->
-                            <div class="cube-face face-front" id="faceFront">
+                        <div class="cube folded" id="cube">
+                            <!-- Front: Term -->
+                            <div class="cube-face face-front">
                                 <div class="face-content-element">
-                                    <div class="term-sketch">APPLE</div>
-                                    <div style="font-size: 10px; color: #44403c; font-weight: 600; margin-top: 2px;">/ˈæp.əl/</div>
+                                    <div class="term-sketch" id="cubeTerm">APPLE</div>
+                                    <div id="cubePhonetic" style="font-size: 10px; color: #44403c; font-weight: 600; margin-top: 2px;">/ˈæp.əl/</div>
                                 </div>
                             </div>
 
                             <!-- Right: Example 1 -->
-                            <div class="cube-face face-right" id="faceRight">
+                            <div class="cube-face face-right">
                                 <div class="face-content-element">
-                                    <div class="face-content-text">I eat a fresh <b>apple</b> every morning.</div>
+                                    <div class="face-content-text" id="cubeEx1">I eat a fresh <b>apple</b> every morning.</div>
                                 </div>
                             </div>
 
                             <!-- Back: Example 3 -->
-                            <div class="cube-face face-back" id="faceBack">
+                            <div class="cube-face face-back">
                                 <div class="face-content-element">
-                                    <div class="face-content-text">This green <b>apple</b> tastes quite sour.</div>
+                                    <div class="face-content-text" id="cubeEx3">This green <b>apple</b> tastes quite sour.</div>
                                 </div>
                             </div>
 
                             <!-- Left: Example 2 -->
-                            <div class="cube-face face-left" id="faceLeft">
+                            <div class="cube-face face-left">
                                 <div class="face-content-element">
-                                    <div class="face-content-text">She cut the <b>apple</b> into four equal pieces.</div>
+                                    <div class="face-content-text" id="cubeEx2">She cut the <b>apple</b> into four equal pieces.</div>
                                 </div>
                             </div>
 
                             <!-- Top: Definition -->
-                            <div class="cube-face face-top" id="faceTop">
+                            <div class="cube-face face-top">
                                 <div class="face-content-element">
-                                    <div class="face-content-text">The fruit that fell on Igor’s head</div>
+                                    <div class="face-content-text" id="cubeDef">The fruit that fell on Igor’s head</div>
                                 </div>
                             </div>
 
-                            <!-- Bottom: Apple Image -->
-                            <div class="cube-face face-bottom" id="faceBottom">
+                            <!-- Bottom: Visual -->
+                            <div class="cube-face face-bottom">
                                 <div class="face-content-element">
-                                    <div style="font-size: 46px;">🍎</div>
+                                    <div id="cubeVisual" style="font-size: 46px;">🍎</div>
                                 </div>
                             </div>
                         </div>
@@ -746,10 +888,10 @@
 
                 <!-- Crosshair Controls -->
                 <div class="crosshair-pad">
-                    <button class="line-btn line-up" onclick="interactAndTiltUp()" aria-label="Top Face"></button>
-                    <button class="line-btn line-left" onclick="interactAndTurnLeft()" aria-label="Left Face"></button>
-                    <button class="line-btn line-right" onclick="interactAndTurnRight()" aria-label="Right Face"></button>
-                    <button class="line-btn line-down" onclick="interactAndTiltDown()" aria-label="Bottom Face"></button>
+                    <button class="line-btn line-up" onclick="tiltUp()" aria-label="Top Face"></button>
+                    <button class="line-btn line-left" onclick="turnLeft()" aria-label="Left Face"></button>
+                    <button class="line-btn line-right" onclick="turnRight()" aria-label="Right Face"></button>
+                    <button class="line-btn line-down" onclick="tiltDown()" aria-label="Bottom Face"></button>
                 </div>
             </div>
 
@@ -758,11 +900,82 @@
 
     <script>
         let isSolved = false;
-        let rotX = -15;
-        let rotY = 35;
-        let autoSpinning = true;
-        let spinRaf = null;
-        let currentSpinAngle = 35;
+        let isAppleSaved = false;
+        let rotX = 0;
+        let rotY = 0;
+
+        // Base memory words + newly learned APPLE
+        const DEFAULT_WORDS = [
+            {
+                id: 'orchard',
+                word: 'ORCHARD',
+                phonetic: '/ˈɔː.tʃəd/',
+                definition: 'A piece of land planted with fruit trees',
+                ex1: 'Igor walked slowly into an old <b>orchard</b>.',
+                ex2: 'The apple trees in the <b>orchard</b> were full of fruit.',
+                ex3: 'Autumn is the best season to visit an <b>orchard</b>.',
+                visual: '🌳'
+            },
+            {
+                id: 'firm',
+                word: 'FIRM',
+                phonetic: '/fɜːm/',
+                definition: 'Hard and solid when pressed, not soft',
+                ex1: 'The red fruit felt smooth and <b>firm</b>.',
+                ex2: 'She picked a <b>firm</b> apple from the basket.',
+                ex3: 'This mattress is comfortable and <b>firm</b>.',
+                visual: '🧱'
+            },
+            {
+                id: 'ground',
+                word: 'GROUND',
+                phonetic: '/ɡraʊnd/',
+                definition: 'The solid surface of the earth',
+                ex1: 'Various fruits were lying on the <b>ground</b>.',
+                ex2: 'The ripe apple fell softly onto the <b>ground</b>.',
+                ex3: 'Leaves covered the wet <b>ground</b> after rain.',
+                visual: '🌱'
+            },
+            {
+                id: 'head',
+                word: 'HEAD',
+                phonetic: '/hed/',
+                definition: 'The upper part of the human body',
+                ex1: 'Something suddenly fell right on Igor’s <b>head</b>.',
+                ex2: 'He rubbed the top of his <b>head</b> in surprise.',
+                ex3: 'A clever idea popped into his <b>head</b>.',
+                visual: '👽'
+            }
+        ];
+
+        const APPLE_WORD = {
+            id: 'apple',
+            word: 'APPLE',
+            phonetic: '/ˈæp.əl/',
+            definition: 'The fruit that fell on Igor’s head',
+            ex1: 'I eat a fresh <b>apple</b> every morning.',
+            ex2: 'She cut the <b>apple</b> into four equal pieces.',
+            ex3: 'This green <b>apple</b> tastes quite sour.',
+            visual: '🍎',
+            isNew: true
+        };
+
+        function getStoredWords() {
+            try {
+                const raw = localStorage.getItem('alien_memory_cubes');
+                if (raw) {
+                    const parsed = JSON.parse(raw);
+                    if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+                }
+            } catch (e) {}
+            return [...DEFAULT_WORDS];
+        }
+
+        function saveStoredWords(words) {
+            try {
+                localStorage.setItem('alien_memory_cubes', JSON.stringify(words));
+            } catch (e) {}
+        }
 
         function slideBetweenPages(fromEl, toEl, onAfterShow) {
             fromEl.classList.remove('active-center');
@@ -788,11 +1001,34 @@
             }, 720);
         }
 
+        function slideBackToPage(fromEl, toEl, onAfterShow) {
+            fromEl.classList.remove('active-center');
+            fromEl.classList.add('enter-from-right');
+
+            toEl.style.display = 'flex';
+            toEl.classList.remove('enter-from-right', 'active-center');
+            toEl.classList.add('exit-to-left');
+            toEl.offsetHeight;
+
+            requestAnimationFrame(() => {
+                toEl.classList.remove('exit-to-left');
+                toEl.classList.add('active-center');
+            });
+
+            if (typeof onAfterShow === 'function') {
+                onAfterShow();
+            }
+
+            setTimeout(() => {
+                fromEl.style.display = 'none';
+                fromEl.classList.remove('enter-from-right');
+            }, 720);
+        }
+
         function startScan() {
             const btn = document.getElementById('scanBtn');
             const intro = document.getElementById('introScreen');
             const workspace = document.getElementById('scanWorkspace');
-            const grid = document.getElementById('cardsGrid');
             const board = document.getElementById('retroBoard');
 
             btn.classList.add('pressed');
@@ -800,9 +1036,7 @@
             setTimeout(() => {
                 btn.classList.remove('pressed');
                 board.classList.add('clouds-bg');
-                slideBetweenPages(intro, workspace, () => {
-                    grid.classList.add('revealed');
-                });
+                slideBetweenPages(intro, workspace);
             }, 180);
         }
 
@@ -845,54 +1079,167 @@
         }
 
         function saveInCube() {
-            // Function to be defined later
+            if (isAppleSaved) return;
+            isAppleSaved = true;
+
+            const words = getStoredWords();
+            if (!words.some(w => w.id === 'apple')) {
+                words.unshift(APPLE_WORD);
+                saveStoredWords(words);
+            }
+
+            const btn = document.getElementById('saveCubeBtn');
+            btn.classList.add('saved-state');
+            btn.querySelector('span').textContent = 'Saved ✓';
         }
 
-        function transformToCube() {
+        function openMemoryVault() {
             const workspace = document.getElementById('scanWorkspace');
+            const vault = document.getElementById('memoryVault');
+
+            const words = getStoredWords();
+            // Ensure APPLE is visible in the vault when navigating there
+            if (!words.some(w => w.id === 'apple')) {
+                words.unshift(APPLE_WORD);
+                saveStoredWords(words);
+            }
+
+            renderMemoryConstellation(words);
+
+            slideBetweenPages(workspace, vault, () => {
+                // Re-measure synapses once layout settles
+                setTimeout(() => drawSynapses(), 50);
+            });
+        }
+
+        function renderMemoryConstellation(words) {
+            const canvas = document.getElementById('constellationCanvas');
+            const svg = document.getElementById('synapseSvg');
+
+            // Clear old nodes while keeping SVG
+            canvas.querySelectorAll('.node-wrapper').forEach(n => n.remove());
+            svg.innerHTML = '';
+
+            const containerWidth = Math.min(window.innerWidth - 44, 344);
+            const nodeSize = 82;
+            const verticalStep = 112;
+            const topOffset = 18;
+
+            // Organic staggered X positions matching the neural sketch
+            const xPatterns = [
+                containerWidth * 0.14,
+                containerWidth * 0.62,
+                containerWidth * 0.36,
+                containerWidth * 0.10,
+                containerWidth * 0.64,
+                containerWidth * 0.34
+            ];
+
+            const totalHeight = Math.max(window.innerHeight - 60, topOffset + words.length * verticalStep + 50);
+            canvas.style.height = totalHeight + 'px';
+
+            words.forEach((item, index) => {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'node-wrapper' + (item.isNew ? ' newly-saved' : '');
+                const leftPos = Math.max(8, Math.min(containerWidth - nodeSize - 8, xPatterns[index % xPatterns.length]));
+                const topPos = topOffset + index * verticalStep;
+
+                wrapper.style.left = leftPos + 'px';
+                wrapper.style.top = topPos + 'px';
+                wrapper.style.animationDelay = (index * 0.55) + 's';
+                wrapper.dataset.index = index;
+
+                wrapper.innerHTML = `
+                    <div class="node-cube">
+                        <div class="node-face node-front">
+                            <div class="node-word">${item.word}</div>
+                        </div>
+                        <div class="node-face node-top"></div>
+                        <div class="node-face node-left"></div>
+                        <div class="node-face node-right"></div>
+                        <div class="node-face node-bottom"></div>
+                        <div class="node-face node-back"></div>
+                    </div>
+                `;
+
+                wrapper.onclick = () => inspectMemoryCube(item);
+                canvas.appendChild(wrapper);
+            });
+
+            drawSynapses();
+        }
+
+        function drawSynapses() {
+            const canvas = document.getElementById('constellationCanvas');
+            const svg = document.getElementById('synapseSvg');
+            const nodes = Array.from(canvas.querySelectorAll('.node-wrapper'));
+            svg.innerHTML = '';
+
+            if (nodes.length < 2) return;
+
+            for (let i = 0; i < nodes.length - 1; i++) {
+                const a = nodes[i];
+                const b = nodes[i + 1];
+
+                const x1 = a.offsetLeft + a.offsetWidth / 2;
+                const y1 = a.offsetTop + a.offsetHeight / 2;
+                const x2 = b.offsetLeft + b.offsetWidth / 2;
+                const y2 = b.offsetTop + b.offsetHeight / 2;
+
+                // Subtle organic curve for neural synapse
+                const midX = (x1 + x2) / 2 + (i % 2 === 0 ? 16 : -16);
+                const midY = (y1 + y2) / 2;
+
+                const pathData = `M ${x1} ${y1} Q ${midX} ${midY} ${x2} ${y2}`;
+
+                // Dark hand-drawn outline under yellow synapse
+                const outline = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                outline.setAttribute('d', pathData);
+                outline.setAttribute('fill', 'none');
+                outline.setAttribute('stroke', '#18181b');
+                outline.setAttribute('stroke-width', '5');
+                outline.setAttribute('stroke-linecap', 'round');
+                svg.appendChild(outline);
+
+                // Yellow synapse core
+                const line = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                line.setAttribute('d', pathData);
+                line.setAttribute('fill', 'none');
+                line.setAttribute('stroke', '#fcd34d');
+                line.setAttribute('stroke-width', '2.5');
+                line.setAttribute('stroke-linecap', 'round');
+                svg.appendChild(line);
+            }
+        }
+
+        function inspectMemoryCube(wordData) {
+            const vault = document.getElementById('memoryVault');
             const cubeStage = document.getElementById('cubeStage');
-            const cubeWrapper = document.getElementById('cubeWrapper');
-            const cube = document.getElementById('cube');
 
-            cube.classList.add('folded');
-            cube.style.transform = `translateZ(-75px) rotateX(${rotX}deg) rotateY(${rotY}deg)`;
-            cubeStage.classList.add('assembled');
-            cubeWrapper.classList.add('levitating');
+            document.getElementById('cubeTerm').textContent = wordData.word;
+            document.getElementById('cubePhonetic').textContent = wordData.phonetic;
+            document.getElementById('cubeDef').textContent = wordData.definition;
+            document.getElementById('cubeEx1').innerHTML = wordData.ex1;
+            document.getElementById('cubeEx2').innerHTML = wordData.ex2;
+            document.getElementById('cubeEx3').innerHTML = wordData.ex3;
+            document.getElementById('cubeVisual').textContent = wordData.visual;
 
-            slideBetweenPages(workspace, cubeStage, () => {
-                startAutoSpin();
+            rotX = 0;
+            rotY = 0;
+            applyCubeTransform();
+
+            slideBetweenPages(vault, cubeStage);
+        }
+
+        function returnToVault() {
+            const cubeStage = document.getElementById('cubeStage');
+            const vault = document.getElementById('memoryVault');
+            slideBackToPage(cubeStage, vault, () => {
+                setTimeout(() => drawSynapses(), 50);
             });
         }
 
         const cube = document.getElementById('cube');
-
-        function startAutoSpin() {
-            cube.classList.add('spinning-mode');
-            let lastTime = performance.now();
-            function spinLoop(time) {
-                if (!autoSpinning) return;
-                const delta = time - lastTime;
-                lastTime = time;
-                currentSpinAngle = (currentSpinAngle + delta * 0.018) % 360;
-                cube.style.transform = `translateZ(-75px) rotateX(${rotX}deg) rotateY(${currentSpinAngle.toFixed(1)}deg)`;
-                spinRaf = requestAnimationFrame(spinLoop);
-            }
-            spinRaf = requestAnimationFrame(spinLoop);
-        }
-
-        function stopAutoSpinAndZoomIn() {
-            if (autoSpinning) {
-                autoSpinning = false;
-                cancelAnimationFrame(spinRaf);
-                cube.classList.remove('spinning-mode');
-                document.getElementById('cubeDepthHolder').classList.add('zoomed-in');
-                rotX = 0;
-                rotY = 0;
-                applyCubeTransform();
-                return true;
-            }
-            return false;
-        }
 
         function applyCubeTransform() {
             cube.style.transform = `translateZ(-75px) rotateX(${rotX}deg) rotateY(${rotY}deg)`;
@@ -932,11 +1279,11 @@
             applyCubeTransform();
         }
 
-        function interactAndTiltUp() { if (!stopAutoSpinAndZoomIn()) tiltUp(); }
-        function interactAndTiltDown() { if (!stopAutoSpinAndZoomIn()) tiltDown(); }
-        function interactAndTurnLeft() { if (!stopAutoSpinAndZoomIn()) turnLeft(); }
-        function interactAndTurnRight() { if (!stopAutoSpinAndZoomIn()) turnRight(); }
-        function interactAndTurnBack() { if (!stopAutoSpinAndZoomIn()) turnBack(); }
+        window.addEventListener('resize', () => {
+            if (document.getElementById('memoryVault').style.display === 'flex') {
+                renderMemoryConstellation(getStoredWords());
+            }
+        });
     </script>
 </body>
 </html>
