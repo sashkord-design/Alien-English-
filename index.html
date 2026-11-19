@@ -326,7 +326,7 @@
             color: var(--correct-text);
         }
 
-        /* Paper texture + yellow tint for Store in Memory */
+        /* Paper texture + yellow tint for Memory Cube button (slides in fully opaque from right) */
         .btn-action {
             position: relative;
             background-image: url('frame.png');
@@ -343,19 +343,20 @@
             text-transform: uppercase;
             cursor: pointer;
             width: 100%;
-            opacity: 0;
-            transform: translateY(10px);
+            opacity: 1;
+            transform: translateX(120vw);
             pointer-events: none;
-            transition: opacity 0.35s ease, transform 0.35s ease;
+            transition: transform 0.65s cubic-bezier(0.16, 1, 0.3, 1);
             box-shadow: 2px 3px 0px var(--ink-dark);
             display: flex;
             align-items: center;
             justify-content: center;
+            will-change: transform;
         }
 
         .btn-action.visible {
             opacity: 1;
-            transform: translateY(0);
+            transform: translateX(0);
             pointer-events: auto;
         }
 
@@ -446,19 +447,6 @@
         .cube.folded .face-left   { transform: rotateY(270deg) translateZ(75px); }
         .cube.folded .face-right  { transform: rotateY( 90deg) translateZ(75px); }
         .cube.folded .face-back   { transform: rotateY(180deg) translateZ(75px); }
-
-        .face-tag {
-            position: absolute;
-            top: 8px;
-            left: 10px;
-            z-index: 1;
-            font-size: 7.5px;
-            font-weight: 800;
-            letter-spacing: 0.06em;
-            text-transform: uppercase;
-            color: var(--ink-dark);
-            opacity: 0.72;
-        }
 
         .face-content-element {
             position: relative;
@@ -677,7 +665,7 @@
                     </div>
                 </div>
 
-                <button class="btn-action" id="actionBtn" onclick="transformToCube()"><span>Store in Memory</span></button>
+                <button class="btn-action" id="actionBtn" onclick="transformToCube()"><span>Memory Cube</span></button>
             </div>
 
             <!-- Screen 3: Solid Hand-Drawn 3D Cube -->
@@ -701,7 +689,6 @@
                         <div class="cube spinning-mode folded" id="cube">
                             <!-- Front: Apple Image -->
                             <div class="cube-face face-front" id="faceFront">
-                                <span class="face-tag">Visual</span>
                                 <div class="face-content-element">
                                     <div style="font-size: 46px;">🍎</div>
                                 </div>
@@ -709,7 +696,6 @@
 
                             <!-- Right: Example 1 -->
                             <div class="cube-face face-right" id="faceRight">
-                                <span class="face-tag">Example 1</span>
                                 <div class="face-content-element">
                                     <div class="face-content-text">I eat a fresh <b>apple</b> every morning.</div>
                                 </div>
@@ -717,7 +703,6 @@
 
                             <!-- Back: Example 3 -->
                             <div class="cube-face face-back" id="faceBack">
-                                <span class="face-tag">Example 3</span>
                                 <div class="face-content-element">
                                     <div class="face-content-text">This green <b>apple</b> tastes quite sour.</div>
                                 </div>
@@ -725,7 +710,6 @@
 
                             <!-- Left: Example 2 -->
                             <div class="cube-face face-left" id="faceLeft">
-                                <span class="face-tag">Example 2</span>
                                 <div class="face-content-element">
                                     <div class="face-content-text">She cut the <b>apple</b> into four equal pieces.</div>
                                 </div>
@@ -733,7 +717,6 @@
 
                             <!-- Top: Definition -->
                             <div class="cube-face face-top" id="faceTop">
-                                <span class="face-tag">Definition</span>
                                 <div class="face-content-element">
                                     <div class="face-content-text">The fruit that fell on Igor’s head</div>
                                 </div>
@@ -741,7 +724,6 @@
 
                             <!-- Bottom: Term -->
                             <div class="cube-face face-bottom" id="faceBottom">
-                                <span class="face-tag">Term</span>
                                 <div class="face-content-element">
                                     <div class="term-sketch">APPLE</div>
                                     <div style="font-size: 10px; color: #44403c; font-weight: 600; margin-top: 2px;">/ˈæp.əl/</div>
@@ -838,7 +820,12 @@
                     }
                 });
 
-                document.getElementById('actionBtn').classList.add('visible');
+                const actionBtn = document.getElementById('actionBtn');
+                actionBtn.classList.remove('visible');
+                actionBtn.offsetHeight;
+                requestAnimationFrame(() => {
+                    actionBtn.classList.add('visible');
+                });
             } else {
                 const willFlip = !slotEl.classList.contains('flipped');
                 slotEl.classList.toggle('flipped', willFlip);
