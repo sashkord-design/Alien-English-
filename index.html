@@ -62,7 +62,7 @@
         }
 
         .bg-clouds-page {
-            background-image: url('Background1.png');
+            background-image: url('Background1.webp');
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
@@ -326,7 +326,25 @@
             color: var(--correct-text);
         }
 
-        /* Paper texture + yellow tint for Save in Cube button (slides in fully opaque from right) */
+        /* Dual action row at the bottom of the scan workspace (slides in fully opaque from left) */
+        .action-row {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            width: 100%;
+            opacity: 1;
+            transform: translateX(-120vw);
+            pointer-events: none;
+            transition: transform 0.65s cubic-bezier(0.16, 1, 0.3, 1);
+            will-change: transform;
+        }
+
+        .action-row.visible {
+            transform: translateX(0);
+            pointer-events: auto;
+        }
+
+        /* Paper texture + yellow tint for action buttons */
         .btn-action {
             position: relative;
             background-image: url('frame.png');
@@ -336,28 +354,18 @@
             border-radius: 14px;
             overflow: hidden;
             color: var(--ink-dark);
-            padding: 12px 20px;
-            font-size: 12.5px;
+            padding: 12px 12px;
+            font-size: 12px;
             font-weight: 800;
-            letter-spacing: 0.05em;
+            letter-spacing: 0.04em;
             text-transform: uppercase;
             cursor: pointer;
             width: 100%;
-            opacity: 1;
-            transform: translateX(120vw);
-            pointer-events: none;
-            transition: transform 0.65s cubic-bezier(0.16, 1, 0.3, 1);
             box-shadow: 2px 3px 0px var(--ink-dark);
             display: flex;
             align-items: center;
             justify-content: center;
-            will-change: transform;
-        }
-
-        .btn-action.visible {
-            opacity: 1;
-            transform: translateX(0);
-            pointer-events: auto;
+            text-align: center;
         }
 
         .btn-action:active {
@@ -665,7 +673,10 @@
                     </div>
                 </div>
 
-                <button class="btn-action" id="actionBtn" onclick="transformToCube()"><span>Save in Cube</span></button>
+                <div class="action-row" id="actionRow">
+                    <button class="btn-action" id="saveCubeBtn" onclick="saveInCube()"><span>Save in Cube</span></button>
+                    <button class="btn-action" id="goCubeBtn" onclick="transformToCube()"><span>Go to Cube</span></button>
+                </div>
             </div>
 
             <!-- Screen 3: Solid Hand-Drawn 3D Cube -->
@@ -820,17 +831,21 @@
                     }
                 });
 
-                const actionBtn = document.getElementById('actionBtn');
-                actionBtn.classList.remove('visible');
-                actionBtn.offsetHeight;
+                const actionRow = document.getElementById('actionRow');
+                actionRow.classList.remove('visible');
+                actionRow.offsetHeight;
                 requestAnimationFrame(() => {
-                    actionBtn.classList.add('visible');
+                    actionRow.classList.add('visible');
                 });
             } else {
                 const willFlip = !slotEl.classList.contains('flipped');
                 slotEl.classList.toggle('flipped', willFlip);
                 slotEl.classList.toggle('wrong', willFlip);
             }
+        }
+
+        function saveInCube() {
+            // Function to be defined later
         }
 
         function transformToCube() {
