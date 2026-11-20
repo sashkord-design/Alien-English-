@@ -118,7 +118,7 @@
             inset: 0;
             margin: auto;
             width: 100%;
-            height: fit-content;
+            height: 100%;
             opacity: 1;
             transition: transform 0.72s cubic-bezier(0.16, 1, 0.3, 1), filter 0.45s ease;
             will-change: transform, filter;
@@ -140,6 +140,7 @@
         /* 1. INTRO SCREEN */
         .intro-screen {
             width: 100%;
+            height: auto;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -232,6 +233,7 @@
         /* 2. SCAN WORKSPACE */
         .scan-workspace {
             width: 100%;
+            height: auto;
             display: none;
             flex-direction: column;
             align-items: center;
@@ -530,27 +532,28 @@
             user-select: none;
             -webkit-user-select: none;
             position: relative;
+            transform: none !important;
         }
 
         .webgl-cube-holder {
             position: relative;
-            width: 256px;
-            height: 256px;
-            margin-bottom: 24px;
+            width: 264px;
+            height: 264px;
+            margin: 0 auto 24px;
             display: flex;
             align-items: center;
             justify-content: center;
-            transform: scale(0.84);
-            transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+            transform: scale(0.88);
+            transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
         }
 
         .webgl-cube-holder.approached {
-            transform: scale(1.04);
+            transform: scale(1.02);
         }
 
         #threeCanvasHost {
-            width: 256px;
-            height: 256px;
+            width: 264px;
+            height: 264px;
             position: relative;
             z-index: 5;
         }
@@ -677,7 +680,7 @@
             </div>
 
             <!-- Screen 4: Three.js WebGL 3D Cube Inspection -->
-            <div class="cube-stage page-slide assembled" id="cubeStage">
+            <div class="cube-stage" id="cubeStage">
                 <div class="webgl-cube-holder" id="cubeDepthHolder">
                     <div id="threeCanvasHost"></div>
                     <div class="touch-overlay">
@@ -777,7 +780,7 @@
 
         function getStoredWords() {
             try {
-                const raw = localStorage.getItem('alien_memory_cubes_v9');
+                const raw = localStorage.getItem('alien_memory_cubes_v10');
                 if (raw) {
                     const parsed = JSON.parse(raw);
                     if (Array.isArray(parsed) && parsed.length > 0) return parsed;
@@ -788,7 +791,7 @@
 
         function saveStoredWords(words) {
             try {
-                localStorage.setItem('alien_memory_cubes_v9', JSON.stringify(words));
+                localStorage.setItem('alien_memory_cubes_v10', JSON.stringify(words));
             } catch (e) {}
         }
 
@@ -938,13 +941,13 @@
             }, 720);
         }
 
-        // Smooth rounded stone cube geometry
-        function createSmoothRoundedCubeGeometry(size, rounding = 0.24) {
-            const segs = 14;
+        // Slightly sharper stone cube geometry with subtle edge bevel/rounding
+        function createSharperStoneCubeGeometry(size, rounding = 0.11) {
+            const segs = 12;
             const geom = new THREE.BoxGeometry(size, size, size, segs, segs, segs);
             const pos = geom.attributes.position;
             const half = size * 0.5;
-            const r = Math.min(half * 0.95, size * rounding);
+            const r = Math.min(half * 0.9, size * rounding);
             const inner = Math.max(0.001, half - r);
 
             for (let i = 0; i < pos.count; i++) {
@@ -962,7 +965,7 @@
                 const len = Math.hypot(dx, dy, dz);
 
                 if (len > 0.00001) {
-                    const targetLen = Math.min(r, len * 1.18);
+                    const targetLen = Math.min(r, len * 1.12);
                     x = cx + (dx / len) * targetLen;
                     y = cy + (dy / len) * targetLen;
                     z = cz + (dz / len) * targetLen;
@@ -980,7 +983,7 @@
             return x - Math.floor(x);
         }
 
-        // Muted grey multi-stone texture with kept speckles and reduced dark blotches
+        // Greyer multi-stone texture with more stone imperfections (scratches, chips, pores, grain)
         function createMultiStoneTextures(lines, options = {}, seedOffset = 1) {
             const size = 512;
             const colorCanvas = document.createElement('canvas');
@@ -993,27 +996,29 @@
             bumpCanvas.height = size;
             const bctx = bumpCanvas.getContext('2d');
 
-            ctx.fillStyle = '#b4b8bf';
+            // Deeper, more neutral grey stone base
+            ctx.fillStyle = '#9ea3ac';
             ctx.fillRect(0, 0, size, size);
 
             bctx.fillStyle = '#808080';
             bctx.fillRect(0, 0, size, size);
 
-            // Reduced number of multi-stone patches (fewer dark patches)
+            // Muted grey multi-stone patches + faint blue-violet reflection
             const greyPatches = [
-                'rgba(162, 167, 176, 0.42)',
-                'rgba(142, 147, 156, 0.34)',
-                'rgba(180, 184, 192, 0.38)',
-                'rgba(138, 140, 164, 0.16)',
-                'rgba(150, 138, 166, 0.15)'
+                'rgba(138, 143, 152, 0.45)',
+                'rgba(118, 123, 132, 0.42)',
+                'rgba(154, 158, 166, 0.36)',
+                'rgba(108, 113, 124, 0.35)',
+                'rgba(122, 124, 148, 0.14)',
+                'rgba(132, 122, 148, 0.13)'
             ];
 
-            for (let i = 0; i < 8; i++) {
+            for (let i = 0; i < 12; i++) {
                 const s = seedOffset * 100 + i * 17;
                 const cx = seededRand(s + 1) * size;
                 const cy = seededRand(s + 2) * size;
-                const rx = 28 + seededRand(s + 3) * 64;
-                const ry = 22 + seededRand(s + 4) * 52;
+                const rx = 24 + seededRand(s + 3) * 60;
+                const ry = 20 + seededRand(s + 4) * 50;
                 const verts = 5 + Math.floor(seededRand(s + 5) * 3);
                 const rot = seededRand(s + 6) * Math.PI * 2;
                 const col = greyPatches[i % greyPatches.length];
@@ -1024,7 +1029,7 @@
                 ctx.beginPath();
                 for (let v = 0; v < verts; v++) {
                     const ang = (v / verts) * Math.PI * 2;
-                    const radScale = 0.72 + seededRand(s + 10 + v) * 0.42;
+                    const radScale = 0.7 + seededRand(s + 10 + v) * 0.45;
                     const px = Math.cos(ang) * rx * radScale;
                     const py = Math.sin(ang) * ry * radScale;
                     if (v === 0) ctx.moveTo(px, py);
@@ -1041,54 +1046,84 @@
                 bctx.beginPath();
                 for (let v = 0; v < verts; v++) {
                     const ang = (v / verts) * Math.PI * 2;
-                    const radScale = 0.72 + seededRand(s + 10 + v) * 0.42;
+                    const radScale = 0.7 + seededRand(s + 10 + v) * 0.45;
                     const px = Math.cos(ang) * rx * radScale;
                     const py = Math.sin(ang) * ry * radScale;
                     if (v === 0) bctx.moveTo(px, py);
                     else bctx.lineTo(px, py);
                 }
                 bctx.closePath();
-                bctx.fillStyle = i % 2 === 0 ? 'rgba(148, 148, 148, 0.25)' : 'rgba(112, 112, 112, 0.25)';
+                bctx.fillStyle = i % 2 === 0 ? 'rgba(156, 156, 156, 0.34)' : 'rgba(102, 102, 102, 0.34)';
                 bctx.fill();
                 bctx.restore();
             }
 
-            // Subtle blue-violet sheen matching Background2.webp
+            // Subtle blue-violet reflection matching Background2.webp
             const sheen = ctx.createLinearGradient(0, 0, size, size);
-            sheen.addColorStop(0, 'rgba(99, 102, 241, 0.09)');
-            sheen.addColorStop(0.55, 'rgba(139, 92, 246, 0.07)');
+            sheen.addColorStop(0, 'rgba(99, 102, 241, 0.08)');
+            sheen.addColorStop(0.55, 'rgba(139, 92, 246, 0.06)');
             sheen.addColorStop(1, 'rgba(59, 130, 246, 0.04)');
             ctx.fillStyle = sheen;
             ctx.fillRect(0, 0, size, size);
 
-            // Kept speckles & stone dots
-            for (let p = 0; p < 34; p++) {
-                const sp = seedOffset * 500 + p * 31;
-                const px = 18 + seededRand(sp + 1) * (size - 36);
-                const py = 18 + seededRand(sp + 2) * (size - 36);
-                const pr = 1.4 + seededRand(sp + 3) * 3.8;
+            // Surface imperfections: fine stone cracks & scratches
+            for (let c = 0; c < 14; c++) {
+                const sc = seedOffset * 300 + c * 29;
+                let x = 24 + seededRand(sc + 1) * (size - 48);
+                let y = 24 + seededRand(sc + 2) * (size - 48);
+                let ang = seededRand(sc + 3) * Math.PI * 2;
+                const steps = 4 + Math.floor(seededRand(sc + 4) * 4);
 
-                ctx.fillStyle = 'rgba(24, 24, 27, 0.22)';
+                ctx.strokeStyle = 'rgba(24, 24, 27, 0.25)';
+                ctx.lineWidth = 1.2 + seededRand(sc + 5) * 1.1;
+                ctx.beginPath();
+                ctx.moveTo(x, y);
+
+                bctx.strokeStyle = 'rgba(35, 35, 35, 0.75)';
+                bctx.lineWidth = 1.8;
+                bctx.beginPath();
+                bctx.moveTo(x, y);
+
+                for (let st = 0; st < steps; st++) {
+                    ang += (seededRand(sc + 10 + st) - 0.5) * 0.9;
+                    const segLen = 8 + seededRand(sc + 20 + st) * 14;
+                    x += Math.cos(ang) * segLen;
+                    y += Math.sin(ang) * segLen;
+                    ctx.lineTo(x, y);
+                    bctx.lineTo(x, y);
+                }
+                ctx.stroke();
+                bctx.stroke();
+            }
+
+            // Kept speckles & stone chips
+            for (let p = 0; p < 44; p++) {
+                const sp = seedOffset * 500 + p * 31;
+                const px = 14 + seededRand(sp + 1) * (size - 28);
+                const py = 14 + seededRand(sp + 2) * (size - 28);
+                const pr = 1.2 + seededRand(sp + 3) * 3.4;
+
+                ctx.fillStyle = p % 4 === 0 ? 'rgba(226, 232, 240, 0.22)' : 'rgba(24, 24, 27, 0.24)';
                 ctx.beginPath();
                 ctx.arc(px, py, pr, 0, Math.PI * 2);
                 ctx.fill();
 
-                bctx.fillStyle = 'rgba(55, 55, 55, 0.55)';
+                bctx.fillStyle = p % 4 === 0 ? 'rgba(205, 205, 205, 0.55)' : 'rgba(45, 45, 45, 0.65)';
                 bctx.beginPath();
                 bctx.arc(px, py, pr + 0.8, 0, Math.PI * 2);
                 bctx.fill();
             }
 
-            // Fine mineral grain
-            for (let g = 0; g < 600; g++) {
+            // Fine mineral grain & micro-flaws
+            for (let g = 0; g < 750; g++) {
                 const gs = seedOffset * 900 + g * 13;
                 const gx = seededRand(gs + 1) * size;
                 const gy = seededRand(gs + 2) * size;
                 const isLight = seededRand(gs + 3) > 0.5;
-                ctx.fillStyle = isLight ? 'rgba(255, 255, 255, 0.09)' : 'rgba(24, 24, 27, 0.05)';
+                ctx.fillStyle = isLight ? 'rgba(255, 255, 255, 0.08)' : 'rgba(24, 24, 27, 0.07)';
                 ctx.fillRect(gx, gy, 2, 2);
 
-                bctx.fillStyle = isLight ? 'rgba(175, 175, 175, 0.24)' : 'rgba(80, 80, 80, 0.24)';
+                bctx.fillStyle = isLight ? 'rgba(185, 185, 185, 0.30)' : 'rgba(70, 70, 70, 0.30)';
                 bctx.fillRect(gx, gy, 2, 2);
             }
 
@@ -1110,7 +1145,7 @@
                 ctx.fillText(lines[0], size / 2, size / 2 - 20);
                 if (lines[1]) {
                     ctx.font = '600 32px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-                    ctx.fillStyle = '#3f3f46';
+                    ctx.fillStyle = '#27272a';
                     ctx.fillText(lines[1], size / 2, size / 2 + 42);
                 }
             } else {
@@ -1185,7 +1220,6 @@
                 if (typeof THREE !== 'undefined') {
                     const miniScene = new THREE.Scene();
                     const miniCam = new THREE.PerspectiveCamera(36, 1, 0.1, 50);
-                    // Level straight-on camera angle with comfortable margin so edges never clip
                     miniCam.position.set(0, 0, 5.15);
                     miniCam.lookAt(0, 0, 0);
 
@@ -1193,18 +1227,18 @@
                     miniRenderer.setSize(126, 126);
                     miniRenderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
 
-                    miniScene.add(new THREE.AmbientLight(0xdbeafe, 0.94));
-                    const dLight = new THREE.DirectionalLight(0xffffff, 0.72);
+                    miniScene.add(new THREE.AmbientLight(0xd4d8e8, 0.85));
+                    const dLight = new THREE.DirectionalLight(0xe4e4e7, 0.65);
                     dLight.position.set(2, 2.5, 4);
                     miniScene.add(dLight);
 
-                    const geom = createSmoothRoundedCubeGeometry(2.0, 0.24);
+                    const geom = createSharperStoneCubeGeometry(2.02, 0.11);
                     const stoneSet = createMultiStoneTextures([item.word], { isMiniWord: true }, index + 1);
                     const mats = Array.from({ length: 6 }, () => new THREE.MeshStandardMaterial({
                         map: stoneSet.map,
                         bumpMap: stoneSet.bumpMap,
-                        bumpScale: 0.022,
-                        roughness: 0.78,
+                        bumpScale: 0.035,
+                        roughness: 0.84,
                         metalness: 0.05
                     }));
 
@@ -1256,23 +1290,23 @@
             if (!renderer) {
                 scene = new THREE.Scene();
                 camera = new THREE.PerspectiveCamera(38, 1, 0.1, 100);
-                camera.position.set(0, 0, 5.45);
+                camera.position.set(0, 0, 5.5);
                 camera.lookAt(0, 0, 0);
 
                 renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-                renderer.setSize(256, 256);
+                renderer.setSize(264, 264);
                 renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
                 host.innerHTML = '';
                 host.appendChild(renderer.domElement);
 
-                const ambient = new THREE.AmbientLight(0xdbeafe, 0.94);
+                const ambient = new THREE.AmbientLight(0xd4d8e8, 0.85);
                 scene.add(ambient);
 
-                const keyLight = new THREE.DirectionalLight(0xffffff, 0.72);
+                const keyLight = new THREE.DirectionalLight(0xe4e4e7, 0.65);
                 keyLight.position.set(2, 2.5, 4);
                 scene.add(keyLight);
 
-                const rimLight = new THREE.DirectionalLight(0x818cf8, 0.24);
+                const rimLight = new THREE.DirectionalLight(0x818cf8, 0.2);
                 rimLight.position.set(-2.5, -1.5, -2);
                 scene.add(rimLight);
             }
@@ -1281,7 +1315,7 @@
                 scene.remove(stoneCubeMesh);
             }
 
-            const geom = createSmoothRoundedCubeGeometry(2.04, 0.22);
+            const geom = createSharperStoneCubeGeometry(2.04, 0.10);
 
             const faceSets = [
                 createMultiStoneTextures([wordData.ex1], { fontSize: 36 }, 11),
@@ -1295,8 +1329,8 @@
             const materials = faceSets.map((set) => new THREE.MeshStandardMaterial({
                 map: set.map,
                 bumpMap: set.bumpMap,
-                bumpScale: 0.022,
-                roughness: 0.78,
+                bumpScale: 0.035,
+                roughness: 0.84,
                 metalness: 0.05
             }));
 
@@ -1324,7 +1358,7 @@
             if (stoneCubeMesh) {
                 stoneCubeMesh.rotation.x = THREE.MathUtils.degToRad(currentRotX);
                 stoneCubeMesh.rotation.y = THREE.MathUtils.degToRad(currentRotY);
-                stoneCubeMesh.position.y = Math.sin(performance.now() * 0.0022) * 0.04;
+                stoneCubeMesh.position.y = Math.sin(performance.now() * 0.0022) * 0.035;
             }
 
             renderer.render(scene, camera);
@@ -1351,8 +1385,6 @@
 
             holder.classList.remove('approached');
             cubeStage.style.display = 'flex';
-            cubeStage.classList.remove('exit-to-left');
-            cubeStage.classList.add('active-center');
             holder.offsetHeight;
 
             requestAnimationFrame(() => {
