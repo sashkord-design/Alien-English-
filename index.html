@@ -419,7 +419,7 @@
             overflow-y: hidden;
             -webkit-overflow-scrolling: touch;
             scrollbar-width: none;
-            padding: 20px 16px;
+            padding: 18px 14px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -435,20 +435,20 @@
 
         .vault-grid {
             display: grid;
-            grid-template-rows: repeat(2, 104px);
+            grid-template-rows: repeat(2, 122px);
             grid-auto-flow: column;
-            grid-auto-columns: 104px;
-            row-gap: 28px;
-            column-gap: 32px;
+            grid-auto-columns: 122px;
+            row-gap: 24px;
+            column-gap: 26px;
             width: max-content;
             align-items: center;
             justify-items: center;
-            padding: 6px;
+            padding: 4px;
         }
 
         .vault-node-slot {
-            width: 104px;
-            height: 104px;
+            width: 122px;
+            height: 122px;
             cursor: pointer;
             animation: node-levitate 4.4s ease-in-out infinite;
             flex-shrink: 0;
@@ -468,8 +468,8 @@
         }
 
         .vault-mini-canvas {
-            width: 104px;
-            height: 104px;
+            width: 122px;
+            height: 122px;
             display: block;
         }
 
@@ -531,8 +531,8 @@
 
         .webgl-cube-holder {
             position: relative;
-            width: 244px;
-            height: 244px;
+            width: 248px;
+            height: 248px;
             margin-top: 34px;
             display: flex;
             align-items: center;
@@ -542,12 +542,12 @@
         }
 
         .webgl-cube-holder.approached {
-            transform: translateY(18px) scale(1.04);
+            transform: translateY(18px) scale(1.05);
         }
 
         #threeCanvasHost {
-            width: 244px;
-            height: 244px;
+            width: 248px;
+            height: 248px;
             position: relative;
             z-index: 5;
         }
@@ -856,7 +856,7 @@
 
         function getStoredWords() {
             try {
-                const raw = localStorage.getItem('alien_memory_cubes_v7');
+                const raw = localStorage.getItem('alien_memory_cubes_v8');
                 if (raw) {
                     const parsed = JSON.parse(raw);
                     if (Array.isArray(parsed) && parsed.length > 0) return parsed;
@@ -867,7 +867,7 @@
 
         function saveStoredWords(words) {
             try {
-                localStorage.setItem('alien_memory_cubes_v7', JSON.stringify(words));
+                localStorage.setItem('alien_memory_cubes_v8', JSON.stringify(words));
             } catch (e) {}
         }
 
@@ -985,7 +985,7 @@
             });
         }
 
-        // Build a cube with smooth rounded vertices and no sharp points or border frames
+        // Smooth rounded stone cube geometry
         function createSmoothRoundedCubeGeometry(size, rounding = 0.24) {
             const segs = 14;
             const geom = new THREE.BoxGeometry(size, size, size, segs, segs, segs);
@@ -999,7 +999,6 @@
                 let y = pos.getY(i);
                 let z = pos.getZ(i);
 
-                // Clamp inner core and project outward onto a rounded corner sphere
                 const cx = Math.max(-inner, Math.min(inner, x));
                 const cy = Math.max(-inner, Math.min(inner, y));
                 const cz = Math.max(-inner, Math.min(inner, z));
@@ -1023,39 +1022,135 @@
             return geom;
         }
 
-        // Create grey-toned texture with faint blue-violet reflection, no frame border, no wave
-        function createGreyCubeTexture(lines, options = {}) {
+        // Deterministic helper for consistent multi-stone blotches & speckles
+        function seededRand(seed) {
+            const x = Math.sin(seed * 12.9898 + 78.233) * 43758.5453;
+            return x - Math.floor(x);
+        }
+
+        // Generates both color map and bump map in muted grey multi-stone style
+        function createMultiStoneTextures(lines, options = {}, seedOffset = 1) {
             const size = 512;
-            const canvas = document.createElement('canvas');
-            canvas.width = size;
-            canvas.height = size;
-            const ctx = canvas.getContext('2d');
+            const colorCanvas = document.createElement('canvas');
+            colorCanvas.width = size;
+            colorCanvas.height = size;
+            const ctx = colorCanvas.getContext('2d');
 
-            // Neutral grey base
-            const baseGrad = ctx.createLinearGradient(0, 0, size, size);
-            baseGrad.addColorStop(0, '#c8ccd2');
-            baseGrad.addColorStop(0.55, '#b8bec6');
-            baseGrad.addColorStop(1, '#a7aeb8');
-            ctx.fillStyle = baseGrad;
+            const bumpCanvas = document.createElement('canvas');
+            bumpCanvas.width = size;
+            bumpCanvas.height = size;
+            const bctx = bumpCanvas.getContext('2d');
+
+            // Base muted grey tone
+            ctx.fillStyle = '#b4b8bf';
             ctx.fillRect(0, 0, size, size);
 
-            // Very subtle blue-violet reflection matching Background2.webp
-            const reflGrad = ctx.createLinearGradient(0, 0, size, size);
-            reflGrad.addColorStop(0, 'rgba(99, 102, 241, 0.10)');
-            reflGrad.addColorStop(0.6, 'rgba(139, 92, 246, 0.08)');
-            reflGrad.addColorStop(1, 'rgba(59, 130, 246, 0.05)');
-            ctx.fillStyle = reflGrad;
-            ctx.fillRect(0, 0, size, size);
+            bctx.fillStyle = '#808080';
+            bctx.fillRect(0, 0, size, size);
 
-            // Soft subtle grain without blotchy rings
-            for (let j = 0; j < 360; j++) {
-                const gx = (j * 79 + 13) % size;
-                const gy = (j * 131 + 29) % size;
-                ctx.fillStyle = j % 2 === 0 ? 'rgba(24, 24, 27, 0.045)' : 'rgba(255, 255, 255, 0.08)';
-                ctx.fillRect(gx, gy, 2, 2);
+            // Multi-stone angular/faceted patches in muted grey shades + faint blue-violet cast
+            const greyPatches = [
+                'rgba(156, 161, 170, 0.55)',
+                'rgba(132, 137, 146, 0.50)',
+                'rgba(176, 180, 188, 0.45)',
+                'rgba(116, 121, 132, 0.42)',
+                'rgba(136, 138, 162, 0.22)',
+                'rgba(148, 134, 166, 0.20)'
+            ];
+
+            for (let i = 0; i < 24; i++) {
+                const s = seedOffset * 100 + i * 17;
+                const cx = seededRand(s + 1) * size;
+                const cy = seededRand(s + 2) * size;
+                const rx = 28 + seededRand(s + 3) * 68;
+                const ry = 22 + seededRand(s + 4) * 58;
+                const verts = 5 + Math.floor(seededRand(s + 5) * 3);
+                const rot = seededRand(s + 6) * Math.PI * 2;
+                const col = greyPatches[i % greyPatches.length];
+
+                ctx.save();
+                ctx.translate(cx, cy);
+                ctx.rotate(rot);
+                ctx.beginPath();
+                for (let v = 0; v < verts; v++) {
+                    const ang = (v / verts) * Math.PI * 2;
+                    const radScale = 0.72 + seededRand(s + 10 + v) * 0.42;
+                    const px = Math.cos(ang) * rx * radScale;
+                    const py = Math.sin(ang) * ry * radScale;
+                    if (v === 0) ctx.moveTo(px, py);
+                    else ctx.lineTo(px, py);
+                }
+                ctx.closePath();
+                ctx.fillStyle = col;
+                ctx.fill();
+
+                // Fine ink-like stone seam on selected patches
+                if (i % 3 === 0) {
+                    ctx.strokeStyle = 'rgba(39, 39, 42, 0.22)';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                }
+                ctx.restore();
+
+                // Bump relief for stone patches
+                bctx.save();
+                bctx.translate(cx, cy);
+                bctx.rotate(rot);
+                bctx.beginPath();
+                for (let v = 0; v < verts; v++) {
+                    const ang = (v / verts) * Math.PI * 2;
+                    const radScale = 0.72 + seededRand(s + 10 + v) * 0.42;
+                    const px = Math.cos(ang) * rx * radScale;
+                    const py = Math.sin(ang) * ry * radScale;
+                    if (v === 0) bctx.moveTo(px, py);
+                    else bctx.lineTo(px, py);
+                }
+                bctx.closePath();
+                bctx.fillStyle = i % 2 === 0 ? 'rgba(155, 155, 155, 0.35)' : 'rgba(105, 105, 105, 0.35)';
+                bctx.fill();
+                bctx.restore();
             }
 
-            // Straight, non-wavy typography
+            // Subtle blue-violet sheen matching Background2.webp
+            const sheen = ctx.createLinearGradient(0, 0, size, size);
+            sheen.addColorStop(0, 'rgba(99, 102, 241, 0.10)');
+            sheen.addColorStop(0.55, 'rgba(139, 92, 246, 0.08)');
+            sheen.addColorStop(1, 'rgba(59, 130, 246, 0.05)');
+            ctx.fillStyle = sheen;
+            ctx.fillRect(0, 0, size, size);
+
+            // Small stone pores & mineral flecks (no border frame)
+            for (let p = 0; p < 34; p++) {
+                const sp = seedOffset * 500 + p * 31;
+                const px = 18 + seededRand(sp + 1) * (size - 36);
+                const py = 18 + seededRand(sp + 2) * (size - 36);
+                const pr = 1.5 + seededRand(sp + 3) * 4.2;
+
+                ctx.fillStyle = 'rgba(24, 24, 27, 0.24)';
+                ctx.beginPath();
+                ctx.arc(px, py, pr, 0, Math.PI * 2);
+                ctx.fill();
+
+                bctx.fillStyle = 'rgba(45, 45, 45, 0.65)';
+                bctx.beginPath();
+                bctx.arc(px, py, pr + 1, 0, Math.PI * 2);
+                bctx.fill();
+            }
+
+            // Fine mineral grain
+            for (let g = 0; g < 650; g++) {
+                const gs = seedOffset * 900 + g * 13;
+                const gx = seededRand(gs + 1) * size;
+                const gy = seededRand(gs + 2) * size;
+                const isLight = seededRand(gs + 3) > 0.5;
+                ctx.fillStyle = isLight ? 'rgba(255, 255, 255, 0.10)' : 'rgba(24, 24, 27, 0.07)';
+                ctx.fillRect(gx, gy, 2, 2);
+
+                bctx.fillStyle = isLight ? 'rgba(180, 180, 180, 0.28)' : 'rgba(75, 75, 75, 0.28)';
+                bctx.fillRect(gx, gy, 2, 2);
+            }
+
+            // Straight, non-wavy text overlay
             ctx.fillStyle = '#18181b';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
@@ -1102,9 +1197,13 @@
                 });
             }
 
-            const tex = new THREE.CanvasTexture(canvas);
-            tex.anisotropy = 4;
-            return tex;
+            const map = new THREE.CanvasTexture(colorCanvas);
+            map.anisotropy = 4;
+
+            const bumpMap = new THREE.CanvasTexture(bumpCanvas);
+            bumpMap.anisotropy = 4;
+
+            return { map, bumpMap };
         }
 
         function disposeVaultMiniCubes() {
@@ -1134,8 +1233,8 @@
 
                 const canvas = document.createElement('canvas');
                 canvas.className = 'vault-mini-canvas';
-                canvas.width = 208;
-                canvas.height = 208;
+                canvas.width = 244;
+                canvas.height = 244;
                 slot.appendChild(canvas);
 
                 slot.onclick = () => inspectMemoryCube(item, slot);
@@ -1144,22 +1243,24 @@
                 if (typeof THREE !== 'undefined') {
                     const miniScene = new THREE.Scene();
                     const miniCam = new THREE.PerspectiveCamera(36, 1, 0.1, 50);
-                    miniCam.position.set(0, 0, 4.6);
+                    miniCam.position.set(0, 0, 4.35);
 
                     const miniRenderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
-                    miniRenderer.setSize(104, 104);
+                    miniRenderer.setSize(122, 122);
                     miniRenderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
 
-                    miniScene.add(new THREE.AmbientLight(0xdbeafe, 0.95));
-                    const dLight = new THREE.DirectionalLight(0xffffff, 0.65);
+                    miniScene.add(new THREE.AmbientLight(0xdbeafe, 0.92));
+                    const dLight = new THREE.DirectionalLight(0xffffff, 0.72);
                     dLight.position.set(2, 3, 4);
                     miniScene.add(dLight);
 
-                    const geom = createSmoothRoundedCubeGeometry(1.95, 0.24);
-                    const faceTex = createGreyCubeTexture([item.word], { isMiniWord: true });
+                    const geom = createSmoothRoundedCubeGeometry(2.05, 0.24);
+                    const stoneSet = createMultiStoneTextures([item.word], { isMiniWord: true }, index + 1);
                     const mats = Array.from({ length: 6 }, () => new THREE.MeshStandardMaterial({
-                        map: faceTex,
-                        roughness: 0.72,
+                        map: stoneSet.map,
+                        bumpMap: stoneSet.bumpMap,
+                        bumpScale: 0.025,
+                        roughness: 0.78,
                         metalness: 0.05
                     }));
 
@@ -1192,7 +1293,6 @@
                 lastTime = now;
 
                 vaultMiniCubes.forEach((entry) => {
-                    // Half speed, single consistent direction
                     entry.angle = (entry.angle + delta * 0.0105) % 360;
                     entry.mesh.rotation.y = THREE.MathUtils.degToRad(entry.angle);
                     entry.renderer.render(entry.scene, entry.camera);
@@ -1214,15 +1314,15 @@
                 camera.position.set(0, 0, 5.2);
 
                 renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-                renderer.setSize(244, 244);
+                renderer.setSize(248, 248);
                 renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
                 host.innerHTML = '';
                 host.appendChild(renderer.domElement);
 
-                const ambient = new THREE.AmbientLight(0xdbeafe, 0.95);
+                const ambient = new THREE.AmbientLight(0xdbeafe, 0.92);
                 scene.add(ambient);
 
-                const keyLight = new THREE.DirectionalLight(0xffffff, 0.68);
+                const keyLight = new THREE.DirectionalLight(0xffffff, 0.72);
                 keyLight.position.set(2.5, 4, 4);
                 scene.add(keyLight);
 
@@ -1235,20 +1335,22 @@
                 scene.remove(stoneCubeMesh);
             }
 
-            const geom = createSmoothRoundedCubeGeometry(2.05, 0.22);
+            const geom = createSmoothRoundedCubeGeometry(2.08, 0.22);
 
-            const textures = [
-                createGreyCubeTexture([wordData.ex1], { fontSize: 36 }),
-                createGreyCubeTexture([wordData.ex2], { fontSize: 36 }),
-                createGreyCubeTexture([wordData.definition], { fontSize: 36 }),
-                createGreyCubeTexture([wordData.visual], { isEmoji: true }),
-                createGreyCubeTexture([wordData.word, wordData.phonetic], { isTitle: true }),
-                createGreyCubeTexture([wordData.ex3], { fontSize: 36 })
+            const faceSets = [
+                createMultiStoneTextures([wordData.ex1], { fontSize: 36 }, 11),
+                createMultiStoneTextures([wordData.ex2], { fontSize: 36 }, 12),
+                createMultiStoneTextures([wordData.definition], { fontSize: 36 }, 13),
+                createMultiStoneTextures([wordData.visual], { isEmoji: true }, 14),
+                createMultiStoneTextures([wordData.word, wordData.phonetic], { isTitle: true }, 15),
+                createMultiStoneTextures([wordData.ex3], { fontSize: 36 }, 16)
             ];
 
-            const materials = textures.map((tex) => new THREE.MeshStandardMaterial({
-                map: tex,
-                roughness: 0.74,
+            const materials = faceSets.map((set) => new THREE.MeshStandardMaterial({
+                map: set.map,
+                bumpMap: set.bumpMap,
+                bumpScale: 0.025,
+                roughness: 0.78,
                 metalness: 0.05
             }));
 
