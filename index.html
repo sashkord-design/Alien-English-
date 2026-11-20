@@ -398,7 +398,7 @@
             box-shadow: 1px 1px 0px var(--ink-dark);
         }
 
-        /* 3. MEMORY STORAGE ORGANIC GRID WITH SCROLL */
+        /* 3. MEMORY STORAGE 2-PER-ROW GRID WITH SCROLL */
         .memory-vault {
             display: none;
             flex-direction: column;
@@ -421,7 +421,7 @@
             overflow-x: hidden;
             -webkit-overflow-scrolling: touch;
             scrollbar-width: none;
-            padding: 14px 4px 30px;
+            padding: 18px 12px 36px;
         }
 
         .vault-scroll::-webkit-scrollbar {
@@ -430,24 +430,24 @@
 
         .vault-grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            row-gap: 24px;
-            column-gap: 10px;
+            grid-template-columns: repeat(2, 1fr);
+            row-gap: 32px;
+            column-gap: 18px;
             width: 100%;
-            min-height: calc(100dvh - 56px);
-            align-content: space-between;
+            min-height: 100%;
+            align-content: start;
             justify-items: center;
-            padding: 8px 2px;
+            padding: 10px 6px;
         }
 
         .node-wrapper {
-            width: 72px;
-            height: 72px;
+            width: 82px;
+            height: 82px;
             cursor: pointer;
-            perspective: 700px;
+            perspective: 750px;
             animation: node-levitate 4.4s ease-in-out infinite;
             flex-shrink: 0;
-            transition: opacity 0.25s ease;
+            transition: opacity 0.2s ease;
         }
 
         .node-wrapper.picked-out {
@@ -461,8 +461,8 @@
         }
 
         .node-cube {
-            width: 72px;
-            height: 72px;
+            width: 82px;
+            height: 82px;
             position: relative;
             transform-style: preserve-3d;
             -webkit-transform-style: preserve-3d;
@@ -474,8 +474,8 @@
             position: absolute;
             top: 0;
             left: 0;
-            width: 72px;
-            height: 72px;
+            width: 82px;
+            height: 82px;
             border: 2px solid var(--ink-dark);
             border-radius: 0;
             background-image: url('frame.png');
@@ -486,7 +486,7 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 4px;
+            padding: 5px;
             text-align: center;
             backface-visibility: hidden;
             -webkit-backface-visibility: hidden;
@@ -501,23 +501,23 @@
             pointer-events: none;
         }
 
-        .node-front  { transform: rotateY(  0deg) translateZ(36px); }
-        .node-right  { transform: rotateY( 90deg) translateZ(36px); }
-        .node-back   { transform: rotateY(180deg) translateZ(36px); }
-        .node-left   { transform: rotateY(270deg) translateZ(36px); }
-        .node-top    { transform: rotateX( 90deg) translateZ(36px); }
-        .node-bottom { transform: rotateX(-90deg) translateZ(36px); }
+        .node-front  { transform: rotateY(  0deg) translateZ(41px); }
+        .node-right  { transform: rotateY( 90deg) translateZ(41px); }
+        .node-back   { transform: rotateY(180deg) translateZ(41px); }
+        .node-left   { transform: rotateY(270deg) translateZ(41px); }
+        .node-top    { transform: rotateX( 90deg) translateZ(41px); }
+        .node-bottom { transform: rotateX(-90deg) translateZ(41px); }
 
         .node-word {
             position: relative;
             z-index: 1;
-            font-size: 9px;
+            font-size: 10px;
             font-weight: 900;
             letter-spacing: 0.03em;
             color: var(--ink-dark);
             text-transform: uppercase;
             word-break: break-word;
-            line-height: 1.1;
+            line-height: 1.15;
         }
 
         /* 4. INSPECTED 3D CUBE STAGE */
@@ -579,14 +579,14 @@
         .cube-depth-holder {
             width: 150px;
             height: 150px;
-            margin: 34px auto 0;
+            margin: 44px auto 0;
             transform: translate(var(--from-x, 0px), var(--from-y, 0px)) scale(0.45);
-            transition: transform 0.65s cubic-bezier(0.16, 1, 0.3, 1);
+            transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
             position: relative;
         }
 
         .cube-depth-holder.approached {
-            transform: translate(0px, 16px) scale(1.12);
+            transform: translate(0px, 34px) scale(1.1);
         }
 
         .cube-wrapper {
@@ -703,7 +703,7 @@
             position: relative;
             width: 70px;
             height: 70px;
-            margin-top: calc(46px + 12dvh);
+            margin-top: calc(56px + 10dvh);
             opacity: 1;
             pointer-events: auto;
         }
@@ -870,7 +870,7 @@
                 </div>
             </div>
 
-            <!-- Screen 3: Memory Storage Organic Grid -->
+            <!-- Screen 3: Memory Storage 2-per-row Grid -->
             <div class="memory-vault page-slide" id="memoryVault">
                 <div class="vault-scroll" id="vaultScroll">
                     <div class="vault-grid" id="vaultGrid"></div>
@@ -964,11 +964,11 @@
         let vaultSpinRaf = null;
         let activePickedWrapper = null;
 
-        // Slight organic offsets mimicking the hand-drawn sketch
-        const SKETCH_OFFSETS = [
-            { x: -3, y: 2 },  { x: 4, y: -5 },  { x: -2, y: 4 },
-            { x: 3, y: 3 },   { x: -4, y: -2 }, { x: 2, y: 5 },
-            { x: -2, y: -4 }, { x: 4, y: 2 },   { x: -3, y: 3 }
+        // Subtle organic offsets for 2-per-row rows
+        const ROW_OFFSETS = [
+            { x: -4, y: 2 },  { x: 5, y: -4 },
+            { x: 4, y: 4 },   { x: -5, y: -2 },
+            { x: -3, y: 3 },  { x: 4, y: -3 }
         ];
 
         const DEFAULT_WORDS = [
@@ -1031,26 +1031,6 @@
                 ex2: 'A <b>red</b> apple stood out among green leaves.',
                 ex3: 'She painted the wooden box <b>red</b>.',
                 visual: '🔴'
-            },
-            {
-                id: 'fall',
-                word: 'FALL',
-                phonetic: '/fɔːl/',
-                definition: 'Move downward rapidly without support',
-                ex1: 'An apple began to <b>fall</b> from the branch.',
-                ex2: 'Watch your step so you do not <b>fall</b>.',
-                ex3: 'Dry leaves <b>fall</b> every autumn.',
-                visual: '🍂'
-            },
-            {
-                id: 'wander',
-                word: 'WANDER',
-                phonetic: '/ˈwɒn.dər/',
-                definition: 'Walk or move in a leisurely or aimless way',
-                ex1: 'Igor liked to <b>wander</b> through quiet groves.',
-                ex2: 'They <b>wander</b> along the path after sunset.',
-                ex3: 'His thoughts began to <b>wander</b>.',
-                visual: '🧭'
             }
         ];
 
@@ -1067,7 +1047,7 @@
 
         function getStoredWords() {
             try {
-                const raw = localStorage.getItem('alien_memory_cubes_v3');
+                const raw = localStorage.getItem('alien_memory_cubes_v4');
                 if (raw) {
                     const parsed = JSON.parse(raw);
                     if (Array.isArray(parsed) && parsed.length > 0) return parsed;
@@ -1078,7 +1058,7 @@
 
         function saveStoredWords(words) {
             try {
-                localStorage.setItem('alien_memory_cubes_v3', JSON.stringify(words));
+                localStorage.setItem('alien_memory_cubes_v4', JSON.stringify(words));
             } catch (e) {}
         }
 
@@ -1200,36 +1180,15 @@
             const grid = document.getElementById('vaultGrid');
             grid.innerHTML = '';
 
-            const displayList = [...words];
-            const extraPool = [
-                {
-                    id: 'sky',
-                    word: 'SKY',
-                    phonetic: '/skaɪ/',
-                    definition: 'The space above the earth where clouds float',
-                    ex1: 'Clouds drifted across the <b>sky</b>.',
-                    ex2: 'Birds flew high in the <b>sky</b>.',
-                    ex3: 'The evening <b>sky</b> turned violet.',
-                    visual: '🌌'
-                }
-            ];
-            let poolIdx = 0;
-            while (displayList.length < 9) {
-                const candidate = extraPool[poolIdx % extraPool.length];
-                displayList.push({ ...candidate, id: candidate.id + '_' + displayList.length });
-                poolIdx++;
-            }
-
-            displayList.forEach((item, index) => {
-                const offset = SKETCH_OFFSETS[index % SKETCH_OFFSETS.length];
+            words.forEach((item, index) => {
+                const offset = ROW_OFFSETS[index % ROW_OFFSETS.length];
                 const wrapper = document.createElement('div');
                 wrapper.className = 'node-wrapper';
                 wrapper.style.marginLeft = offset.x + 'px';
                 wrapper.style.marginTop = offset.y + 'px';
                 wrapper.style.animationDelay = ((index * 0.45) % 3.2) + 's';
-                wrapper.dataset.angle = ((index * 38) % 360).toString();
+                wrapper.dataset.angle = ((index * 35) % 360).toString();
 
-                // Put the word on every face of the spinning vault cube
                 wrapper.innerHTML = `
                     <div class="node-cube">
                         <div class="node-face node-front"><div class="node-word">${item.word}</div></div>
@@ -1254,21 +1213,34 @@
                 const delta = now - lastTime;
                 lastTime = now;
                 const wrappers = document.querySelectorAll('#vaultGrid .node-wrapper');
-                wrappers.forEach((w, idx) => {
+                wrappers.forEach((w) => {
                     if (w.classList.contains('picked-out')) return;
-                    const direction = idx % 2 === 0 ? 1 : -1;
-                    let angle = (parseFloat(w.dataset.angle || '0') + direction * delta * 0.028) % 360;
-                    if (angle < 0) angle += 360;
+                    // 25% slower than 0.028 -> 0.021 deg/ms, single consistent direction
+                    let angle = (parseFloat(w.dataset.angle || '0') + delta * 0.021) % 360;
                     w.dataset.angle = angle.toFixed(2);
                     const cubeEl = w.querySelector('.node-cube');
                     if (cubeEl) {
-                        cubeEl.style.transform = `translateZ(-36px) rotateX(-14deg) rotateY(${angle.toFixed(1)}deg)`;
+                        cubeEl.style.transform = `translateZ(-41px) rotateX(-13deg) rotateY(${angle.toFixed(1)}deg)`;
                     }
                 });
                 vaultSpinRaf = requestAnimationFrame(step);
             }
 
             vaultSpinRaf = requestAnimationFrame(step);
+        }
+
+        function computeReturnOffset(wrapper, holder) {
+            if (!wrapper || !holder) return { x: 0, y: 0 };
+            const wrapRect = wrapper.getBoundingClientRect();
+            const holderRect = holder.getBoundingClientRect();
+            const wrapCenterX = wrapRect.left + wrapRect.width / 2;
+            const wrapCenterY = wrapRect.top + wrapRect.height / 2;
+            const holderBaseX = holderRect.left + holderRect.width / 2;
+            const holderBaseY = holderRect.top + holderRect.height / 2;
+            return {
+                x: Math.round(wrapCenterX - holderBaseX),
+                y: Math.round(wrapCenterY - holderBaseY)
+            };
         }
 
         function inspectMemoryCube(wordData, sourceWrapper) {
@@ -1282,17 +1254,6 @@
             }
             activePickedWrapper = sourceWrapper || null;
 
-            let fromX = 0;
-            let fromY = 0;
-            if (sourceWrapper) {
-                const rect = sourceWrapper.getBoundingClientRect();
-                const centerX = window.innerWidth / 2;
-                const centerY = window.innerHeight / 2;
-                fromX = Math.round(rect.left + rect.width / 2 - centerX);
-                fromY = Math.round(rect.top + rect.height / 2 - centerY);
-                sourceWrapper.classList.add('picked-out');
-            }
-
             document.getElementById('cubeTerm').textContent = wordData.word;
             document.getElementById('cubePhonetic').textContent = wordData.phonetic;
             document.getElementById('cubeDef').textContent = wordData.definition;
@@ -1305,19 +1266,26 @@
             rotY = 0;
             applyCubeTransform();
 
-            holder.style.setProperty('--from-x', fromX + 'px');
-            holder.style.setProperty('--from-y', fromY + 'px');
-
             vault.classList.add('defocused');
             board.classList.add('blurred-bg');
 
             holder.classList.remove('approached');
+            holder.style.transition = 'none';
             cubeStage.style.display = 'flex';
             cubeStage.classList.remove('exit-to-left');
             cubeStage.classList.add('active-center');
+
+            const startOffset = computeReturnOffset(sourceWrapper, holder);
+            holder.style.setProperty('--from-x', startOffset.x + 'px');
+            holder.style.setProperty('--from-y', startOffset.y + 'px');
             holder.offsetHeight;
 
+            if (sourceWrapper) {
+                sourceWrapper.classList.add('picked-out');
+            }
+
             requestAnimationFrame(() => {
+                holder.style.transition = '';
                 holder.classList.add('approached');
             });
         }
@@ -1327,6 +1295,10 @@
             const cubeStage = document.getElementById('cubeStage');
             const holder = document.getElementById('cubeDepthHolder');
             const board = document.getElementById('retroBoard');
+
+            const targetOffset = computeReturnOffset(activePickedWrapper, holder);
+            holder.style.setProperty('--from-x', targetOffset.x + 'px');
+            holder.style.setProperty('--from-y', targetOffset.y + 'px');
 
             holder.classList.remove('approached');
             board.classList.remove('blurred-bg');
@@ -1338,7 +1310,7 @@
                     activePickedWrapper.classList.remove('picked-out');
                     activePickedWrapper = null;
                 }
-            }, 350);
+            }, 600);
         }
 
         const cube = document.getElementById('cube');
