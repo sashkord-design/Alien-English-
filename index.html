@@ -97,7 +97,7 @@
         }
 
         .retro-board.blurred-bg .bg-layer {
-            filter: blur(5px) brightness(0.88);
+            filter: blur(5px) brightness(0.86);
         }
 
         .content-wrap {
@@ -204,8 +204,7 @@
         }
 
         .scan-btn::before,
-        .btn-action::before,
-        .back-network-btn::before {
+        .btn-action::before {
             content: '';
             position: absolute;
             inset: 0;
@@ -219,8 +218,7 @@
         }
 
         .scan-btn span,
-        .btn-action span,
-        .back-network-btn span {
+        .btn-action span {
             position: relative;
             z-index: 1;
         }
@@ -400,7 +398,7 @@
             box-shadow: 1px 1px 0px var(--ink-dark);
         }
 
-        /* 3. MEMORY STORAGE 3x3 GRID WITH SCROLL */
+        /* 3. MEMORY STORAGE ORGANIC GRID WITH SCROLL */
         .memory-vault {
             display: none;
             flex-direction: column;
@@ -423,7 +421,7 @@
             overflow-x: hidden;
             -webkit-overflow-scrolling: touch;
             scrollbar-width: none;
-            padding: 14px 4px 28px;
+            padding: 14px 4px 30px;
         }
 
         .vault-scroll::-webkit-scrollbar {
@@ -449,6 +447,12 @@
             perspective: 700px;
             animation: node-levitate 4.4s ease-in-out infinite;
             flex-shrink: 0;
+            transition: opacity 0.25s ease;
+        }
+
+        .node-wrapper.picked-out {
+            opacity: 0;
+            pointer-events: none;
         }
 
         @keyframes node-levitate {
@@ -462,16 +466,10 @@
             position: relative;
             transform-style: preserve-3d;
             -webkit-transform-style: preserve-3d;
-            /* Angle tuned so left face is minimally visible */
-            transform: translateZ(-36px) rotateX(-12deg) rotateY(10deg);
-            transition: transform 0.25s ease;
+            will-change: transform;
         }
 
-        .node-wrapper:active .node-cube {
-            transform: translateZ(-36px) rotateX(-6deg) rotateY(4deg) scale(0.95);
-        }
-
-        /* Rawer base tone + subtle blue-violet reflection */
+        /* Rawer cube tone + subtle blue-violet reflection */
         .node-face {
             position: absolute;
             top: 0;
@@ -488,7 +486,7 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 5px;
+            padding: 4px;
             text-align: center;
             backface-visibility: hidden;
             -webkit-backface-visibility: hidden;
@@ -504,25 +502,25 @@
         }
 
         .node-front  { transform: rotateY(  0deg) translateZ(36px); }
-        .node-top    { transform: rotateX( 90deg) translateZ(36px); filter: saturate(0.72) contrast(0.96) brightness(0.99); }
-        .node-left   { transform: rotateY(270deg) translateZ(36px); filter: saturate(0.76) contrast(0.96) brightness(0.88); }
-        .node-right  { transform: rotateY( 90deg) translateZ(36px); filter: saturate(0.76) contrast(0.96) brightness(0.90); }
-        .node-bottom { transform: rotateX(-90deg) translateZ(36px); }
+        .node-right  { transform: rotateY( 90deg) translateZ(36px); }
         .node-back   { transform: rotateY(180deg) translateZ(36px); }
+        .node-left   { transform: rotateY(270deg) translateZ(36px); }
+        .node-top    { transform: rotateX( 90deg) translateZ(36px); }
+        .node-bottom { transform: rotateX(-90deg) translateZ(36px); }
 
         .node-word {
             position: relative;
             z-index: 1;
-            font-size: 9.5px;
+            font-size: 9px;
             font-weight: 900;
             letter-spacing: 0.03em;
             color: var(--ink-dark);
             text-transform: uppercase;
             word-break: break-word;
-            line-height: 1.15;
+            line-height: 1.1;
         }
 
-        /* 4. INSPECTED 3D CUBE STAGE (APPROACHING AT RIGHT ANGLE) */
+        /* 4. INSPECTED 3D CUBE STAGE */
         .cube-stage {
             display: none;
             flex-direction: column;
@@ -534,11 +532,13 @@
             -webkit-user-select: none;
         }
 
+        /* Pink button matching Background2.webp palette */
         .back-network-btn {
             position: absolute;
-            top: 8px;
+            top: 12px;
             left: 50%;
             transform: translateX(-50%);
+            background-color: #d9779a;
             background-image: url('frame.png');
             background-size: cover;
             background-position: center;
@@ -557,6 +557,20 @@
             white-space: nowrap;
         }
 
+        .back-network-btn::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-color: rgba(236, 122, 162, 0.72);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .back-network-btn span {
+            position: relative;
+            z-index: 1;
+        }
+
         .back-network-btn:active {
             transform: translateX(-50%) translate(2px, 2px);
             box-shadow: 1px 1px 0px var(--ink-dark);
@@ -565,14 +579,14 @@
         .cube-depth-holder {
             width: 150px;
             height: 150px;
-            margin: 14px auto 0;
-            transform: scale(0.55);
+            margin: 34px auto 0;
+            transform: translate(var(--from-x, 0px), var(--from-y, 0px)) scale(0.45);
             transition: transform 0.65s cubic-bezier(0.16, 1, 0.3, 1);
             position: relative;
         }
 
         .cube-depth-holder.approached {
-            transform: scale(1.12);
+            transform: translate(0px, 16px) scale(1.12);
         }
 
         .cube-wrapper {
@@ -600,7 +614,6 @@
             transition: transform 0.75s cubic-bezier(0.25, 1, 0.5, 1);
         }
 
-        /* Rawer cube tone + faint blue-violet reflection */
         .cube-face {
             position: absolute;
             top: 0;
@@ -857,7 +870,7 @@
                 </div>
             </div>
 
-            <!-- Screen 3: Memory Storage 3x3 Grid -->
+            <!-- Screen 3: Memory Storage Organic Grid -->
             <div class="memory-vault page-slide" id="memoryVault">
                 <div class="vault-scroll" id="vaultScroll">
                     <div class="vault-grid" id="vaultGrid"></div>
@@ -948,6 +961,15 @@
         let isAppleSaved = false;
         let rotX = 0;
         let rotY = 0;
+        let vaultSpinRaf = null;
+        let activePickedWrapper = null;
+
+        // Slight organic offsets mimicking the hand-drawn sketch
+        const SKETCH_OFFSETS = [
+            { x: -3, y: 2 },  { x: 4, y: -5 },  { x: -2, y: 4 },
+            { x: 3, y: 3 },   { x: -4, y: -2 }, { x: 2, y: 5 },
+            { x: -2, y: -4 }, { x: 4, y: 2 },   { x: -3, y: 3 }
+        ];
 
         const DEFAULT_WORDS = [
             {
@@ -1045,7 +1067,7 @@
 
         function getStoredWords() {
             try {
-                const raw = localStorage.getItem('alien_memory_cubes_v2');
+                const raw = localStorage.getItem('alien_memory_cubes_v3');
                 if (raw) {
                     const parsed = JSON.parse(raw);
                     if (Array.isArray(parsed) && parsed.length > 0) return parsed;
@@ -1056,7 +1078,7 @@
 
         function saveStoredWords(words) {
             try {
-                localStorage.setItem('alien_memory_cubes_v2', JSON.stringify(words));
+                localStorage.setItem('alien_memory_cubes_v3', JSON.stringify(words));
             } catch (e) {}
         }
 
@@ -1169,17 +1191,27 @@
             board.classList.add('vault-bg');
             vault.classList.remove('defocused');
 
-            slideBetweenPages(workspace, vault);
+            slideBetweenPages(workspace, vault, () => {
+                startVaultSpinning();
+            });
         }
 
         function renderVaultGrid(words) {
             const grid = document.getElementById('vaultGrid');
             grid.innerHTML = '';
 
-            // Ensure at least 9 cubes to fill the initial 3x3 view cleanly
             const displayList = [...words];
             const extraPool = [
-                { id: 'sky', word: 'SKY', phonetic: '/skaɪ/', definition: 'The space above the earth where clouds float', ex1: 'Clouds drifted across the <b>sky</b>.', ex2: 'Birds flew high in the <b>sky</b>.', ex3: 'The evening <b>sky</b> turned violet.', visual: '🌌' }
+                {
+                    id: 'sky',
+                    word: 'SKY',
+                    phonetic: '/skaɪ/',
+                    definition: 'The space above the earth where clouds float',
+                    ex1: 'Clouds drifted across the <b>sky</b>.',
+                    ex2: 'Birds flew high in the <b>sky</b>.',
+                    ex3: 'The evening <b>sky</b> turned violet.',
+                    visual: '🌌'
+                }
             ];
             let poolIdx = 0;
             while (displayList.length < 9) {
@@ -1189,33 +1221,77 @@
             }
 
             displayList.forEach((item, index) => {
+                const offset = SKETCH_OFFSETS[index % SKETCH_OFFSETS.length];
                 const wrapper = document.createElement('div');
                 wrapper.className = 'node-wrapper';
+                wrapper.style.marginLeft = offset.x + 'px';
+                wrapper.style.marginTop = offset.y + 'px';
                 wrapper.style.animationDelay = ((index * 0.45) % 3.2) + 's';
+                wrapper.dataset.angle = ((index * 38) % 360).toString();
 
+                // Put the word on every face of the spinning vault cube
                 wrapper.innerHTML = `
                     <div class="node-cube">
-                        <div class="node-face node-front">
-                            <div class="node-word">${item.word}</div>
-                        </div>
-                        <div class="node-face node-top"></div>
-                        <div class="node-face node-left"></div>
-                        <div class="node-face node-right"></div>
-                        <div class="node-face node-bottom"></div>
-                        <div class="node-face node-back"></div>
+                        <div class="node-face node-front"><div class="node-word">${item.word}</div></div>
+                        <div class="node-face node-right"><div class="node-word">${item.word}</div></div>
+                        <div class="node-face node-back"><div class="node-word">${item.word}</div></div>
+                        <div class="node-face node-left"><div class="node-word">${item.word}</div></div>
+                        <div class="node-face node-top"><div class="node-word">${item.word}</div></div>
+                        <div class="node-face node-bottom"><div class="node-word">${item.word}</div></div>
                     </div>
                 `;
 
-                wrapper.onclick = () => inspectMemoryCube(item);
+                wrapper.onclick = () => inspectMemoryCube(item, wrapper);
                 grid.appendChild(wrapper);
             });
         }
 
-        function inspectMemoryCube(wordData) {
+        function startVaultSpinning() {
+            if (vaultSpinRaf) cancelAnimationFrame(vaultSpinRaf);
+            let lastTime = performance.now();
+
+            function step(now) {
+                const delta = now - lastTime;
+                lastTime = now;
+                const wrappers = document.querySelectorAll('#vaultGrid .node-wrapper');
+                wrappers.forEach((w, idx) => {
+                    if (w.classList.contains('picked-out')) return;
+                    const direction = idx % 2 === 0 ? 1 : -1;
+                    let angle = (parseFloat(w.dataset.angle || '0') + direction * delta * 0.028) % 360;
+                    if (angle < 0) angle += 360;
+                    w.dataset.angle = angle.toFixed(2);
+                    const cubeEl = w.querySelector('.node-cube');
+                    if (cubeEl) {
+                        cubeEl.style.transform = `translateZ(-36px) rotateX(-14deg) rotateY(${angle.toFixed(1)}deg)`;
+                    }
+                });
+                vaultSpinRaf = requestAnimationFrame(step);
+            }
+
+            vaultSpinRaf = requestAnimationFrame(step);
+        }
+
+        function inspectMemoryCube(wordData, sourceWrapper) {
             const vault = document.getElementById('memoryVault');
             const cubeStage = document.getElementById('cubeStage');
             const holder = document.getElementById('cubeDepthHolder');
             const board = document.getElementById('retroBoard');
+
+            if (activePickedWrapper) {
+                activePickedWrapper.classList.remove('picked-out');
+            }
+            activePickedWrapper = sourceWrapper || null;
+
+            let fromX = 0;
+            let fromY = 0;
+            if (sourceWrapper) {
+                const rect = sourceWrapper.getBoundingClientRect();
+                const centerX = window.innerWidth / 2;
+                const centerY = window.innerHeight / 2;
+                fromX = Math.round(rect.left + rect.width / 2 - centerX);
+                fromY = Math.round(rect.top + rect.height / 2 - centerY);
+                sourceWrapper.classList.add('picked-out');
+            }
 
             document.getElementById('cubeTerm').textContent = wordData.word;
             document.getElementById('cubePhonetic').textContent = wordData.phonetic;
@@ -1225,10 +1301,12 @@
             document.getElementById('cubeEx3').innerHTML = wordData.ex3;
             document.getElementById('cubeVisual').textContent = wordData.visual;
 
-            // Reset to straight-on right angle
             rotX = 0;
             rotY = 0;
             applyCubeTransform();
+
+            holder.style.setProperty('--from-x', fromX + 'px');
+            holder.style.setProperty('--from-y', fromY + 'px');
 
             vault.classList.add('defocused');
             board.classList.add('blurred-bg');
@@ -1256,6 +1334,10 @@
 
             setTimeout(() => {
                 cubeStage.style.display = 'none';
+                if (activePickedWrapper) {
+                    activePickedWrapper.classList.remove('picked-out');
+                    activePickedWrapper = null;
+                }
             }, 350);
         }
 
