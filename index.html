@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Alien Memory Scanner</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
         :root {
             --ink-dark: #18181b;
@@ -112,7 +113,7 @@
             justify-content: center;
         }
 
-        /* Horizontal page slide transitions pinned to exact center trajectory (fully opaque) */
+        /* Horizontal page slide transitions */
         .page-slide {
             position: absolute;
             inset: 0;
@@ -178,7 +179,6 @@
             text-align-last: left;
         }
 
-        /* Paper texture + yellow tint for buttons */
         .scan-btn {
             position: relative;
             background-image: url('frame.png');
@@ -268,7 +268,6 @@
             opacity: 1;
         }
 
-        /* Mini 3D Cubes for choice options */
         .card-slot {
             perspective: 800px;
             height: 88px;
@@ -353,7 +352,6 @@
             color: var(--correct-text);
         }
 
-        /* Dual action row at the bottom of the scan workspace */
         .action-row {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -477,7 +475,6 @@
             will-change: transform;
         }
 
-        /* Rawer cube tone, subtle blue-violet reflection, and non-black cube-colored edges */
         .node-face {
             position: absolute;
             top: 0;
@@ -528,7 +525,7 @@
             line-height: 1.15;
         }
 
-        /* 4. INSPECTED 3D CUBE STAGE */
+        /* 4. THREE.JS WEBGL 3D CUBE STAGE */
         .cube-stage {
             display: none;
             flex-direction: column;
@@ -538,9 +535,9 @@
             justify-content: center;
             user-select: none;
             -webkit-user-select: none;
+            position: relative;
         }
 
-        /* Pink button matching Background2.webp palette */
         .back-network-btn {
             position: absolute;
             top: 12px;
@@ -584,120 +581,36 @@
             box-shadow: 1px 1px 0px var(--ink-dark);
         }
 
-        .cube-depth-holder {
-            width: 150px;
-            height: 150px;
-            margin: 44px auto 0;
-            transform: translate(0px, 34px) scale(0.75);
+        .webgl-cube-holder {
+            position: relative;
+            width: 240px;
+            height: 240px;
+            margin-top: 34px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transform: scale(0.75);
             transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        .webgl-cube-holder.approached {
+            transform: translateY(18px) scale(1.04);
+        }
+
+        #threeCanvasHost {
+            width: 240px;
+            height: 240px;
             position: relative;
-        }
-
-        .cube-depth-holder.approached {
-            transform: translate(0px, 34px) scale(1.1);
-        }
-
-        .cube-wrapper {
-            perspective: 1400px;
-            width: 150px;
-            height: 150px;
-            position: relative;
-        }
-
-        .cube-wrapper.levitating {
-            animation: levitate 4s ease-in-out infinite;
-        }
-
-        @keyframes levitate {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-6px); }
-        }
-
-        .cube {
-            width: 150px;
-            height: 150px;
-            position: relative;
-            transform-style: preserve-3d;
-            -webkit-transform-style: preserve-3d;
-            transition: transform 0.75s cubic-bezier(0.25, 1, 0.5, 1);
-        }
-
-        .cube-face {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 150px;
-            height: 150px;
-            border: 1.5px solid var(--cube-edge);
-            border-radius: 0;
-            overflow: hidden;
-            padding: 12px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            backface-visibility: hidden;
-            -webkit-backface-visibility: hidden;
-            background-image: url('frame.png');
-            background-size: cover;
-            background-position: center;
-            filter: saturate(0.72) contrast(0.96) brightness(0.95);
-            box-shadow: inset 0 0 12px rgba(0,0,0,0.04);
-        }
-
-        .cube-face::after {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(150deg, rgba(99, 102, 241, 0.13) 0%, rgba(168, 85, 247, 0.09) 65%, rgba(59, 130, 246, 0.05) 100%);
-            pointer-events: none;
-            z-index: 0;
-        }
-
-        .cube.folded .face-front  { transform: rotateY(  0deg) translateZ(75px); }
-        .cube.folded .face-top    { transform: rotateX( 90deg) translateZ(75px); }
-        .cube.folded .face-bottom { transform: rotateX(-90deg) translateZ(75px); }
-        .cube.folded .face-left   { transform: rotateY(270deg) translateZ(75px); }
-        .cube.folded .face-right  { transform: rotateY( 90deg) translateZ(75px); }
-        .cube.folded .face-back   { transform: rotateY(180deg) translateZ(75px); }
-
-        .face-content-element {
-            position: relative;
-            z-index: 1;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .face-content-text {
-            font-size: 12px;
-            line-height: 1.35;
-            color: var(--ink-dark);
-            font-weight: 600;
-        }
-
-        .term-sketch {
-            font-size: 20px;
-            font-weight: 900;
-            letter-spacing: 0.06em;
-            color: var(--ink-dark);
+            z-index: 5;
         }
 
         .touch-overlay {
             position: absolute;
-            inset: -14px;
+            inset: 8px;
             z-index: 20;
-            display: none;
+            display: grid;
             grid-template-columns: 1fr 1fr 1fr;
             grid-template-rows: 1fr 1fr 1fr;
-        }
-
-        .cube-stage.assembled .touch-overlay {
-            display: grid;
         }
 
         .zone {
@@ -711,9 +624,10 @@
             position: relative;
             width: 70px;
             height: 70px;
-            margin-top: calc(56px + 10dvh);
+            margin-top: calc(22px + 8dvh);
             opacity: 1;
             pointer-events: auto;
+            z-index: 25;
         }
 
         .line-btn {
@@ -885,70 +799,24 @@
                 </div>
             </div>
 
-            <!-- Screen 4: Solid Hand-Drawn 3D Cube Inspection -->
+            <!-- Screen 4: Three.js WebGL 3D Cube Inspection -->
             <div class="cube-stage page-slide assembled" id="cubeStage">
                 <button class="back-network-btn" onclick="returnToVault()"><span>← Back to Grid</span></button>
 
-                <div class="cube-depth-holder" id="cubeDepthHolder">
-                    <div class="cube-wrapper levitating" id="cubeWrapper">
-                        <div class="touch-overlay">
-                            <div class="zone" onclick="tiltUp()"></div>
-                            <div class="zone" onclick="tiltUp()"></div>
-                            <div class="zone" onclick="tiltUp()"></div>
+                <div class="webgl-cube-holder" id="cubeDepthHolder">
+                    <div id="threeCanvasHost"></div>
+                    <div class="touch-overlay">
+                        <div class="zone" onclick="tiltUp()"></div>
+                        <div class="zone" onclick="tiltUp()"></div>
+                        <div class="zone" onclick="tiltUp()"></div>
 
-                            <div class="zone" onclick="turnLeft()"></div>
-                            <div class="zone" onclick="turnBack()"></div>
-                            <div class="zone" onclick="turnRight()"></div>
+                        <div class="zone" onclick="turnLeft()"></div>
+                        <div class="zone" onclick="turnBack()"></div>
+                        <div class="zone" onclick="turnRight()"></div>
 
-                            <div class="zone" onclick="tiltDown()"></div>
-                            <div class="zone" onclick="tiltDown()"></div>
-                            <div class="zone" onclick="tiltDown()"></div>
-                        </div>
-
-                        <div class="cube folded" id="cube">
-                            <!-- Front: Term -->
-                            <div class="cube-face face-front">
-                                <div class="face-content-element">
-                                    <div class="term-sketch" id="cubeTerm">APPLE</div>
-                                    <div id="cubePhonetic" style="font-size: 10px; color: #44403c; font-weight: 600; margin-top: 2px;">/ˈæp.əl/</div>
-                                </div>
-                            </div>
-
-                            <!-- Right: Example 1 -->
-                            <div class="cube-face face-right">
-                                <div class="face-content-element">
-                                    <div class="face-content-text" id="cubeEx1">I eat a fresh <b>apple</b> every morning.</div>
-                                </div>
-                            </div>
-
-                            <!-- Back: Example 3 -->
-                            <div class="cube-face face-back">
-                                <div class="face-content-element">
-                                    <div class="face-content-text" id="cubeEx3">This green <b>apple</b> tastes quite sour.</div>
-                                </div>
-                            </div>
-
-                            <!-- Left: Example 2 -->
-                            <div class="cube-face face-left">
-                                <div class="face-content-element">
-                                    <div class="face-content-text" id="cubeEx2">She cut the <b>apple</b> into four equal pieces.</div>
-                                </div>
-                            </div>
-
-                            <!-- Top: Definition -->
-                            <div class="cube-face face-top">
-                                <div class="face-content-element">
-                                    <div class="face-content-text" id="cubeDef">The fruit that fell on Igor’s head</div>
-                                </div>
-                            </div>
-
-                            <!-- Bottom: Visual -->
-                            <div class="cube-face face-bottom">
-                                <div class="face-content-element">
-                                    <div id="cubeVisual" style="font-size: 46px;">🍎</div>
-                                </div>
-                            </div>
-                        </div>
+                        <div class="zone" onclick="tiltDown()"></div>
+                        <div class="zone" onclick="tiltDown()"></div>
+                        <div class="zone" onclick="tiltDown()"></div>
                     </div>
                 </div>
 
@@ -967,12 +835,18 @@
     <script>
         let isSolved = false;
         let isAppleSaved = false;
-        let rotX = 0;
-        let rotY = 0;
         let vaultSpinRaf = null;
         let activePickedWrapper = null;
 
-        // Subtle organic offsets for centered cubes
+        // Three.js state
+        let scene, camera, renderer, stoneCubeMesh, outlineMesh;
+        let targetRotX = 0;
+        let targetRotY = 0;
+        let currentRotX = 0;
+        let currentRotY = 0;
+        let threeAnimId = null;
+        let currentWordData = null;
+
         const CUBE_OFFSETS = [
             { x: -3, y: 2 },  { x: 4, y: -3 },
             { x: 3, y: 3 },   { x: -4, y: -2 }
@@ -984,9 +858,9 @@
                 word: 'ORCHARD',
                 phonetic: '/ˈɔː.tʃəd/',
                 definition: 'A piece of land planted with fruit trees',
-                ex1: 'Igor walked slowly into an old <b>orchard</b>.',
-                ex2: 'The apple trees in the <b>orchard</b> were full of fruit.',
-                ex3: 'Autumn is the best season to visit an <b>orchard</b>.',
+                ex1: 'Igor walked slowly into an old orchard.',
+                ex2: 'The apple trees in the orchard were full of fruit.',
+                ex3: 'Autumn is the best season to visit an orchard.',
                 visual: '🌳'
             },
             {
@@ -994,9 +868,9 @@
                 word: 'FIRM',
                 phonetic: '/fɜːm/',
                 definition: 'Hard and solid when pressed, not soft',
-                ex1: 'The red fruit felt smooth and <b>firm</b>.',
-                ex2: 'She picked a <b>firm</b> apple from the basket.',
-                ex3: 'This mattress is comfortable and <b>firm</b>.',
+                ex1: 'The red fruit felt smooth and firm.',
+                ex2: 'She picked a firm apple from the basket.',
+                ex3: 'This mattress is comfortable and firm.',
                 visual: '🧱'
             },
             {
@@ -1004,9 +878,9 @@
                 word: 'GROUND',
                 phonetic: '/ɡraʊnd/',
                 definition: 'The solid surface of the earth',
-                ex1: 'Various fruits were lying on the <b>ground</b>.',
-                ex2: 'The ripe apple fell softly onto the <b>ground</b>.',
-                ex3: 'Leaves covered the wet <b>ground</b> after rain.',
+                ex1: 'Various fruits were lying on the ground.',
+                ex2: 'The ripe apple fell softly onto the ground.',
+                ex3: 'Leaves covered the wet ground after rain.',
                 visual: '🌱'
             },
             {
@@ -1014,9 +888,9 @@
                 word: 'HEAD',
                 phonetic: '/hed/',
                 definition: 'The upper part of the human body',
-                ex1: 'Something suddenly fell right on Igor’s <b>head</b>.',
-                ex2: 'He rubbed the top of his <b>head</b> in surprise.',
-                ex3: 'A clever idea popped into his <b>head</b>.',
+                ex1: 'Something suddenly fell right on Igor’s head.',
+                ex2: 'He rubbed the top of his head in surprise.',
+                ex3: 'A clever idea popped into his head.',
                 visual: '👽'
             }
         ];
@@ -1026,15 +900,17 @@
             word: 'APPLE',
             phonetic: '/ˈæp.əl/',
             definition: 'The fruit that fell on Igor’s head',
-            ex1: 'I eat a fresh <b>apple</b> every morning.',
-            ex2: 'She cut the <b>apple</b> into four equal pieces.',
-            ex3: 'This green <b>apple</b> tastes quite sour.',
+            ex1: 'I eat a fresh apple every morning.',
+            ex2: 'She cut the apple into four equal pieces.',
+            ex3: 'This green apple tastes quite sour.',
             visual: '🍎'
         };
 
+        currentWordData = APPLE_WORD;
+
         function getStoredWords() {
             try {
-                const raw = localStorage.getItem('alien_memory_cubes_v5');
+                const raw = localStorage.getItem('alien_memory_cubes_v6');
                 if (raw) {
                     const parsed = JSON.parse(raw);
                     if (Array.isArray(parsed) && parsed.length > 0) return parsed;
@@ -1045,7 +921,7 @@
 
         function saveStoredWords(words) {
             try {
-                localStorage.setItem('alien_memory_cubes_v5', JSON.stringify(words));
+                localStorage.setItem('alien_memory_cubes_v6', JSON.stringify(words));
             } catch (e) {}
         }
 
@@ -1168,7 +1044,6 @@
             const scrollEl = document.getElementById('vaultScroll');
             grid.innerHTML = '';
 
-            // Keep 4 cubes on screen by default
             const visibleWords = words.slice(0, 4);
 
             visibleWords.forEach((item, index) => {
@@ -1208,7 +1083,6 @@
                 const wrappers = document.querySelectorAll('#vaultGrid .node-wrapper');
                 wrappers.forEach((w) => {
                     if (w.classList.contains('picked-out')) return;
-                    // Half speed of 0.021 -> 0.0105 deg/ms, single direction
                     let angle = (parseFloat(w.dataset.angle || '0') + delta * 0.0105) % 360;
                     w.dataset.angle = angle.toFixed(2);
                     const cubeEl = w.querySelector('.node-cube');
@@ -1222,35 +1096,220 @@
             vaultSpinRaf = requestAnimationFrame(step);
         }
 
+        // Create comic-stone canvas texture for each face with subtle blue-violet tint
+        function createStoneFaceTexture(lines, options = {}) {
+            const size = 512;
+            const canvas = document.createElement('canvas');
+            canvas.width = size;
+            canvas.height = size;
+            const ctx = canvas.getContext('2d');
+
+            // Raw parchment / stone base
+            const baseGrad = ctx.createLinearGradient(0, 0, size, size);
+            baseGrad.addColorStop(0, '#e5dec9');
+            baseGrad.addColorStop(0.55, '#dcd2bb');
+            baseGrad.addColorStop(1, '#cfc3ae');
+            ctx.fillStyle = baseGrad;
+            ctx.fillRect(0, 0, size, size);
+
+            // Subtle blue-violet reflection overlay matching Background2.webp
+            const reflGrad = ctx.createLinearGradient(0, 0, size * 0.85, size);
+            reflGrad.addColorStop(0, 'rgba(99, 102, 241, 0.16)');
+            reflGrad.addColorStop(0.55, 'rgba(168, 85, 247, 0.12)');
+            reflGrad.addColorStop(1, 'rgba(59, 130, 246, 0.07)');
+            ctx.fillStyle = reflGrad;
+            ctx.fillRect(0, 0, size, size);
+
+            // Comic stone blotches & speckles
+            for (let i = 0; i < 42; i++) {
+                const x = ((i * 97) % (size - 40)) + 20;
+                const y = ((i * 151) % (size - 40)) + 20;
+                const r = 10 + ((i * 13) % 28);
+                ctx.fillStyle = i % 3 === 0
+                    ? 'rgba(126, 87, 194, 0.08)'
+                    : i % 2 === 0
+                        ? 'rgba(79, 70, 229, 0.07)'
+                        : 'rgba(120, 113, 108, 0.08)';
+                ctx.beginPath();
+                ctx.ellipse(x, y, r * 1.2, r * 0.75, (i * 0.4) % Math.PI, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // Fine grain speckles
+            for (let j = 0; j < 450; j++) {
+                const gx = (j * 73 + 19) % size;
+                const gy = (j * 137 + 11) % size;
+                ctx.fillStyle = j % 2 === 0 ? 'rgba(24, 24, 27, 0.07)' : 'rgba(255, 255, 255, 0.12)';
+                ctx.fillRect(gx, gy, 2, 2);
+            }
+
+            // Inner comic border in cube-matched tone
+            ctx.strokeStyle = 'rgba(120, 110, 96, 0.65)';
+            ctx.lineWidth = 8;
+            ctx.strokeRect(10, 10, size - 20, size - 20);
+
+            // Render text or emoji
+            ctx.fillStyle = '#18181b';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+
+            if (options.isEmoji) {
+                ctx.font = '140px sans-serif';
+                ctx.fillText(lines[0], size / 2, size / 2 + 6);
+            } else if (options.isTitle) {
+                ctx.font = '900 72px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+                ctx.fillText(lines[0], size / 2, size / 2 - 22);
+                if (lines[1]) {
+                    ctx.font = '600 32px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+                    ctx.fillStyle = '#44403c';
+                    ctx.fillText(lines[1], size / 2, size / 2 + 44);
+                }
+            } else {
+                const fontSize = options.fontSize || 38;
+                ctx.font = `700 ${fontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+                const text = lines.join(' ');
+                const words = text.split(' ');
+                const wrapped = [];
+                let currentLine = '';
+
+                words.forEach((w) => {
+                    const testLine = currentLine ? currentLine + ' ' + w : w;
+                    if (ctx.measureText(testLine).width > size - 84 && currentLine) {
+                        wrapped.push(currentLine);
+                        currentLine = w;
+                    } else {
+                        currentLine = testLine;
+                    }
+                });
+                if (currentLine) wrapped.push(currentLine);
+
+                const lineHeight = fontSize * 1.28;
+                const startY = size / 2 - ((wrapped.length - 1) * lineHeight) / 2;
+                wrapped.forEach((line, idx) => {
+                    ctx.fillText(line, size / 2, startY + idx * lineHeight);
+                });
+            }
+
+            const tex = new THREE.CanvasTexture(canvas);
+            tex.anisotropy = 4;
+            return tex;
+        }
+
+        function initThreeCube(wordData) {
+            const host = document.getElementById('threeCanvasHost');
+            if (!host || typeof THREE === 'undefined') return;
+
+            if (!renderer) {
+                scene = new THREE.Scene();
+                camera = new THREE.PerspectiveCamera(38, 1, 0.1, 100);
+                camera.position.set(0, 0, 5.2);
+
+                renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+                renderer.setSize(240, 240);
+                renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+                host.innerHTML = '';
+                host.appendChild(renderer.domElement);
+
+                const ambient = new THREE.AmbientLight(0xd8d0f0, 0.92);
+                scene.add(ambient);
+
+                const keyLight = new THREE.DirectionalLight(0xfff7ed, 0.72);
+                keyLight.position.set(2.5, 4, 4);
+                scene.add(keyLight);
+
+                const rimLight = new THREE.DirectionalLight(0x818cf8, 0.38);
+                rimLight.position.set(-3, -2, -2);
+                scene.add(rimLight);
+            }
+
+            if (stoneCubeMesh) {
+                scene.remove(stoneCubeMesh);
+            }
+
+            // Slightly subdivided box with subtle organic rock displacement
+            const geom = new THREE.BoxGeometry(2.05, 2.05, 2.05, 10, 10, 10);
+            const pos = geom.attributes.position;
+            for (let i = 0; i < pos.count; i++) {
+                const vx = pos.getX(i);
+                const vy = pos.getY(i);
+                const vz = pos.getZ(i);
+                const jitter = 0.022 * Math.sin(vx * 7.3 + vy * 5.1) * Math.cos(vz * 6.7);
+                pos.setXYZ(i, vx + jitter, vy - jitter * 0.8, vz + jitter * 0.6);
+            }
+            geom.computeVertexNormals();
+
+            const textures = [
+                createStoneFaceTexture([wordData.ex1], { fontSize: 36 }),                 // Right (+X)
+                createStoneFaceTexture([wordData.ex2], { fontSize: 36 }),                 // Left (-X)
+                createStoneFaceTexture([wordData.definition], { fontSize: 36 }),           // Top (+Y)
+                createStoneFaceTexture([wordData.visual], { isEmoji: true }),              // Bottom (-Y)
+                createStoneFaceTexture([wordData.word, wordData.phonetic], { isTitle: true }), // Front (+Z)
+                createStoneFaceTexture([wordData.ex3], { fontSize: 36 })                  // Back (-Z)
+            ];
+
+            const materials = textures.map((tex) => new THREE.MeshStandardMaterial({
+                map: tex,
+                roughness: 0.78,
+                metalness: 0.06
+            }));
+
+            stoneCubeMesh = new THREE.Mesh(geom, materials);
+
+            // Subtle dark comic-style wireframe edge accent
+            const edgesGeom = new THREE.EdgesGeometry(new THREE.BoxGeometry(2.06, 2.06, 2.06));
+            const edgesMat = new THREE.LineBasicMaterial({ color: 0x27272a, transparent: true, opacity: 0.55 });
+            outlineMesh = new THREE.LineSegments(edgesGeom, edgesMat);
+            stoneCubeMesh.add(outlineMesh);
+
+            scene.add(stoneCubeMesh);
+
+            targetRotX = 0;
+            targetRotY = 0;
+            currentRotX = 0;
+            currentRotY = 0;
+            stoneCubeMesh.rotation.set(0, 0, 0);
+
+            if (!threeAnimId) {
+                renderThreeLoop();
+            }
+        }
+
+        function renderThreeLoop() {
+            threeAnimId = requestAnimationFrame(renderThreeLoop);
+            if (!renderer || !scene || !camera) return;
+
+            currentRotX += (targetRotX - currentRotX) * 0.14;
+            currentRotY += (targetRotY - currentRotY) * 0.14;
+
+            if (stoneCubeMesh) {
+                stoneCubeMesh.rotation.x = THREE.MathUtils.degToRad(currentRotX);
+                stoneCubeMesh.rotation.y = THREE.MathUtils.degToRad(currentRotY);
+                stoneCubeMesh.position.y = Math.sin(performance.now() * 0.0022) * 0.06;
+            }
+
+            renderer.render(scene, camera);
+        }
+
         function inspectMemoryCube(wordData, sourceWrapper) {
             const vault = document.getElementById('memoryVault');
             const cubeStage = document.getElementById('cubeStage');
             const holder = document.getElementById('cubeDepthHolder');
             const board = document.getElementById('retroBoard');
 
+            currentWordData = wordData;
+
             if (activePickedWrapper) {
                 activePickedWrapper.classList.remove('picked-out');
             }
             activePickedWrapper = sourceWrapper || null;
-
-            document.getElementById('cubeTerm').textContent = wordData.word;
-            document.getElementById('cubePhonetic').textContent = wordData.phonetic;
-            document.getElementById('cubeDef').textContent = wordData.definition;
-            document.getElementById('cubeEx1').innerHTML = wordData.ex1;
-            document.getElementById('cubeEx2').innerHTML = wordData.ex2;
-            document.getElementById('cubeEx3').innerHTML = wordData.ex3;
-            document.getElementById('cubeVisual').textContent = wordData.visual;
-
-            rotX = 0;
-            rotY = 0;
-            applyCubeTransform();
-
-            vault.classList.add('defocused');
-            board.classList.add('blurred-bg');
-
             if (sourceWrapper) {
                 sourceWrapper.classList.add('picked-out');
             }
+
+            initThreeCube(wordData);
+
+            vault.classList.add('defocused');
+            board.classList.add('blurred-bg');
 
             holder.classList.remove('approached');
             cubeStage.style.display = 'flex';
@@ -1280,44 +1339,33 @@
             cubeStage.style.display = 'none';
         }
 
-        const cube = document.getElementById('cube');
-
-        function applyCubeTransform() {
-            cube.style.transform = `translateZ(-75px) rotateX(${rotX}deg) rotateY(${rotY}deg)`;
-        }
-
         function alignYToUprightFront() {
-            rotY = Math.round(rotY / 360) * 360;
+            targetRotY = Math.round(targetRotY / 360) * 360;
         }
 
         function tiltUp() {
             alignYToUprightFront();
-            rotX = rotX > 0 ? 0 : -90;
-            applyCubeTransform();
+            targetRotX = targetRotX > 0 ? 0 : -90;
         }
 
         function tiltDown() {
             alignYToUprightFront();
-            rotX = rotX < 0 ? 0 : 90;
-            applyCubeTransform();
+            targetRotX = targetRotX < 0 ? 0 : 90;
         }
 
         function turnLeft() {
-            rotX = 0;
-            rotY += 90;
-            applyCubeTransform();
+            targetRotX = 0;
+            targetRotY += 90;
         }
 
         function turnRight() {
-            rotX = 0;
-            rotY -= 90;
-            applyCubeTransform();
+            targetRotX = 0;
+            targetRotY -= 90;
         }
 
         function turnBack() {
-            rotX = 0;
-            rotY += 180;
-            applyCubeTransform();
+            targetRotX = 0;
+            targetRotY += 180;
         }
     </script>
 </body>
