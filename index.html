@@ -8,7 +8,6 @@
     <style>
         :root {
             --ink-dark: #18181b;
-            --cube-edge: #9b9282;
             --wrong-text: #7e22ce;
             --correct-text: #15803d;
         }
@@ -420,7 +419,7 @@
             overflow-y: hidden;
             -webkit-overflow-scrolling: touch;
             scrollbar-width: none;
-            padding: 24px 18px;
+            padding: 20px 16px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -436,27 +435,29 @@
 
         .vault-grid {
             display: grid;
-            grid-template-rows: repeat(2, 82px);
+            grid-template-rows: repeat(2, 104px);
             grid-auto-flow: column;
-            grid-auto-columns: 82px;
-            row-gap: 34px;
-            column-gap: 36px;
+            grid-auto-columns: 104px;
+            row-gap: 28px;
+            column-gap: 32px;
             width: max-content;
             align-items: center;
             justify-items: center;
-            padding: 8px 6px;
+            padding: 6px;
         }
 
-        .node-wrapper {
-            width: 82px;
-            height: 82px;
+        .vault-node-slot {
+            width: 104px;
+            height: 104px;
             cursor: pointer;
-            perspective: 750px;
             animation: node-levitate 4.4s ease-in-out infinite;
             flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        .node-wrapper.picked-out {
+        .vault-node-slot.picked-out {
             visibility: hidden;
             pointer-events: none;
         }
@@ -466,63 +467,10 @@
             50% { transform: translateY(-5px); }
         }
 
-        .node-cube {
-            width: 82px;
-            height: 82px;
-            position: relative;
-            transform-style: preserve-3d;
-            -webkit-transform-style: preserve-3d;
-            will-change: transform;
-        }
-
-        .node-face {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 82px;
-            height: 82px;
-            border: 1.5px solid var(--cube-edge);
-            border-radius: 0;
-            background-image: url('frame.png');
-            background-size: cover;
-            background-position: center;
-            filter: saturate(0.72) contrast(0.96) brightness(0.95);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 5px;
-            text-align: center;
-            backface-visibility: hidden;
-            -webkit-backface-visibility: hidden;
-            overflow: hidden;
-        }
-
-        .node-face::after {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(145deg, rgba(99, 102, 241, 0.14) 0%, rgba(168, 85, 247, 0.10) 65%, rgba(59, 130, 246, 0.06) 100%);
-            pointer-events: none;
-        }
-
-        .node-front  { transform: rotateY(  0deg) translateZ(41px); }
-        .node-right  { transform: rotateY( 90deg) translateZ(41px); }
-        .node-back   { transform: rotateY(180deg) translateZ(41px); }
-        .node-left   { transform: rotateY(270deg) translateZ(41px); }
-        .node-top    { transform: rotateX( 90deg) translateZ(41px); }
-        .node-bottom { transform: rotateX(-90deg) translateZ(41px); }
-
-        .node-word {
-            position: relative;
-            z-index: 1;
-            font-size: 10px;
-            font-weight: 900;
-            letter-spacing: 0.03em;
-            color: var(--ink-dark);
-            text-transform: uppercase;
-            word-break: break-word;
-            line-height: 1.15;
+        .vault-mini-canvas {
+            width: 104px;
+            height: 104px;
+            display: block;
         }
 
         /* 4. THREE.JS WEBGL 3D CUBE STAGE */
@@ -583,13 +531,13 @@
 
         .webgl-cube-holder {
             position: relative;
-            width: 240px;
-            height: 240px;
+            width: 244px;
+            height: 244px;
             margin-top: 34px;
             display: flex;
             align-items: center;
             justify-content: center;
-            transform: scale(0.75);
+            transform: scale(0.78);
             transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
         }
 
@@ -598,8 +546,8 @@
         }
 
         #threeCanvasHost {
-            width: 240px;
-            height: 240px;
+            width: 244px;
+            height: 244px;
             position: relative;
             z-index: 5;
         }
@@ -836,16 +784,16 @@
         let isSolved = false;
         let isAppleSaved = false;
         let vaultSpinRaf = null;
-        let activePickedWrapper = null;
+        let activePickedSlot = null;
+        let vaultMiniCubes = [];
 
-        // Three.js state
-        let scene, camera, renderer, stoneCubeMesh, outlineMesh;
+        // Main Three.js inspection cube state
+        let scene, camera, renderer, stoneCubeMesh;
         let targetRotX = 0;
         let targetRotY = 0;
         let currentRotX = 0;
         let currentRotY = 0;
         let threeAnimId = null;
-        let currentWordData = null;
 
         const CUBE_OFFSETS = [
             { x: -3, y: 2 },  { x: 4, y: -3 },
@@ -906,11 +854,9 @@
             visual: '🍎'
         };
 
-        currentWordData = APPLE_WORD;
-
         function getStoredWords() {
             try {
-                const raw = localStorage.getItem('alien_memory_cubes_v6');
+                const raw = localStorage.getItem('alien_memory_cubes_v7');
                 if (raw) {
                     const parsed = JSON.parse(raw);
                     if (Array.isArray(parsed) && parsed.length > 0) return parsed;
@@ -921,7 +867,7 @@
 
         function saveStoredWords(words) {
             try {
-                localStorage.setItem('alien_memory_cubes_v6', JSON.stringify(words));
+                localStorage.setItem('alien_memory_cubes_v7', JSON.stringify(words));
             } catch (e) {}
         }
 
@@ -1039,35 +985,199 @@
             });
         }
 
+        // Build a cube with smooth rounded vertices and no sharp points or border frames
+        function createSmoothRoundedCubeGeometry(size, rounding = 0.24) {
+            const segs = 14;
+            const geom = new THREE.BoxGeometry(size, size, size, segs, segs, segs);
+            const pos = geom.attributes.position;
+            const half = size * 0.5;
+            const r = Math.min(half * 0.95, size * rounding);
+            const inner = Math.max(0.001, half - r);
+
+            for (let i = 0; i < pos.count; i++) {
+                let x = pos.getX(i);
+                let y = pos.getY(i);
+                let z = pos.getZ(i);
+
+                // Clamp inner core and project outward onto a rounded corner sphere
+                const cx = Math.max(-inner, Math.min(inner, x));
+                const cy = Math.max(-inner, Math.min(inner, y));
+                const cz = Math.max(-inner, Math.min(inner, z));
+
+                const dx = x - cx;
+                const dy = y - cy;
+                const dz = z - cz;
+                const len = Math.hypot(dx, dy, dz);
+
+                if (len > 0.00001) {
+                    const targetLen = Math.min(r, len * 1.18);
+                    x = cx + (dx / len) * targetLen;
+                    y = cy + (dy / len) * targetLen;
+                    z = cz + (dz / len) * targetLen;
+                }
+
+                pos.setXYZ(i, x, y, z);
+            }
+
+            geom.computeVertexNormals();
+            return geom;
+        }
+
+        // Create grey-toned texture with faint blue-violet reflection, no frame border, no wave
+        function createGreyCubeTexture(lines, options = {}) {
+            const size = 512;
+            const canvas = document.createElement('canvas');
+            canvas.width = size;
+            canvas.height = size;
+            const ctx = canvas.getContext('2d');
+
+            // Neutral grey base
+            const baseGrad = ctx.createLinearGradient(0, 0, size, size);
+            baseGrad.addColorStop(0, '#c8ccd2');
+            baseGrad.addColorStop(0.55, '#b8bec6');
+            baseGrad.addColorStop(1, '#a7aeb8');
+            ctx.fillStyle = baseGrad;
+            ctx.fillRect(0, 0, size, size);
+
+            // Very subtle blue-violet reflection matching Background2.webp
+            const reflGrad = ctx.createLinearGradient(0, 0, size, size);
+            reflGrad.addColorStop(0, 'rgba(99, 102, 241, 0.10)');
+            reflGrad.addColorStop(0.6, 'rgba(139, 92, 246, 0.08)');
+            reflGrad.addColorStop(1, 'rgba(59, 130, 246, 0.05)');
+            ctx.fillStyle = reflGrad;
+            ctx.fillRect(0, 0, size, size);
+
+            // Soft subtle grain without blotchy rings
+            for (let j = 0; j < 360; j++) {
+                const gx = (j * 79 + 13) % size;
+                const gy = (j * 131 + 29) % size;
+                ctx.fillStyle = j % 2 === 0 ? 'rgba(24, 24, 27, 0.045)' : 'rgba(255, 255, 255, 0.08)';
+                ctx.fillRect(gx, gy, 2, 2);
+            }
+
+            // Straight, non-wavy typography
+            ctx.fillStyle = '#18181b';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+
+            if (options.isEmoji) {
+                ctx.font = '136px sans-serif';
+                ctx.fillText(lines[0], size / 2, size / 2 + 4);
+            } else if (options.isMiniWord) {
+                const word = lines[0];
+                const fontSize = word.length > 6 ? 56 : 68;
+                ctx.font = `900 ${fontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+                ctx.fillText(word, size / 2, size / 2 + 2);
+            } else if (options.isTitle) {
+                ctx.font = '900 70px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+                ctx.fillText(lines[0], size / 2, size / 2 - 20);
+                if (lines[1]) {
+                    ctx.font = '600 32px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+                    ctx.fillStyle = '#3f3f46';
+                    ctx.fillText(lines[1], size / 2, size / 2 + 42);
+                }
+            } else {
+                const fontSize = options.fontSize || 36;
+                ctx.font = `700 ${fontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+                const text = lines.join(' ');
+                const words = text.split(' ');
+                const wrapped = [];
+                let currentLine = '';
+
+                words.forEach((w) => {
+                    const testLine = currentLine ? currentLine + ' ' + w : w;
+                    if (ctx.measureText(testLine).width > size - 88 && currentLine) {
+                        wrapped.push(currentLine);
+                        currentLine = w;
+                    } else {
+                        currentLine = testLine;
+                    }
+                });
+                if (currentLine) wrapped.push(currentLine);
+
+                const lineHeight = fontSize * 1.3;
+                const startY = size / 2 - ((wrapped.length - 1) * lineHeight) / 2;
+                wrapped.forEach((line, idx) => {
+                    ctx.fillText(line, size / 2, startY + idx * lineHeight);
+                });
+            }
+
+            const tex = new THREE.CanvasTexture(canvas);
+            tex.anisotropy = 4;
+            return tex;
+        }
+
+        function disposeVaultMiniCubes() {
+            vaultMiniCubes.forEach((entry) => {
+                if (entry.renderer) {
+                    entry.renderer.dispose();
+                }
+            });
+            vaultMiniCubes = [];
+        }
+
         function renderVaultGrid(words) {
             const grid = document.getElementById('vaultGrid');
             const scrollEl = document.getElementById('vaultScroll');
+            disposeVaultMiniCubes();
             grid.innerHTML = '';
 
             const visibleWords = words.slice(0, 4);
 
             visibleWords.forEach((item, index) => {
                 const offset = CUBE_OFFSETS[index % CUBE_OFFSETS.length];
-                const wrapper = document.createElement('div');
-                wrapper.className = 'node-wrapper';
-                wrapper.style.marginLeft = offset.x + 'px';
-                wrapper.style.marginTop = offset.y + 'px';
-                wrapper.style.animationDelay = ((index * 0.45) % 3.2) + 's';
-                wrapper.dataset.angle = ((index * 35) % 360).toString();
+                const slot = document.createElement('div');
+                slot.className = 'vault-node-slot';
+                slot.style.marginLeft = offset.x + 'px';
+                slot.style.marginTop = offset.y + 'px';
+                slot.style.animationDelay = ((index * 0.45) % 3.2) + 's';
 
-                wrapper.innerHTML = `
-                    <div class="node-cube">
-                        <div class="node-face node-front"><div class="node-word">${item.word}</div></div>
-                        <div class="node-face node-right"><div class="node-word">${item.word}</div></div>
-                        <div class="node-face node-back"><div class="node-word">${item.word}</div></div>
-                        <div class="node-face node-left"><div class="node-word">${item.word}</div></div>
-                        <div class="node-face node-top"><div class="node-word">${item.word}</div></div>
-                        <div class="node-face node-bottom"><div class="node-word">${item.word}</div></div>
-                    </div>
-                `;
+                const canvas = document.createElement('canvas');
+                canvas.className = 'vault-mini-canvas';
+                canvas.width = 208;
+                canvas.height = 208;
+                slot.appendChild(canvas);
 
-                wrapper.onclick = () => inspectMemoryCube(item, wrapper);
-                grid.appendChild(wrapper);
+                slot.onclick = () => inspectMemoryCube(item, slot);
+                grid.appendChild(slot);
+
+                if (typeof THREE !== 'undefined') {
+                    const miniScene = new THREE.Scene();
+                    const miniCam = new THREE.PerspectiveCamera(36, 1, 0.1, 50);
+                    miniCam.position.set(0, 0, 4.6);
+
+                    const miniRenderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+                    miniRenderer.setSize(104, 104);
+                    miniRenderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+
+                    miniScene.add(new THREE.AmbientLight(0xdbeafe, 0.95));
+                    const dLight = new THREE.DirectionalLight(0xffffff, 0.65);
+                    dLight.position.set(2, 3, 4);
+                    miniScene.add(dLight);
+
+                    const geom = createSmoothRoundedCubeGeometry(1.95, 0.24);
+                    const faceTex = createGreyCubeTexture([item.word], { isMiniWord: true });
+                    const mats = Array.from({ length: 6 }, () => new THREE.MeshStandardMaterial({
+                        map: faceTex,
+                        roughness: 0.72,
+                        metalness: 0.05
+                    }));
+
+                    const mesh = new THREE.Mesh(geom, mats);
+                    mesh.rotation.x = THREE.MathUtils.degToRad(-14);
+                    mesh.rotation.y = THREE.MathUtils.degToRad(index * 30);
+                    miniScene.add(mesh);
+
+                    miniRenderer.render(miniScene, miniCam);
+
+                    vaultMiniCubes.push({
+                        scene: miniScene,
+                        camera: miniCam,
+                        renderer: miniRenderer,
+                        mesh,
+                        angle: index * 30
+                    });
+                }
             });
 
             scrollEl.classList.toggle('has-overflow', grid.scrollWidth > scrollEl.clientWidth);
@@ -1080,119 +1190,18 @@
             function step(now) {
                 const delta = now - lastTime;
                 lastTime = now;
-                const wrappers = document.querySelectorAll('#vaultGrid .node-wrapper');
-                wrappers.forEach((w) => {
-                    if (w.classList.contains('picked-out')) return;
-                    let angle = (parseFloat(w.dataset.angle || '0') + delta * 0.0105) % 360;
-                    w.dataset.angle = angle.toFixed(2);
-                    const cubeEl = w.querySelector('.node-cube');
-                    if (cubeEl) {
-                        cubeEl.style.transform = `translateZ(-41px) rotateX(-13deg) rotateY(${angle.toFixed(1)}deg)`;
-                    }
+
+                vaultMiniCubes.forEach((entry) => {
+                    // Half speed, single consistent direction
+                    entry.angle = (entry.angle + delta * 0.0105) % 360;
+                    entry.mesh.rotation.y = THREE.MathUtils.degToRad(entry.angle);
+                    entry.renderer.render(entry.scene, entry.camera);
                 });
+
                 vaultSpinRaf = requestAnimationFrame(step);
             }
 
             vaultSpinRaf = requestAnimationFrame(step);
-        }
-
-        // Create comic-stone canvas texture for each face with subtle blue-violet tint
-        function createStoneFaceTexture(lines, options = {}) {
-            const size = 512;
-            const canvas = document.createElement('canvas');
-            canvas.width = size;
-            canvas.height = size;
-            const ctx = canvas.getContext('2d');
-
-            // Raw parchment / stone base
-            const baseGrad = ctx.createLinearGradient(0, 0, size, size);
-            baseGrad.addColorStop(0, '#e5dec9');
-            baseGrad.addColorStop(0.55, '#dcd2bb');
-            baseGrad.addColorStop(1, '#cfc3ae');
-            ctx.fillStyle = baseGrad;
-            ctx.fillRect(0, 0, size, size);
-
-            // Subtle blue-violet reflection overlay matching Background2.webp
-            const reflGrad = ctx.createLinearGradient(0, 0, size * 0.85, size);
-            reflGrad.addColorStop(0, 'rgba(99, 102, 241, 0.16)');
-            reflGrad.addColorStop(0.55, 'rgba(168, 85, 247, 0.12)');
-            reflGrad.addColorStop(1, 'rgba(59, 130, 246, 0.07)');
-            ctx.fillStyle = reflGrad;
-            ctx.fillRect(0, 0, size, size);
-
-            // Comic stone blotches & speckles
-            for (let i = 0; i < 42; i++) {
-                const x = ((i * 97) % (size - 40)) + 20;
-                const y = ((i * 151) % (size - 40)) + 20;
-                const r = 10 + ((i * 13) % 28);
-                ctx.fillStyle = i % 3 === 0
-                    ? 'rgba(126, 87, 194, 0.08)'
-                    : i % 2 === 0
-                        ? 'rgba(79, 70, 229, 0.07)'
-                        : 'rgba(120, 113, 108, 0.08)';
-                ctx.beginPath();
-                ctx.ellipse(x, y, r * 1.2, r * 0.75, (i * 0.4) % Math.PI, 0, Math.PI * 2);
-                ctx.fill();
-            }
-
-            // Fine grain speckles
-            for (let j = 0; j < 450; j++) {
-                const gx = (j * 73 + 19) % size;
-                const gy = (j * 137 + 11) % size;
-                ctx.fillStyle = j % 2 === 0 ? 'rgba(24, 24, 27, 0.07)' : 'rgba(255, 255, 255, 0.12)';
-                ctx.fillRect(gx, gy, 2, 2);
-            }
-
-            // Inner comic border in cube-matched tone
-            ctx.strokeStyle = 'rgba(120, 110, 96, 0.65)';
-            ctx.lineWidth = 8;
-            ctx.strokeRect(10, 10, size - 20, size - 20);
-
-            // Render text or emoji
-            ctx.fillStyle = '#18181b';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-
-            if (options.isEmoji) {
-                ctx.font = '140px sans-serif';
-                ctx.fillText(lines[0], size / 2, size / 2 + 6);
-            } else if (options.isTitle) {
-                ctx.font = '900 72px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-                ctx.fillText(lines[0], size / 2, size / 2 - 22);
-                if (lines[1]) {
-                    ctx.font = '600 32px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-                    ctx.fillStyle = '#44403c';
-                    ctx.fillText(lines[1], size / 2, size / 2 + 44);
-                }
-            } else {
-                const fontSize = options.fontSize || 38;
-                ctx.font = `700 ${fontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
-                const text = lines.join(' ');
-                const words = text.split(' ');
-                const wrapped = [];
-                let currentLine = '';
-
-                words.forEach((w) => {
-                    const testLine = currentLine ? currentLine + ' ' + w : w;
-                    if (ctx.measureText(testLine).width > size - 84 && currentLine) {
-                        wrapped.push(currentLine);
-                        currentLine = w;
-                    } else {
-                        currentLine = testLine;
-                    }
-                });
-                if (currentLine) wrapped.push(currentLine);
-
-                const lineHeight = fontSize * 1.28;
-                const startY = size / 2 - ((wrapped.length - 1) * lineHeight) / 2;
-                wrapped.forEach((line, idx) => {
-                    ctx.fillText(line, size / 2, startY + idx * lineHeight);
-                });
-            }
-
-            const tex = new THREE.CanvasTexture(canvas);
-            tex.anisotropy = 4;
-            return tex;
         }
 
         function initThreeCube(wordData) {
@@ -1205,19 +1214,19 @@
                 camera.position.set(0, 0, 5.2);
 
                 renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-                renderer.setSize(240, 240);
+                renderer.setSize(244, 244);
                 renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
                 host.innerHTML = '';
                 host.appendChild(renderer.domElement);
 
-                const ambient = new THREE.AmbientLight(0xd8d0f0, 0.92);
+                const ambient = new THREE.AmbientLight(0xdbeafe, 0.95);
                 scene.add(ambient);
 
-                const keyLight = new THREE.DirectionalLight(0xfff7ed, 0.72);
+                const keyLight = new THREE.DirectionalLight(0xffffff, 0.68);
                 keyLight.position.set(2.5, 4, 4);
                 scene.add(keyLight);
 
-                const rimLight = new THREE.DirectionalLight(0x818cf8, 0.38);
+                const rimLight = new THREE.DirectionalLight(0x818cf8, 0.28);
                 rimLight.position.set(-3, -2, -2);
                 scene.add(rimLight);
             }
@@ -1226,41 +1235,24 @@
                 scene.remove(stoneCubeMesh);
             }
 
-            // Slightly subdivided box with subtle organic rock displacement
-            const geom = new THREE.BoxGeometry(2.05, 2.05, 2.05, 10, 10, 10);
-            const pos = geom.attributes.position;
-            for (let i = 0; i < pos.count; i++) {
-                const vx = pos.getX(i);
-                const vy = pos.getY(i);
-                const vz = pos.getZ(i);
-                const jitter = 0.022 * Math.sin(vx * 7.3 + vy * 5.1) * Math.cos(vz * 6.7);
-                pos.setXYZ(i, vx + jitter, vy - jitter * 0.8, vz + jitter * 0.6);
-            }
-            geom.computeVertexNormals();
+            const geom = createSmoothRoundedCubeGeometry(2.05, 0.22);
 
             const textures = [
-                createStoneFaceTexture([wordData.ex1], { fontSize: 36 }),                 // Right (+X)
-                createStoneFaceTexture([wordData.ex2], { fontSize: 36 }),                 // Left (-X)
-                createStoneFaceTexture([wordData.definition], { fontSize: 36 }),           // Top (+Y)
-                createStoneFaceTexture([wordData.visual], { isEmoji: true }),              // Bottom (-Y)
-                createStoneFaceTexture([wordData.word, wordData.phonetic], { isTitle: true }), // Front (+Z)
-                createStoneFaceTexture([wordData.ex3], { fontSize: 36 })                  // Back (-Z)
+                createGreyCubeTexture([wordData.ex1], { fontSize: 36 }),
+                createGreyCubeTexture([wordData.ex2], { fontSize: 36 }),
+                createGreyCubeTexture([wordData.definition], { fontSize: 36 }),
+                createGreyCubeTexture([wordData.visual], { isEmoji: true }),
+                createGreyCubeTexture([wordData.word, wordData.phonetic], { isTitle: true }),
+                createGreyCubeTexture([wordData.ex3], { fontSize: 36 })
             ];
 
             const materials = textures.map((tex) => new THREE.MeshStandardMaterial({
                 map: tex,
-                roughness: 0.78,
-                metalness: 0.06
+                roughness: 0.74,
+                metalness: 0.05
             }));
 
             stoneCubeMesh = new THREE.Mesh(geom, materials);
-
-            // Subtle dark comic-style wireframe edge accent
-            const edgesGeom = new THREE.EdgesGeometry(new THREE.BoxGeometry(2.06, 2.06, 2.06));
-            const edgesMat = new THREE.LineBasicMaterial({ color: 0x27272a, transparent: true, opacity: 0.55 });
-            outlineMesh = new THREE.LineSegments(edgesGeom, edgesMat);
-            stoneCubeMesh.add(outlineMesh);
-
             scene.add(stoneCubeMesh);
 
             targetRotX = 0;
@@ -1284,26 +1276,24 @@
             if (stoneCubeMesh) {
                 stoneCubeMesh.rotation.x = THREE.MathUtils.degToRad(currentRotX);
                 stoneCubeMesh.rotation.y = THREE.MathUtils.degToRad(currentRotY);
-                stoneCubeMesh.position.y = Math.sin(performance.now() * 0.0022) * 0.06;
+                stoneCubeMesh.position.y = Math.sin(performance.now() * 0.0022) * 0.05;
             }
 
             renderer.render(scene, camera);
         }
 
-        function inspectMemoryCube(wordData, sourceWrapper) {
+        function inspectMemoryCube(wordData, sourceSlot) {
             const vault = document.getElementById('memoryVault');
             const cubeStage = document.getElementById('cubeStage');
             const holder = document.getElementById('cubeDepthHolder');
             const board = document.getElementById('retroBoard');
 
-            currentWordData = wordData;
-
-            if (activePickedWrapper) {
-                activePickedWrapper.classList.remove('picked-out');
+            if (activePickedSlot) {
+                activePickedSlot.classList.remove('picked-out');
             }
-            activePickedWrapper = sourceWrapper || null;
-            if (sourceWrapper) {
-                sourceWrapper.classList.add('picked-out');
+            activePickedSlot = sourceSlot || null;
+            if (sourceSlot) {
+                sourceSlot.classList.add('picked-out');
             }
 
             initThreeCube(wordData);
@@ -1328,9 +1318,9 @@
             const holder = document.getElementById('cubeDepthHolder');
             const board = document.getElementById('retroBoard');
 
-            if (activePickedWrapper) {
-                activePickedWrapper.classList.remove('picked-out');
-                activePickedWrapper = null;
+            if (activePickedSlot) {
+                activePickedSlot.classList.remove('picked-out');
+                activePickedSlot = null;
             }
 
             holder.classList.remove('approached');
