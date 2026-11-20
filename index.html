@@ -9,7 +9,6 @@
             --ink-dark: #18181b;
             --wrong-text: #7e22ce;
             --correct-text: #15803d;
-            --synapse-yellow: #fcd34d;
         }
 
         * {
@@ -51,7 +50,7 @@
             left: -4vw;
             z-index: 0;
             pointer-events: none;
-            transition: opacity 0.45s ease;
+            transition: opacity 0.45s ease, filter 0.45s ease;
         }
 
         .bg-first-page {
@@ -71,12 +70,34 @@
             opacity: 0;
         }
 
-        .retro-board.clouds-bg .bg-first-page {
+        .bg-vault-page {
+            background-image: url('Background2.webp');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            opacity: 0;
+        }
+
+        .retro-board.clouds-bg .bg-first-page,
+        .retro-board.clouds-bg .bg-vault-page {
             opacity: 0;
         }
 
         .retro-board.clouds-bg .bg-clouds-page {
             opacity: 1;
+        }
+
+        .retro-board.vault-bg .bg-first-page,
+        .retro-board.vault-bg .bg-clouds-page {
+            opacity: 0;
+        }
+
+        .retro-board.vault-bg .bg-vault-page {
+            opacity: 1;
+        }
+
+        .retro-board.blurred-bg .bg-layer {
+            filter: blur(5px) brightness(0.88);
         }
 
         .content-wrap {
@@ -98,8 +119,8 @@
             width: 100%;
             height: fit-content;
             opacity: 1;
-            transition: transform 0.72s cubic-bezier(0.16, 1, 0.3, 1);
-            will-change: transform;
+            transition: transform 0.72s cubic-bezier(0.16, 1, 0.3, 1), filter 0.45s ease;
+            will-change: transform, filter;
         }
 
         .page-slide.enter-from-right {
@@ -379,13 +400,19 @@
             box-shadow: 1px 1px 0px var(--ink-dark);
         }
 
-        /* 3. MEMORY STORAGE NETWORK (NEURAL CONSTELLATION) */
+        /* 3. MEMORY STORAGE 3x3 GRID WITH SCROLL */
         .memory-vault {
             display: none;
             flex-direction: column;
             width: 100%;
             height: 100%;
             padding: 6px 0;
+            transition: transform 0.72s cubic-bezier(0.16, 1, 0.3, 1), filter 0.45s ease;
+        }
+
+        .memory-vault.defocused {
+            filter: blur(5px) brightness(0.84);
+            pointer-events: none;
         }
 
         .vault-scroll {
@@ -396,106 +423,106 @@
             overflow-x: hidden;
             -webkit-overflow-scrolling: touch;
             scrollbar-width: none;
-            padding: 18px 8px 32px;
+            padding: 14px 4px 28px;
         }
 
         .vault-scroll::-webkit-scrollbar {
             display: none;
         }
 
-        .constellation-canvas {
-            position: relative;
+        .vault-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            row-gap: 24px;
+            column-gap: 10px;
             width: 100%;
-            min-height: 100%;
-        }
-
-        .synapse-svg {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 1;
-            overflow: visible;
+            min-height: calc(100dvh - 56px);
+            align-content: space-between;
+            justify-items: center;
+            padding: 8px 2px;
         }
 
         .node-wrapper {
-            position: absolute;
-            width: 82px;
-            height: 82px;
-            z-index: 2;
+            width: 72px;
+            height: 72px;
             cursor: pointer;
             perspective: 700px;
-            animation: node-levitate 4.2s ease-in-out infinite;
+            animation: node-levitate 4.4s ease-in-out infinite;
+            flex-shrink: 0;
         }
 
         @keyframes node-levitate {
             0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-6px); }
+            50% { transform: translateY(-5px); }
         }
 
         .node-cube {
-            width: 82px;
-            height: 82px;
+            width: 72px;
+            height: 72px;
             position: relative;
             transform-style: preserve-3d;
             -webkit-transform-style: preserve-3d;
-            transform: translateZ(-41px) rotateX(-16deg) rotateY(24deg);
+            /* Angle tuned so left face is minimally visible */
+            transform: translateZ(-36px) rotateX(-12deg) rotateY(10deg);
             transition: transform 0.25s ease;
         }
 
         .node-wrapper:active .node-cube {
-            transform: translateZ(-41px) rotateX(-10deg) rotateY(15deg) scale(0.94);
+            transform: translateZ(-36px) rotateX(-6deg) rotateY(4deg) scale(0.95);
         }
 
+        /* Rawer base tone + subtle blue-violet reflection */
         .node-face {
             position: absolute;
             top: 0;
             left: 0;
-            width: 82px;
-            height: 82px;
+            width: 72px;
+            height: 72px;
             border: 2px solid var(--ink-dark);
             border-radius: 0;
             background-image: url('frame.png');
             background-size: cover;
             background-position: center;
+            filter: saturate(0.72) contrast(0.96) brightness(0.95);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 6px;
+            padding: 5px;
             text-align: center;
             backface-visibility: hidden;
             -webkit-backface-visibility: hidden;
+            overflow: hidden;
         }
 
-        .node-front  { transform: rotateY(  0deg) translateZ(41px); }
-        .node-top    { transform: rotateX( 90deg) translateZ(41px); filter: brightness(1.03); }
-        .node-left   { transform: rotateY(270deg) translateZ(41px); filter: brightness(0.93); }
-        .node-right  { transform: rotateY( 90deg) translateZ(41px); filter: brightness(0.93); }
-        .node-bottom { transform: rotateX(-90deg) translateZ(41px); }
-        .node-back   { transform: rotateY(180deg) translateZ(41px); }
+        .node-face::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(145deg, rgba(99, 102, 241, 0.14) 0%, rgba(168, 85, 247, 0.10) 65%, rgba(59, 130, 246, 0.06) 100%);
+            pointer-events: none;
+        }
+
+        .node-front  { transform: rotateY(  0deg) translateZ(36px); }
+        .node-top    { transform: rotateX( 90deg) translateZ(36px); filter: saturate(0.72) contrast(0.96) brightness(0.99); }
+        .node-left   { transform: rotateY(270deg) translateZ(36px); filter: saturate(0.76) contrast(0.96) brightness(0.88); }
+        .node-right  { transform: rotateY( 90deg) translateZ(36px); filter: saturate(0.76) contrast(0.96) brightness(0.90); }
+        .node-bottom { transform: rotateX(-90deg) translateZ(36px); }
+        .node-back   { transform: rotateY(180deg) translateZ(36px); }
 
         .node-word {
-            font-size: 11px;
+            position: relative;
+            z-index: 1;
+            font-size: 9.5px;
             font-weight: 900;
-            letter-spacing: 0.04em;
+            letter-spacing: 0.03em;
             color: var(--ink-dark);
             text-transform: uppercase;
             word-break: break-word;
             line-height: 1.15;
         }
 
-        .node-wrapper.newly-saved .node-front::after {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background-color: rgba(252, 211, 77, 0.22);
-            pointer-events: none;
-        }
-
-        /* 4. INSPECTED 3D CUBE STAGE */
+        /* 4. INSPECTED 3D CUBE STAGE (APPROACHING AT RIGHT ANGLE) */
         .cube-stage {
             display: none;
             flex-direction: column;
@@ -539,9 +566,13 @@
             width: 150px;
             height: 150px;
             margin: 14px auto 0;
-            transform: scale(1.12);
-            transition: transform 0.65s cubic-bezier(0.22, 1, 0.36, 1);
+            transform: scale(0.55);
+            transition: transform 0.65s cubic-bezier(0.16, 1, 0.3, 1);
             position: relative;
+        }
+
+        .cube-depth-holder.approached {
+            transform: scale(1.12);
         }
 
         .cube-wrapper {
@@ -569,6 +600,7 @@
             transition: transform 0.75s cubic-bezier(0.25, 1, 0.5, 1);
         }
 
+        /* Rawer cube tone + faint blue-violet reflection */
         .cube-face {
             position: absolute;
             top: 0;
@@ -589,7 +621,17 @@
             background-image: url('frame.png');
             background-size: cover;
             background-position: center;
+            filter: saturate(0.72) contrast(0.96) brightness(0.95);
             box-shadow: inset 0 0 12px rgba(0,0,0,0.05);
+        }
+
+        .cube-face::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(150deg, rgba(99, 102, 241, 0.13) 0%, rgba(168, 85, 247, 0.09) 65%, rgba(59, 130, 246, 0.05) 100%);
+            pointer-events: none;
+            z-index: 0;
         }
 
         .cube.folded .face-front  { transform: rotateY(  0deg) translateZ(75px); }
@@ -628,9 +670,13 @@
             position: absolute;
             inset: -14px;
             z-index: 20;
-            display: grid;
+            display: none;
             grid-template-columns: 1fr 1fr 1fr;
             grid-template-rows: 1fr 1fr 1fr;
+        }
+
+        .cube-stage.assembled .touch-overlay {
+            display: grid;
         }
 
         .zone {
@@ -720,6 +766,7 @@
         <!-- Background Layers -->
         <div class="bg-layer bg-first-page"></div>
         <div class="bg-layer bg-clouds-page"></div>
+        <div class="bg-layer bg-vault-page"></div>
 
         <div class="content-wrap">
 
@@ -810,18 +857,16 @@
                 </div>
             </div>
 
-            <!-- Screen 3: Memory Storage Constellation -->
+            <!-- Screen 3: Memory Storage 3x3 Grid -->
             <div class="memory-vault page-slide" id="memoryVault">
                 <div class="vault-scroll" id="vaultScroll">
-                    <div class="constellation-canvas" id="constellationCanvas">
-                        <svg class="synapse-svg" id="synapseSvg"></svg>
-                    </div>
+                    <div class="vault-grid" id="vaultGrid"></div>
                 </div>
             </div>
 
             <!-- Screen 4: Solid Hand-Drawn 3D Cube Inspection -->
-            <div class="cube-stage page-slide" id="cubeStage">
-                <button class="back-network-btn" onclick="returnToVault()"><span>← Back to Network</span></button>
+            <div class="cube-stage page-slide assembled" id="cubeStage">
+                <button class="back-network-btn" onclick="returnToVault()"><span>← Back to Grid</span></button>
 
                 <div class="cube-depth-holder" id="cubeDepthHolder">
                     <div class="cube-wrapper levitating" id="cubeWrapper">
@@ -904,7 +949,6 @@
         let rotX = 0;
         let rotY = 0;
 
-        // Base memory words + newly learned APPLE
         const DEFAULT_WORDS = [
             {
                 id: 'orchard',
@@ -945,6 +989,46 @@
                 ex2: 'He rubbed the top of his <b>head</b> in surprise.',
                 ex3: 'A clever idea popped into his <b>head</b>.',
                 visual: '👽'
+            },
+            {
+                id: 'fruit',
+                word: 'FRUIT',
+                phonetic: '/fruːt/',
+                definition: 'The sweet or fleshy product of a tree or plant',
+                ex1: 'Ripe <b>fruit</b> lay across the grass.',
+                ex2: 'He gathered a basket of fresh <b>fruit</b>.',
+                ex3: 'Apples are his favorite kind of <b>fruit</b>.',
+                visual: '🍓'
+            },
+            {
+                id: 'red',
+                word: 'RED',
+                phonetic: '/red/',
+                definition: 'Having the color of blood or a ripe apple',
+                ex1: 'The object on the ground was bright <b>red</b>.',
+                ex2: 'A <b>red</b> apple stood out among green leaves.',
+                ex3: 'She painted the wooden box <b>red</b>.',
+                visual: '🔴'
+            },
+            {
+                id: 'fall',
+                word: 'FALL',
+                phonetic: '/fɔːl/',
+                definition: 'Move downward rapidly without support',
+                ex1: 'An apple began to <b>fall</b> from the branch.',
+                ex2: 'Watch your step so you do not <b>fall</b>.',
+                ex3: 'Dry leaves <b>fall</b> every autumn.',
+                visual: '🍂'
+            },
+            {
+                id: 'wander',
+                word: 'WANDER',
+                phonetic: '/ˈwɒn.dər/',
+                definition: 'Walk or move in a leisurely or aimless way',
+                ex1: 'Igor liked to <b>wander</b> through quiet groves.',
+                ex2: 'They <b>wander</b> along the path after sunset.',
+                ex3: 'His thoughts began to <b>wander</b>.',
+                visual: '🧭'
             }
         ];
 
@@ -956,13 +1040,12 @@
             ex1: 'I eat a fresh <b>apple</b> every morning.',
             ex2: 'She cut the <b>apple</b> into four equal pieces.',
             ex3: 'This green <b>apple</b> tastes quite sour.',
-            visual: '🍎',
-            isNew: true
+            visual: '🍎'
         };
 
         function getStoredWords() {
             try {
-                const raw = localStorage.getItem('alien_memory_cubes');
+                const raw = localStorage.getItem('alien_memory_cubes_v2');
                 if (raw) {
                     const parsed = JSON.parse(raw);
                     if (Array.isArray(parsed) && parsed.length > 0) return parsed;
@@ -973,7 +1056,7 @@
 
         function saveStoredWords(words) {
             try {
-                localStorage.setItem('alien_memory_cubes', JSON.stringify(words));
+                localStorage.setItem('alien_memory_cubes_v2', JSON.stringify(words));
             } catch (e) {}
         }
 
@@ -1001,30 +1084,6 @@
             }, 720);
         }
 
-        function slideBackToPage(fromEl, toEl, onAfterShow) {
-            fromEl.classList.remove('active-center');
-            fromEl.classList.add('enter-from-right');
-
-            toEl.style.display = 'flex';
-            toEl.classList.remove('enter-from-right', 'active-center');
-            toEl.classList.add('exit-to-left');
-            toEl.offsetHeight;
-
-            requestAnimationFrame(() => {
-                toEl.classList.remove('exit-to-left');
-                toEl.classList.add('active-center');
-            });
-
-            if (typeof onAfterShow === 'function') {
-                onAfterShow();
-            }
-
-            setTimeout(() => {
-                fromEl.style.display = 'none';
-                fromEl.classList.remove('enter-from-right');
-            }, 720);
-        }
-
         function startScan() {
             const btn = document.getElementById('scanBtn');
             const intro = document.getElementById('introScreen');
@@ -1035,6 +1094,7 @@
 
             setTimeout(() => {
                 btn.classList.remove('pressed');
+                board.classList.remove('vault-bg');
                 board.classList.add('clouds-bg');
                 slideBetweenPages(intro, workspace);
             }, 180);
@@ -1096,58 +1156,42 @@
         function openMemoryVault() {
             const workspace = document.getElementById('scanWorkspace');
             const vault = document.getElementById('memoryVault');
+            const board = document.getElementById('retroBoard');
 
             const words = getStoredWords();
-            // Ensure APPLE is visible in the vault when navigating there
             if (!words.some(w => w.id === 'apple')) {
                 words.unshift(APPLE_WORD);
                 saveStoredWords(words);
             }
 
-            renderMemoryConstellation(words);
+            renderVaultGrid(words);
+            board.classList.remove('clouds-bg', 'blurred-bg');
+            board.classList.add('vault-bg');
+            vault.classList.remove('defocused');
 
-            slideBetweenPages(workspace, vault, () => {
-                // Re-measure synapses once layout settles
-                setTimeout(() => drawSynapses(), 50);
-            });
+            slideBetweenPages(workspace, vault);
         }
 
-        function renderMemoryConstellation(words) {
-            const canvas = document.getElementById('constellationCanvas');
-            const svg = document.getElementById('synapseSvg');
+        function renderVaultGrid(words) {
+            const grid = document.getElementById('vaultGrid');
+            grid.innerHTML = '';
 
-            // Clear old nodes while keeping SVG
-            canvas.querySelectorAll('.node-wrapper').forEach(n => n.remove());
-            svg.innerHTML = '';
-
-            const containerWidth = Math.min(window.innerWidth - 44, 344);
-            const nodeSize = 82;
-            const verticalStep = 112;
-            const topOffset = 18;
-
-            // Organic staggered X positions matching the neural sketch
-            const xPatterns = [
-                containerWidth * 0.14,
-                containerWidth * 0.62,
-                containerWidth * 0.36,
-                containerWidth * 0.10,
-                containerWidth * 0.64,
-                containerWidth * 0.34
+            // Ensure at least 9 cubes to fill the initial 3x3 view cleanly
+            const displayList = [...words];
+            const extraPool = [
+                { id: 'sky', word: 'SKY', phonetic: '/skaɪ/', definition: 'The space above the earth where clouds float', ex1: 'Clouds drifted across the <b>sky</b>.', ex2: 'Birds flew high in the <b>sky</b>.', ex3: 'The evening <b>sky</b> turned violet.', visual: '🌌' }
             ];
+            let poolIdx = 0;
+            while (displayList.length < 9) {
+                const candidate = extraPool[poolIdx % extraPool.length];
+                displayList.push({ ...candidate, id: candidate.id + '_' + displayList.length });
+                poolIdx++;
+            }
 
-            const totalHeight = Math.max(window.innerHeight - 60, topOffset + words.length * verticalStep + 50);
-            canvas.style.height = totalHeight + 'px';
-
-            words.forEach((item, index) => {
+            displayList.forEach((item, index) => {
                 const wrapper = document.createElement('div');
-                wrapper.className = 'node-wrapper' + (item.isNew ? ' newly-saved' : '');
-                const leftPos = Math.max(8, Math.min(containerWidth - nodeSize - 8, xPatterns[index % xPatterns.length]));
-                const topPos = topOffset + index * verticalStep;
-
-                wrapper.style.left = leftPos + 'px';
-                wrapper.style.top = topPos + 'px';
-                wrapper.style.animationDelay = (index * 0.55) + 's';
-                wrapper.dataset.index = index;
+                wrapper.className = 'node-wrapper';
+                wrapper.style.animationDelay = ((index * 0.45) % 3.2) + 's';
 
                 wrapper.innerHTML = `
                     <div class="node-cube">
@@ -1163,58 +1207,15 @@
                 `;
 
                 wrapper.onclick = () => inspectMemoryCube(item);
-                canvas.appendChild(wrapper);
+                grid.appendChild(wrapper);
             });
-
-            drawSynapses();
-        }
-
-        function drawSynapses() {
-            const canvas = document.getElementById('constellationCanvas');
-            const svg = document.getElementById('synapseSvg');
-            const nodes = Array.from(canvas.querySelectorAll('.node-wrapper'));
-            svg.innerHTML = '';
-
-            if (nodes.length < 2) return;
-
-            for (let i = 0; i < nodes.length - 1; i++) {
-                const a = nodes[i];
-                const b = nodes[i + 1];
-
-                const x1 = a.offsetLeft + a.offsetWidth / 2;
-                const y1 = a.offsetTop + a.offsetHeight / 2;
-                const x2 = b.offsetLeft + b.offsetWidth / 2;
-                const y2 = b.offsetTop + b.offsetHeight / 2;
-
-                // Subtle organic curve for neural synapse
-                const midX = (x1 + x2) / 2 + (i % 2 === 0 ? 16 : -16);
-                const midY = (y1 + y2) / 2;
-
-                const pathData = `M ${x1} ${y1} Q ${midX} ${midY} ${x2} ${y2}`;
-
-                // Dark hand-drawn outline under yellow synapse
-                const outline = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-                outline.setAttribute('d', pathData);
-                outline.setAttribute('fill', 'none');
-                outline.setAttribute('stroke', '#18181b');
-                outline.setAttribute('stroke-width', '5');
-                outline.setAttribute('stroke-linecap', 'round');
-                svg.appendChild(outline);
-
-                // Yellow synapse core
-                const line = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-                line.setAttribute('d', pathData);
-                line.setAttribute('fill', 'none');
-                line.setAttribute('stroke', '#fcd34d');
-                line.setAttribute('stroke-width', '2.5');
-                line.setAttribute('stroke-linecap', 'round');
-                svg.appendChild(line);
-            }
         }
 
         function inspectMemoryCube(wordData) {
             const vault = document.getElementById('memoryVault');
             const cubeStage = document.getElementById('cubeStage');
+            const holder = document.getElementById('cubeDepthHolder');
+            const board = document.getElementById('retroBoard');
 
             document.getElementById('cubeTerm').textContent = wordData.word;
             document.getElementById('cubePhonetic').textContent = wordData.phonetic;
@@ -1224,19 +1225,38 @@
             document.getElementById('cubeEx3').innerHTML = wordData.ex3;
             document.getElementById('cubeVisual').textContent = wordData.visual;
 
+            // Reset to straight-on right angle
             rotX = 0;
             rotY = 0;
             applyCubeTransform();
 
-            slideBetweenPages(vault, cubeStage);
+            vault.classList.add('defocused');
+            board.classList.add('blurred-bg');
+
+            holder.classList.remove('approached');
+            cubeStage.style.display = 'flex';
+            cubeStage.classList.remove('exit-to-left');
+            cubeStage.classList.add('active-center');
+            holder.offsetHeight;
+
+            requestAnimationFrame(() => {
+                holder.classList.add('approached');
+            });
         }
 
         function returnToVault() {
-            const cubeStage = document.getElementById('cubeStage');
             const vault = document.getElementById('memoryVault');
-            slideBackToPage(cubeStage, vault, () => {
-                setTimeout(() => drawSynapses(), 50);
-            });
+            const cubeStage = document.getElementById('cubeStage');
+            const holder = document.getElementById('cubeDepthHolder');
+            const board = document.getElementById('retroBoard');
+
+            holder.classList.remove('approached');
+            board.classList.remove('blurred-bg');
+            vault.classList.remove('defocused');
+
+            setTimeout(() => {
+                cubeStage.style.display = 'none';
+            }, 350);
         }
 
         const cube = document.getElementById('cube');
@@ -1278,12 +1298,6 @@
             rotY += 180;
             applyCubeTransform();
         }
-
-        window.addEventListener('resize', () => {
-            if (document.getElementById('memoryVault').style.display === 'flex') {
-                renderMemoryConstellation(getStoredWords());
-            }
-        });
     </script>
 </body>
 </html>
