@@ -404,6 +404,7 @@
             justify-content: center;
             width: 100%;
             height: 100%;
+            position: relative;
             transition: transform 0.72s cubic-bezier(0.16, 1, 0.3, 1), filter 0.45s ease;
         }
 
@@ -419,10 +420,11 @@
             overflow-y: hidden;
             -webkit-overflow-scrolling: touch;
             scrollbar-width: none;
-            padding: 18px 14px;
+            padding: 16px 12px;
             display: flex;
             align-items: center;
             justify-content: center;
+            margin-bottom: 24px;
         }
 
         .vault-scroll.has-overflow {
@@ -435,11 +437,11 @@
 
         .vault-grid {
             display: grid;
-            grid-template-rows: repeat(2, 122px);
+            grid-template-rows: repeat(2, 126px);
             grid-auto-flow: column;
-            grid-auto-columns: 122px;
-            row-gap: 24px;
-            column-gap: 26px;
+            grid-auto-columns: 126px;
+            row-gap: 10px;
+            column-gap: 12px;
             width: max-content;
             align-items: center;
             justify-items: center;
@@ -447,8 +449,8 @@
         }
 
         .vault-node-slot {
-            width: 122px;
-            height: 122px;
+            width: 126px;
+            height: 126px;
             cursor: pointer;
             animation: node-levitate 4.4s ease-in-out infinite;
             flex-shrink: 0;
@@ -464,13 +466,57 @@
 
         @keyframes node-levitate {
             0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-5px); }
+            50% { transform: translateY(-4px); }
         }
 
         .vault-mini-canvas {
-            width: 122px;
-            height: 122px;
+            width: 126px;
+            height: 126px;
             display: block;
+        }
+
+        /* Shared bottom pink action button style */
+        .bottom-nav-btn {
+            position: absolute;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #d9779a;
+            background-image: url('frame.png');
+            background-size: cover;
+            background-position: center;
+            border: 2px solid var(--ink-dark);
+            border-radius: 12px;
+            overflow: hidden;
+            color: var(--ink-dark);
+            padding: 10px 18px;
+            font-size: 11.5px;
+            font-weight: 800;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            cursor: pointer;
+            box-shadow: 2px 2px 0px var(--ink-dark);
+            z-index: 30;
+            white-space: nowrap;
+        }
+
+        .bottom-nav-btn::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-color: rgba(236, 122, 162, 0.72);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .bottom-nav-btn span {
+            position: relative;
+            z-index: 1;
+        }
+
+        .bottom-nav-btn:active {
+            transform: translateX(-50%) translate(2px, 2px);
+            box-shadow: 1px 1px 0px var(--ink-dark);
         }
 
         /* 4. THREE.JS WEBGL 3D CUBE STAGE */
@@ -486,68 +532,25 @@
             position: relative;
         }
 
-        .back-network-btn {
-            position: absolute;
-            top: 12px;
-            left: 50%;
-            transform: translateX(-50%);
-            background-color: #d9779a;
-            background-image: url('frame.png');
-            background-size: cover;
-            background-position: center;
-            border: 2px solid var(--ink-dark);
-            border-radius: 12px;
-            overflow: hidden;
-            color: var(--ink-dark);
-            padding: 8px 16px;
-            font-size: 11px;
-            font-weight: 800;
-            letter-spacing: 0.05em;
-            text-transform: uppercase;
-            cursor: pointer;
-            box-shadow: 2px 2px 0px var(--ink-dark);
-            z-index: 30;
-            white-space: nowrap;
-        }
-
-        .back-network-btn::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background-color: rgba(236, 122, 162, 0.72);
-            pointer-events: none;
-            z-index: 0;
-        }
-
-        .back-network-btn span {
-            position: relative;
-            z-index: 1;
-        }
-
-        .back-network-btn:active {
-            transform: translateX(-50%) translate(2px, 2px);
-            box-shadow: 1px 1px 0px var(--ink-dark);
-        }
-
         .webgl-cube-holder {
             position: relative;
-            width: 248px;
-            height: 248px;
-            margin-top: 34px;
+            width: 256px;
+            height: 256px;
+            margin-bottom: 24px;
             display: flex;
             align-items: center;
             justify-content: center;
-            transform: scale(0.78);
+            transform: scale(0.84);
             transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
         }
 
         .webgl-cube-holder.approached {
-            transform: translateY(18px) scale(1.05);
+            transform: scale(1.04);
         }
 
         #threeCanvasHost {
-            width: 248px;
-            height: 248px;
+            width: 256px;
+            height: 256px;
             position: relative;
             z-index: 5;
         }
@@ -566,81 +569,6 @@
             background: transparent;
             border: none;
         }
-
-        /* Crosshair Controls */
-        .crosshair-pad {
-            position: relative;
-            width: 70px;
-            height: 70px;
-            margin-top: calc(22px + 8dvh);
-            opacity: 1;
-            pointer-events: auto;
-            z-index: 25;
-        }
-
-        .line-btn {
-            position: absolute;
-            background: transparent;
-            border: none;
-            outline: none;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 0;
-        }
-
-        .line-btn::after {
-            content: '';
-            display: block;
-            background-image: url('frame.png');
-            background-size: cover;
-            border: 1.5px solid var(--ink-dark);
-            border-radius: 4px;
-            box-shadow: 2px 2px 0px var(--ink-dark);
-            transition: transform 0.18s ease, background-color 0.2s ease;
-        }
-
-        .line-btn:active::after {
-            transform: scale(0.84);
-            background-color: #fcd34d;
-        }
-
-        .line-up {
-            top: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 26px;
-            height: 28px;
-        }
-        .line-up::after { width: 5px; height: 22px; }
-
-        .line-down {
-            bottom: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 26px;
-            height: 28px;
-        }
-        .line-down::after { width: 5px; height: 22px; }
-
-        .line-left {
-            left: 0;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 28px;
-            height: 26px;
-        }
-        .line-left::after { width: 22px; height: 5px; }
-
-        .line-right {
-            right: 0;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 28px;
-            height: 26px;
-        }
-        .line-right::after { width: 22px; height: 5px; }
     </style>
 </head>
 <body>
@@ -745,12 +673,11 @@
                 <div class="vault-scroll" id="vaultScroll">
                     <div class="vault-grid" id="vaultGrid"></div>
                 </div>
+                <button class="bottom-nav-btn" id="backToAdventuresBtn" onclick="returnToAdventures()"><span>Back to Adventures</span></button>
             </div>
 
             <!-- Screen 4: Three.js WebGL 3D Cube Inspection -->
             <div class="cube-stage page-slide assembled" id="cubeStage">
-                <button class="back-network-btn" onclick="returnToVault()"><span>← Back to Grid</span></button>
-
                 <div class="webgl-cube-holder" id="cubeDepthHolder">
                     <div id="threeCanvasHost"></div>
                     <div class="touch-overlay">
@@ -768,13 +695,7 @@
                     </div>
                 </div>
 
-                <!-- Crosshair Controls -->
-                <div class="crosshair-pad">
-                    <button class="line-btn line-up" onclick="tiltUp()" aria-label="Top Face"></button>
-                    <button class="line-btn line-left" onclick="turnLeft()" aria-label="Left Face"></button>
-                    <button class="line-btn line-right" onclick="turnRight()" aria-label="Right Face"></button>
-                    <button class="line-btn line-down" onclick="tiltDown()" aria-label="Bottom Face"></button>
-                </div>
+                <button class="bottom-nav-btn" id="backToGridBtn" onclick="returnToVault()"><span>← Back to Grid</span></button>
             </div>
 
         </div>
@@ -796,8 +717,8 @@
         let threeAnimId = null;
 
         const CUBE_OFFSETS = [
-            { x: -3, y: 2 },  { x: 4, y: -3 },
-            { x: 3, y: 3 },   { x: -4, y: -2 }
+            { x: -1, y: 1 },  { x: 1, y: -1 },
+            { x: 1, y: 1 },   { x: -1, y: -1 }
         ];
 
         const DEFAULT_WORDS = [
@@ -856,7 +777,7 @@
 
         function getStoredWords() {
             try {
-                const raw = localStorage.getItem('alien_memory_cubes_v8');
+                const raw = localStorage.getItem('alien_memory_cubes_v9');
                 if (raw) {
                     const parsed = JSON.parse(raw);
                     if (Array.isArray(parsed) && parsed.length > 0) return parsed;
@@ -867,7 +788,7 @@
 
         function saveStoredWords(words) {
             try {
-                localStorage.setItem('alien_memory_cubes_v8', JSON.stringify(words));
+                localStorage.setItem('alien_memory_cubes_v9', JSON.stringify(words));
             } catch (e) {}
         }
 
@@ -985,6 +906,38 @@
             });
         }
 
+        function returnToAdventures() {
+            const vault = document.getElementById('memoryVault');
+            const workspace = document.getElementById('scanWorkspace');
+            const board = document.getElementById('retroBoard');
+
+            if (vaultSpinRaf) {
+                cancelAnimationFrame(vaultSpinRaf);
+                vaultSpinRaf = null;
+            }
+
+            board.classList.remove('vault-bg', 'blurred-bg');
+            board.classList.add('clouds-bg');
+
+            vault.classList.remove('active-center');
+            vault.classList.add('exit-to-left');
+
+            workspace.style.display = 'flex';
+            workspace.classList.remove('exit-to-left', 'active-center');
+            workspace.classList.add('enter-from-right');
+            workspace.offsetHeight;
+
+            requestAnimationFrame(() => {
+                workspace.classList.remove('enter-from-right');
+                workspace.classList.add('active-center');
+            });
+
+            setTimeout(() => {
+                vault.style.display = 'none';
+                vault.classList.remove('exit-to-left');
+            }, 720);
+        }
+
         // Smooth rounded stone cube geometry
         function createSmoothRoundedCubeGeometry(size, rounding = 0.24) {
             const segs = 14;
@@ -1022,13 +975,12 @@
             return geom;
         }
 
-        // Deterministic helper for consistent multi-stone blotches & speckles
         function seededRand(seed) {
             const x = Math.sin(seed * 12.9898 + 78.233) * 43758.5453;
             return x - Math.floor(x);
         }
 
-        // Generates both color map and bump map in muted grey multi-stone style
+        // Muted grey multi-stone texture with kept speckles and reduced dark blotches
         function createMultiStoneTextures(lines, options = {}, seedOffset = 1) {
             const size = 512;
             const colorCanvas = document.createElement('canvas');
@@ -1041,29 +993,27 @@
             bumpCanvas.height = size;
             const bctx = bumpCanvas.getContext('2d');
 
-            // Base muted grey tone
             ctx.fillStyle = '#b4b8bf';
             ctx.fillRect(0, 0, size, size);
 
             bctx.fillStyle = '#808080';
             bctx.fillRect(0, 0, size, size);
 
-            // Multi-stone angular/faceted patches in muted grey shades + faint blue-violet cast
+            // Reduced number of multi-stone patches (fewer dark patches)
             const greyPatches = [
-                'rgba(156, 161, 170, 0.55)',
-                'rgba(132, 137, 146, 0.50)',
-                'rgba(176, 180, 188, 0.45)',
-                'rgba(116, 121, 132, 0.42)',
-                'rgba(136, 138, 162, 0.22)',
-                'rgba(148, 134, 166, 0.20)'
+                'rgba(162, 167, 176, 0.42)',
+                'rgba(142, 147, 156, 0.34)',
+                'rgba(180, 184, 192, 0.38)',
+                'rgba(138, 140, 164, 0.16)',
+                'rgba(150, 138, 166, 0.15)'
             ];
 
-            for (let i = 0; i < 24; i++) {
+            for (let i = 0; i < 8; i++) {
                 const s = seedOffset * 100 + i * 17;
                 const cx = seededRand(s + 1) * size;
                 const cy = seededRand(s + 2) * size;
-                const rx = 28 + seededRand(s + 3) * 68;
-                const ry = 22 + seededRand(s + 4) * 58;
+                const rx = 28 + seededRand(s + 3) * 64;
+                const ry = 22 + seededRand(s + 4) * 52;
                 const verts = 5 + Math.floor(seededRand(s + 5) * 3);
                 const rot = seededRand(s + 6) * Math.PI * 2;
                 const col = greyPatches[i % greyPatches.length];
@@ -1083,16 +1033,8 @@
                 ctx.closePath();
                 ctx.fillStyle = col;
                 ctx.fill();
-
-                // Fine ink-like stone seam on selected patches
-                if (i % 3 === 0) {
-                    ctx.strokeStyle = 'rgba(39, 39, 42, 0.22)';
-                    ctx.lineWidth = 2;
-                    ctx.stroke();
-                }
                 ctx.restore();
 
-                // Bump relief for stone patches
                 bctx.save();
                 bctx.translate(cx, cy);
                 bctx.rotate(rot);
@@ -1106,47 +1048,47 @@
                     else bctx.lineTo(px, py);
                 }
                 bctx.closePath();
-                bctx.fillStyle = i % 2 === 0 ? 'rgba(155, 155, 155, 0.35)' : 'rgba(105, 105, 105, 0.35)';
+                bctx.fillStyle = i % 2 === 0 ? 'rgba(148, 148, 148, 0.25)' : 'rgba(112, 112, 112, 0.25)';
                 bctx.fill();
                 bctx.restore();
             }
 
             // Subtle blue-violet sheen matching Background2.webp
             const sheen = ctx.createLinearGradient(0, 0, size, size);
-            sheen.addColorStop(0, 'rgba(99, 102, 241, 0.10)');
-            sheen.addColorStop(0.55, 'rgba(139, 92, 246, 0.08)');
-            sheen.addColorStop(1, 'rgba(59, 130, 246, 0.05)');
+            sheen.addColorStop(0, 'rgba(99, 102, 241, 0.09)');
+            sheen.addColorStop(0.55, 'rgba(139, 92, 246, 0.07)');
+            sheen.addColorStop(1, 'rgba(59, 130, 246, 0.04)');
             ctx.fillStyle = sheen;
             ctx.fillRect(0, 0, size, size);
 
-            // Small stone pores & mineral flecks (no border frame)
+            // Kept speckles & stone dots
             for (let p = 0; p < 34; p++) {
                 const sp = seedOffset * 500 + p * 31;
                 const px = 18 + seededRand(sp + 1) * (size - 36);
                 const py = 18 + seededRand(sp + 2) * (size - 36);
-                const pr = 1.5 + seededRand(sp + 3) * 4.2;
+                const pr = 1.4 + seededRand(sp + 3) * 3.8;
 
-                ctx.fillStyle = 'rgba(24, 24, 27, 0.24)';
+                ctx.fillStyle = 'rgba(24, 24, 27, 0.22)';
                 ctx.beginPath();
                 ctx.arc(px, py, pr, 0, Math.PI * 2);
                 ctx.fill();
 
-                bctx.fillStyle = 'rgba(45, 45, 45, 0.65)';
+                bctx.fillStyle = 'rgba(55, 55, 55, 0.55)';
                 bctx.beginPath();
-                bctx.arc(px, py, pr + 1, 0, Math.PI * 2);
+                bctx.arc(px, py, pr + 0.8, 0, Math.PI * 2);
                 bctx.fill();
             }
 
             // Fine mineral grain
-            for (let g = 0; g < 650; g++) {
+            for (let g = 0; g < 600; g++) {
                 const gs = seedOffset * 900 + g * 13;
                 const gx = seededRand(gs + 1) * size;
                 const gy = seededRand(gs + 2) * size;
                 const isLight = seededRand(gs + 3) > 0.5;
-                ctx.fillStyle = isLight ? 'rgba(255, 255, 255, 0.10)' : 'rgba(24, 24, 27, 0.07)';
+                ctx.fillStyle = isLight ? 'rgba(255, 255, 255, 0.09)' : 'rgba(24, 24, 27, 0.05)';
                 ctx.fillRect(gx, gy, 2, 2);
 
-                bctx.fillStyle = isLight ? 'rgba(180, 180, 180, 0.28)' : 'rgba(75, 75, 75, 0.28)';
+                bctx.fillStyle = isLight ? 'rgba(175, 175, 175, 0.24)' : 'rgba(80, 80, 80, 0.24)';
                 bctx.fillRect(gx, gy, 2, 2);
             }
 
@@ -1160,7 +1102,7 @@
                 ctx.fillText(lines[0], size / 2, size / 2 + 4);
             } else if (options.isMiniWord) {
                 const word = lines[0];
-                const fontSize = word.length > 6 ? 56 : 68;
+                const fontSize = word.length > 6 ? 54 : 66;
                 ctx.font = `900 ${fontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
                 ctx.fillText(word, size / 2, size / 2 + 2);
             } else if (options.isTitle) {
@@ -1233,8 +1175,8 @@
 
                 const canvas = document.createElement('canvas');
                 canvas.className = 'vault-mini-canvas';
-                canvas.width = 244;
-                canvas.height = 244;
+                canvas.width = 252;
+                canvas.height = 252;
                 slot.appendChild(canvas);
 
                 slot.onclick = () => inspectMemoryCube(item, slot);
@@ -1243,30 +1185,32 @@
                 if (typeof THREE !== 'undefined') {
                     const miniScene = new THREE.Scene();
                     const miniCam = new THREE.PerspectiveCamera(36, 1, 0.1, 50);
-                    miniCam.position.set(0, 0, 4.35);
+                    // Level straight-on camera angle with comfortable margin so edges never clip
+                    miniCam.position.set(0, 0, 5.15);
+                    miniCam.lookAt(0, 0, 0);
 
                     const miniRenderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
-                    miniRenderer.setSize(122, 122);
+                    miniRenderer.setSize(126, 126);
                     miniRenderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
 
-                    miniScene.add(new THREE.AmbientLight(0xdbeafe, 0.92));
+                    miniScene.add(new THREE.AmbientLight(0xdbeafe, 0.94));
                     const dLight = new THREE.DirectionalLight(0xffffff, 0.72);
-                    dLight.position.set(2, 3, 4);
+                    dLight.position.set(2, 2.5, 4);
                     miniScene.add(dLight);
 
-                    const geom = createSmoothRoundedCubeGeometry(2.05, 0.24);
+                    const geom = createSmoothRoundedCubeGeometry(2.0, 0.24);
                     const stoneSet = createMultiStoneTextures([item.word], { isMiniWord: true }, index + 1);
                     const mats = Array.from({ length: 6 }, () => new THREE.MeshStandardMaterial({
                         map: stoneSet.map,
                         bumpMap: stoneSet.bumpMap,
-                        bumpScale: 0.025,
+                        bumpScale: 0.022,
                         roughness: 0.78,
                         metalness: 0.05
                     }));
 
                     const mesh = new THREE.Mesh(geom, mats);
-                    mesh.rotation.x = THREE.MathUtils.degToRad(-14);
-                    mesh.rotation.y = THREE.MathUtils.degToRad(index * 30);
+                    mesh.rotation.x = 0;
+                    mesh.rotation.y = THREE.MathUtils.degToRad(index * 25);
                     miniScene.add(mesh);
 
                     miniRenderer.render(miniScene, miniCam);
@@ -1276,7 +1220,7 @@
                         camera: miniCam,
                         renderer: miniRenderer,
                         mesh,
-                        angle: index * 30
+                        angle: index * 25
                     });
                 }
             });
@@ -1294,6 +1238,7 @@
 
                 vaultMiniCubes.forEach((entry) => {
                     entry.angle = (entry.angle + delta * 0.0105) % 360;
+                    entry.mesh.rotation.x = 0;
                     entry.mesh.rotation.y = THREE.MathUtils.degToRad(entry.angle);
                     entry.renderer.render(entry.scene, entry.camera);
                 });
@@ -1311,23 +1256,24 @@
             if (!renderer) {
                 scene = new THREE.Scene();
                 camera = new THREE.PerspectiveCamera(38, 1, 0.1, 100);
-                camera.position.set(0, 0, 5.2);
+                camera.position.set(0, 0, 5.45);
+                camera.lookAt(0, 0, 0);
 
                 renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-                renderer.setSize(248, 248);
+                renderer.setSize(256, 256);
                 renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
                 host.innerHTML = '';
                 host.appendChild(renderer.domElement);
 
-                const ambient = new THREE.AmbientLight(0xdbeafe, 0.92);
+                const ambient = new THREE.AmbientLight(0xdbeafe, 0.94);
                 scene.add(ambient);
 
                 const keyLight = new THREE.DirectionalLight(0xffffff, 0.72);
-                keyLight.position.set(2.5, 4, 4);
+                keyLight.position.set(2, 2.5, 4);
                 scene.add(keyLight);
 
-                const rimLight = new THREE.DirectionalLight(0x818cf8, 0.28);
-                rimLight.position.set(-3, -2, -2);
+                const rimLight = new THREE.DirectionalLight(0x818cf8, 0.24);
+                rimLight.position.set(-2.5, -1.5, -2);
                 scene.add(rimLight);
             }
 
@@ -1335,7 +1281,7 @@
                 scene.remove(stoneCubeMesh);
             }
 
-            const geom = createSmoothRoundedCubeGeometry(2.08, 0.22);
+            const geom = createSmoothRoundedCubeGeometry(2.04, 0.22);
 
             const faceSets = [
                 createMultiStoneTextures([wordData.ex1], { fontSize: 36 }, 11),
@@ -1349,7 +1295,7 @@
             const materials = faceSets.map((set) => new THREE.MeshStandardMaterial({
                 map: set.map,
                 bumpMap: set.bumpMap,
-                bumpScale: 0.025,
+                bumpScale: 0.022,
                 roughness: 0.78,
                 metalness: 0.05
             }));
@@ -1378,7 +1324,7 @@
             if (stoneCubeMesh) {
                 stoneCubeMesh.rotation.x = THREE.MathUtils.degToRad(currentRotX);
                 stoneCubeMesh.rotation.y = THREE.MathUtils.degToRad(currentRotY);
-                stoneCubeMesh.position.y = Math.sin(performance.now() * 0.0022) * 0.05;
+                stoneCubeMesh.position.y = Math.sin(performance.now() * 0.0022) * 0.04;
             }
 
             renderer.render(scene, camera);
