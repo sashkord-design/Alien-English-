@@ -7,6 +7,7 @@
     <style>
         :root {
             --ink-dark: #18181b;
+            --cube-edge: #9b9282;
             --wrong-text: #7e22ce;
             --correct-text: #15803d;
         }
@@ -398,13 +399,14 @@
             box-shadow: 1px 1px 0px var(--ink-dark);
         }
 
-        /* 3. MEMORY STORAGE 2-PER-ROW GRID WITH SCROLL */
+        /* 3. MEMORY STORAGE CENTERED 2x2 WITH HORIZONTAL SCROLL */
         .memory-vault {
             display: none;
             flex-direction: column;
+            align-items: center;
+            justify-content: center;
             width: 100%;
             height: 100%;
-            padding: 6px 0;
             transition: transform 0.72s cubic-bezier(0.16, 1, 0.3, 1), filter 0.45s ease;
         }
 
@@ -416,12 +418,18 @@
         .vault-scroll {
             position: relative;
             width: 100%;
-            height: 100%;
-            overflow-y: auto;
-            overflow-x: hidden;
+            overflow-x: auto;
+            overflow-y: hidden;
             -webkit-overflow-scrolling: touch;
             scrollbar-width: none;
-            padding: 18px 12px 36px;
+            padding: 24px 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .vault-scroll.has-overflow {
+            justify-content: flex-start;
         }
 
         .vault-scroll::-webkit-scrollbar {
@@ -430,14 +438,15 @@
 
         .vault-grid {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            row-gap: 32px;
-            column-gap: 18px;
-            width: 100%;
-            min-height: 100%;
-            align-content: start;
+            grid-template-rows: repeat(2, 82px);
+            grid-auto-flow: column;
+            grid-auto-columns: 82px;
+            row-gap: 34px;
+            column-gap: 36px;
+            width: max-content;
+            align-items: center;
             justify-items: center;
-            padding: 10px 6px;
+            padding: 8px 6px;
         }
 
         .node-wrapper {
@@ -447,11 +456,10 @@
             perspective: 750px;
             animation: node-levitate 4.4s ease-in-out infinite;
             flex-shrink: 0;
-            transition: opacity 0.2s ease;
         }
 
         .node-wrapper.picked-out {
-            opacity: 0;
+            visibility: hidden;
             pointer-events: none;
         }
 
@@ -469,14 +477,14 @@
             will-change: transform;
         }
 
-        /* Rawer cube tone + subtle blue-violet reflection */
+        /* Rawer cube tone, subtle blue-violet reflection, and non-black cube-colored edges */
         .node-face {
             position: absolute;
             top: 0;
             left: 0;
             width: 82px;
             height: 82px;
-            border: 2px solid var(--ink-dark);
+            border: 1.5px solid var(--cube-edge);
             border-radius: 0;
             background-image: url('frame.png');
             background-size: cover;
@@ -580,8 +588,8 @@
             width: 150px;
             height: 150px;
             margin: 44px auto 0;
-            transform: translate(var(--from-x, 0px), var(--from-y, 0px)) scale(0.45);
-            transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+            transform: translate(0px, 34px) scale(0.75);
+            transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
             position: relative;
         }
 
@@ -620,7 +628,7 @@
             left: 0;
             width: 150px;
             height: 150px;
-            border: 2px solid var(--ink-dark);
+            border: 1.5px solid var(--cube-edge);
             border-radius: 0;
             overflow: hidden;
             padding: 12px;
@@ -635,7 +643,7 @@
             background-size: cover;
             background-position: center;
             filter: saturate(0.72) contrast(0.96) brightness(0.95);
-            box-shadow: inset 0 0 12px rgba(0,0,0,0.05);
+            box-shadow: inset 0 0 12px rgba(0,0,0,0.04);
         }
 
         .cube-face::after {
@@ -870,7 +878,7 @@
                 </div>
             </div>
 
-            <!-- Screen 3: Memory Storage 2-per-row Grid -->
+            <!-- Screen 3: Memory Storage Centered 2x2 with Horizontal Scroll -->
             <div class="memory-vault page-slide" id="memoryVault">
                 <div class="vault-scroll" id="vaultScroll">
                     <div class="vault-grid" id="vaultGrid"></div>
@@ -964,11 +972,10 @@
         let vaultSpinRaf = null;
         let activePickedWrapper = null;
 
-        // Subtle organic offsets for 2-per-row rows
-        const ROW_OFFSETS = [
-            { x: -4, y: 2 },  { x: 5, y: -4 },
-            { x: 4, y: 4 },   { x: -5, y: -2 },
-            { x: -3, y: 3 },  { x: 4, y: -3 }
+        // Subtle organic offsets for centered cubes
+        const CUBE_OFFSETS = [
+            { x: -3, y: 2 },  { x: 4, y: -3 },
+            { x: 3, y: 3 },   { x: -4, y: -2 }
         ];
 
         const DEFAULT_WORDS = [
@@ -1011,26 +1018,6 @@
                 ex2: 'He rubbed the top of his <b>head</b> in surprise.',
                 ex3: 'A clever idea popped into his <b>head</b>.',
                 visual: '👽'
-            },
-            {
-                id: 'fruit',
-                word: 'FRUIT',
-                phonetic: '/fruːt/',
-                definition: 'The sweet or fleshy product of a tree or plant',
-                ex1: 'Ripe <b>fruit</b> lay across the grass.',
-                ex2: 'He gathered a basket of fresh <b>fruit</b>.',
-                ex3: 'Apples are his favorite kind of <b>fruit</b>.',
-                visual: '🍓'
-            },
-            {
-                id: 'red',
-                word: 'RED',
-                phonetic: '/red/',
-                definition: 'Having the color of blood or a ripe apple',
-                ex1: 'The object on the ground was bright <b>red</b>.',
-                ex2: 'A <b>red</b> apple stood out among green leaves.',
-                ex3: 'She painted the wooden box <b>red</b>.',
-                visual: '🔴'
             }
         ];
 
@@ -1047,7 +1034,7 @@
 
         function getStoredWords() {
             try {
-                const raw = localStorage.getItem('alien_memory_cubes_v4');
+                const raw = localStorage.getItem('alien_memory_cubes_v5');
                 if (raw) {
                     const parsed = JSON.parse(raw);
                     if (Array.isArray(parsed) && parsed.length > 0) return parsed;
@@ -1058,7 +1045,7 @@
 
         function saveStoredWords(words) {
             try {
-                localStorage.setItem('alien_memory_cubes_v4', JSON.stringify(words));
+                localStorage.setItem('alien_memory_cubes_v5', JSON.stringify(words));
             } catch (e) {}
         }
 
@@ -1178,10 +1165,14 @@
 
         function renderVaultGrid(words) {
             const grid = document.getElementById('vaultGrid');
+            const scrollEl = document.getElementById('vaultScroll');
             grid.innerHTML = '';
 
-            words.forEach((item, index) => {
-                const offset = ROW_OFFSETS[index % ROW_OFFSETS.length];
+            // Keep 4 cubes on screen by default
+            const visibleWords = words.slice(0, 4);
+
+            visibleWords.forEach((item, index) => {
+                const offset = CUBE_OFFSETS[index % CUBE_OFFSETS.length];
                 const wrapper = document.createElement('div');
                 wrapper.className = 'node-wrapper';
                 wrapper.style.marginLeft = offset.x + 'px';
@@ -1203,6 +1194,8 @@
                 wrapper.onclick = () => inspectMemoryCube(item, wrapper);
                 grid.appendChild(wrapper);
             });
+
+            scrollEl.classList.toggle('has-overflow', grid.scrollWidth > scrollEl.clientWidth);
         }
 
         function startVaultSpinning() {
@@ -1215,8 +1208,8 @@
                 const wrappers = document.querySelectorAll('#vaultGrid .node-wrapper');
                 wrappers.forEach((w) => {
                     if (w.classList.contains('picked-out')) return;
-                    // 25% slower than 0.028 -> 0.021 deg/ms, single consistent direction
-                    let angle = (parseFloat(w.dataset.angle || '0') + delta * 0.021) % 360;
+                    // Half speed of 0.021 -> 0.0105 deg/ms, single direction
+                    let angle = (parseFloat(w.dataset.angle || '0') + delta * 0.0105) % 360;
                     w.dataset.angle = angle.toFixed(2);
                     const cubeEl = w.querySelector('.node-cube');
                     if (cubeEl) {
@@ -1227,20 +1220,6 @@
             }
 
             vaultSpinRaf = requestAnimationFrame(step);
-        }
-
-        function computeReturnOffset(wrapper, holder) {
-            if (!wrapper || !holder) return { x: 0, y: 0 };
-            const wrapRect = wrapper.getBoundingClientRect();
-            const holderRect = holder.getBoundingClientRect();
-            const wrapCenterX = wrapRect.left + wrapRect.width / 2;
-            const wrapCenterY = wrapRect.top + wrapRect.height / 2;
-            const holderBaseX = holderRect.left + holderRect.width / 2;
-            const holderBaseY = holderRect.top + holderRect.height / 2;
-            return {
-                x: Math.round(wrapCenterX - holderBaseX),
-                y: Math.round(wrapCenterY - holderBaseY)
-            };
         }
 
         function inspectMemoryCube(wordData, sourceWrapper) {
@@ -1269,23 +1248,17 @@
             vault.classList.add('defocused');
             board.classList.add('blurred-bg');
 
-            holder.classList.remove('approached');
-            holder.style.transition = 'none';
-            cubeStage.style.display = 'flex';
-            cubeStage.classList.remove('exit-to-left');
-            cubeStage.classList.add('active-center');
-
-            const startOffset = computeReturnOffset(sourceWrapper, holder);
-            holder.style.setProperty('--from-x', startOffset.x + 'px');
-            holder.style.setProperty('--from-y', startOffset.y + 'px');
-            holder.offsetHeight;
-
             if (sourceWrapper) {
                 sourceWrapper.classList.add('picked-out');
             }
 
+            holder.classList.remove('approached');
+            cubeStage.style.display = 'flex';
+            cubeStage.classList.remove('exit-to-left');
+            cubeStage.classList.add('active-center');
+            holder.offsetHeight;
+
             requestAnimationFrame(() => {
-                holder.style.transition = '';
                 holder.classList.add('approached');
             });
         }
@@ -1296,21 +1269,15 @@
             const holder = document.getElementById('cubeDepthHolder');
             const board = document.getElementById('retroBoard');
 
-            const targetOffset = computeReturnOffset(activePickedWrapper, holder);
-            holder.style.setProperty('--from-x', targetOffset.x + 'px');
-            holder.style.setProperty('--from-y', targetOffset.y + 'px');
+            if (activePickedWrapper) {
+                activePickedWrapper.classList.remove('picked-out');
+                activePickedWrapper = null;
+            }
 
             holder.classList.remove('approached');
             board.classList.remove('blurred-bg');
             vault.classList.remove('defocused');
-
-            setTimeout(() => {
-                cubeStage.style.display = 'none';
-                if (activePickedWrapper) {
-                    activePickedWrapper.classList.remove('picked-out');
-                    activePickedWrapper = null;
-                }
-            }, 600);
+            cubeStage.style.display = 'none';
         }
 
         const cube = document.getElementById('cube');
