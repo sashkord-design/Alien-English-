@@ -150,11 +150,15 @@
 
         .intro-illustration {
             width: auto;
-            max-width: 190px;
-            max-height: 34dvh;
+            max-width: 210px;
+            max-height: 36dvh;
             height: auto;
-            object-fit: contain;
-            margin-bottom: 12px;
+            object-fit: cover;
+            margin-top: 8px;
+            margin-bottom: 18px;
+            border: 2px solid var(--ink-dark);
+            border-radius: 12px;
+            box-shadow: 2px 3px 0px var(--ink-dark);
             user-select: none;
             -webkit-user-drag: none;
         }
@@ -167,46 +171,71 @@
             border: 2px solid var(--ink-dark);
             border-radius: 14px;
             overflow: hidden;
-            padding: 14px 16px;
-            margin-bottom: 12px;
+            padding: 12px 15px;
+            margin-bottom: 14px;
             box-shadow: 2px 3px 0px var(--ink-dark);
         }
 
         .narrative-text {
-            font-size: 12.5px;
-            line-height: 1.42;
+            font-size: 11.5px;
+            line-height: 1.4;
             color: var(--ink-dark);
             font-weight: 500;
             text-align: justify;
             text-align-last: left;
         }
 
-        .scan-btn {
+        .intro-arrows-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 14px;
+        }
+
+        .arrow-yellow-btn {
             position: relative;
+            background-color: #fcd34d;
             background-image: url('frame.png');
             background-size: cover;
             background-position: center;
             border: 2px solid var(--ink-dark);
-            border-radius: 14px;
+            border-radius: 11px;
             overflow: hidden;
             color: var(--ink-dark);
-            padding: 12px 24px;
-            width: 100%;
-            max-width: 280px;
-            font-size: 12.5px;
-            font-weight: 800;
-            letter-spacing: 0.05em;
-            text-transform: uppercase;
+            width: 44px;
+            height: 36px;
+            font-size: 15px;
+            font-weight: 900;
+            line-height: 1;
             cursor: pointer;
-            box-shadow: 2px 3px 0px var(--ink-dark);
-            transition: transform 0.18s ease, box-shadow 0.18s ease;
+            box-shadow: 2px 2px 0px var(--ink-dark);
+            transition: transform 0.16s ease, box-shadow 0.16s ease;
             user-select: none;
             display: flex;
             align-items: center;
             justify-content: center;
         }
 
-        .scan-btn::before,
+        .arrow-yellow-btn::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-color: rgba(252, 211, 77, 0.78);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .arrow-yellow-btn span {
+            position: relative;
+            z-index: 1;
+        }
+
+        .arrow-yellow-btn:active,
+        .arrow-yellow-btn.pressed {
+            transform: translate(2px, 2px);
+            box-shadow: 1px 1px 0px var(--ink-dark);
+        }
+
         .btn-action::before {
             content: '';
             position: absolute;
@@ -220,16 +249,9 @@
             background-color: rgba(134, 239, 172, 0.78);
         }
 
-        .scan-btn span,
         .btn-action span {
             position: relative;
             z-index: 1;
-        }
-
-        .scan-btn:active,
-        .scan-btn.pressed {
-            transform: translate(2px, 2px);
-            box-shadow: 1px 1px 0px var(--ink-dark);
         }
 
         /* 2. SCAN WORKSPACE */
@@ -596,21 +618,24 @@
 
             <!-- Screen 1: Intro Narrative -->
             <div class="intro-screen page-slide active-center" id="introScreen">
-                <img src="Igor%20and%20the%20apple.png" alt="Igor in the orchard" class="intro-illustration">
+                <img src="Alan%20and%20the%20apple.jpg" alt="Alan in the orchard" class="intro-illustration">
 
                 <div class="narrative-box">
                     <p class="narrative-text">
-                        Igor wandered into an orchard and saw various fruits lying on the ground. While looking around, something suddenly fell on his head. It was red and firm. And it was...
+                        Alan wandered into an orchard and saw various fruits lying on the ground. While looking around, something suddenly fell on his head. It was red and firm. And it was...
                     </p>
                 </div>
 
-                <button class="scan-btn" id="scanBtn" onclick="startScan()"><span>Object Scanning</span></button>
+                <div class="intro-arrows-row">
+                    <button class="arrow-yellow-btn" id="prevArrowBtn" onclick="pulseArrow(this)" aria-label="Previous"><span>←</span></button>
+                    <button class="arrow-yellow-btn" id="nextArrowBtn" onclick="startScan(this)" aria-label="Next"><span>→</span></button>
+                </div>
             </div>
 
             <!-- Screen 2: Hand-Drawn Mini-Cube Quiz Choices -->
             <div class="scan-workspace page-slide" id="scanWorkspace">
                 <div class="riddle-box">
-                    <div class="riddle-text">The fruit that fell on Igor’s head</div>
+                    <div class="riddle-text">The fruit that fell on Alan’s head</div>
                 </div>
 
                 <div class="cards-grid" id="cardsGrid">
@@ -740,7 +765,7 @@
                 word: 'ORCHARD',
                 phonetic: '/ˈɔː.tʃəd/',
                 definition: 'A piece of land planted with fruit trees',
-                ex1: 'Igor walked slowly into an old orchard.',
+                ex1: 'Alan walked slowly into an old orchard.',
                 ex2: 'The apple trees in the orchard were full of fruit.',
                 ex3: 'Autumn is the best season to visit an orchard.',
                 visual: '🌳'
@@ -770,7 +795,7 @@
                 word: 'HEAD',
                 phonetic: '/hed/',
                 definition: 'The upper part of the human body',
-                ex1: 'Something suddenly fell right on Igor’s head.',
+                ex1: 'Something suddenly fell right on Alan’s head.',
                 ex2: 'He rubbed the top of his head in surprise.',
                 ex3: 'A clever idea popped into his head.',
                 visual: '👽'
@@ -781,7 +806,7 @@
             id: 'apple',
             word: 'APPLE',
             phonetic: '/ˈæp.əl/',
-            definition: 'The fruit that fell on Igor’s head',
+            definition: 'The fruit that fell on Alan’s head',
             ex1: 'I eat a fresh apple every morning.',
             ex2: 'She cut the apple into four equal pieces.',
             ex3: 'This green apple tastes quite sour.',
@@ -790,7 +815,7 @@
 
         function getStoredWords() {
             try {
-                const raw = localStorage.getItem('alien_memory_cubes_v11');
+                const raw = localStorage.getItem('alien_memory_cubes_v12');
                 if (raw) {
                     const parsed = JSON.parse(raw);
                     if (Array.isArray(parsed) && parsed.length > 0) return parsed;
@@ -801,7 +826,7 @@
 
         function saveStoredWords(words) {
             try {
-                localStorage.setItem('alien_memory_cubes_v11', JSON.stringify(words));
+                localStorage.setItem('alien_memory_cubes_v12', JSON.stringify(words));
             } catch (e) {}
         }
 
@@ -829,20 +854,25 @@
             }, 720);
         }
 
-        function startScan() {
-            const btn = document.getElementById('scanBtn');
+        function pulseArrow(btn) {
+            if (!btn) return;
+            btn.classList.add('pressed');
+            setTimeout(() => btn.classList.remove('pressed'), 160);
+        }
+
+        function startScan(btn) {
             const intro = document.getElementById('introScreen');
             const workspace = document.getElementById('scanWorkspace');
             const board = document.getElementById('retroBoard');
 
-            btn.classList.add('pressed');
+            if (btn) btn.classList.add('pressed');
 
             setTimeout(() => {
-                btn.classList.remove('pressed');
+                if (btn) btn.classList.remove('pressed');
                 board.classList.remove('vault-bg');
                 board.classList.add('clouds-bg');
                 slideBetweenPages(intro, workspace);
-            }, 180);
+            }, 160);
         }
 
         function handleCardTap(slot) {
@@ -1006,14 +1036,12 @@
             bumpCanvas.height = size;
             const bctx = bumpCanvas.getContext('2d');
 
-            // Deeper, neutral grey stone base
             ctx.fillStyle = '#9ea3ac';
             ctx.fillRect(0, 0, size, size);
 
             bctx.fillStyle = '#808080';
             bctx.fillRect(0, 0, size, size);
 
-            // Muted grey multi-stone patches + faint blue-violet reflection
             const greyPatches = [
                 'rgba(138, 143, 152, 0.45)',
                 'rgba(118, 123, 132, 0.42)',
@@ -1068,7 +1096,6 @@
                 bctx.restore();
             }
 
-            // Subtle blue-violet reflection matching Background2.webp
             const sheen = ctx.createLinearGradient(0, 0, size, size);
             sheen.addColorStop(0, 'rgba(99, 102, 241, 0.08)');
             sheen.addColorStop(0.55, 'rgba(139, 92, 246, 0.06)');
@@ -1076,7 +1103,6 @@
             ctx.fillStyle = sheen;
             ctx.fillRect(0, 0, size, size);
 
-            // Surface imperfections: fine stone cracks & scratches
             for (let c = 0; c < 14; c++) {
                 const sc = seedOffset * 300 + c * 29;
                 let x = 24 + seededRand(sc + 1) * (size - 48);
@@ -1106,7 +1132,6 @@
                 bctx.stroke();
             }
 
-            // Kept speckles & stone chips
             for (let p = 0; p < 44; p++) {
                 const sp = seedOffset * 500 + p * 31;
                 const px = 14 + seededRand(sp + 1) * (size - 28);
@@ -1124,7 +1149,6 @@
                 bctx.fill();
             }
 
-            // Fine mineral grain & micro-flaws
             for (let g = 0; g < 750; g++) {
                 const gs = seedOffset * 900 + g * 13;
                 const gx = seededRand(gs + 1) * size;
@@ -1137,7 +1161,6 @@
                 bctx.fillRect(gx, gy, 2, 2);
             }
 
-            // Straight, non-wavy text overlay
             ctx.fillStyle = '#18181b';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
