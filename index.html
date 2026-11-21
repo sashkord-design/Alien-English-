@@ -834,8 +834,19 @@
             "He picked it up and turned it over in his purple hands. Every new object in this strange world holds a word worth remembering before the next step."
         ];
 
+        // Preload real Cube1_3.webp reference image so we can sample authentic patches from it
+        const refCubeImage = new Image();
+        let refCubeImageReady = false;
+        refCubeImage.onload = () => {
+            refCubeImageReady = true;
+            if (document.getElementById('memoryVault').style.display === 'flex') {
+                renderVaultGrid(getStoredWords());
+            }
+        };
+        refCubeImage.src = 'Cube1_3.webp';
+
         // Main Three.js inspection cube state
-        let scene, camera, renderer, stoneCubeMesh;
+        let scene, camera, renderer, stoneCubeGroup;
         let targetRotX = 0;
         let targetRotY = 0;
         let currentRotX = 0;
@@ -1083,19 +1094,30 @@
             }, 720);
         }
 
-        function createSharperStoneCubeGeometry(size, rounding = 0.11) {
-            const segs = 12;
+        function seededRand(seed) {
+            const x = Math.sin(seed * 12.9898 + 78.233) * 43758.5453;
+            return x - Math.floor(x);
+        }
+
+        // Chipped & beveled stone cube geometry matching Cube1_3.webp silhouette
+        function createChippedStoneCubeGeometry(size, seedOffset = 1) {
+            const segs = 18;
             const geom = new THREE.BoxGeometry(size, size, size, segs, segs, segs);
             const pos = geom.attributes.position;
             const half = size * 0.5;
-            const r = Math.min(half * 0.9, size * rounding);
-            const inner = Math.max(0.001, half - r);
+            const bevel = size * 0.085;
+            const inner = half - bevel;
 
             for (let i = 0; i < pos.count; i++) {
                 let x = pos.getX(i);
                 let y = pos.getY(i);
                 let z = pos.getZ(i);
 
+                const ax = Math.abs(x);
+                const ay = Math.abs(y);
+                const az = Math.abs(z);
+
+                // Chamfered corners and edges (like cut stone in Cube1_3.webp)
                 const cx = Math.max(-inner, Math.min(inner, x));
                 const cy = Math.max(-inner, Math.min(inner, y));
                 const cz = Math.max(-inner, Math.min(inner, z));
@@ -1106,10 +1128,29 @@
                 const len = Math.hypot(dx, dy, dz);
 
                 if (len > 0.00001) {
-                    const targetLen = Math.min(r, len * 1.12);
-                    x = cx + (dx / len) * targetLen;
-                    y = cy + (dy / len) * targetLen;
-                    z = cz + (dz / len) * targetLen;
+                    const edgeFactor = Math.min(bevel, len * 1.05);
+                    x = cx + (dx / len) * edgeFactor;
+                    y = cy + (dy / len) * edgeFactor;
+                    z = cz + (dz / len) * edgeFactor;
+                }
+
+                // Irregular chips & notches strictly along edges and corners (keeping flat face centers clean for text)
+                const nearX = ax > half * 0.72;
+                const nearY = ay > half * 0.72;
+                const nearZ = az > half * 0.72;
+                const isEdgeOrCorner = (nearX && nearY) || (nearY && nearZ) || (nearX && nearZ);
+
+                if (isEdgeOrCorner) {
+                    const n1 = Math.sin(x * 7.5 + y * 5.2 + seedOffset * 3.1) * Math.cos(z * 6.8 - seedOffset * 2.4);
+                    const n2 = Math.sin((x - y + z) * 13.0 + seedOffset * 5.7);
+                    const chipDepth = Math.max(0, n1 * 0.65 + n2 * 0.35);
+                    if (chipDepth > 0.18) {
+                        const indent = (chipDepth - 0.18) * size * 0.055;
+                        const rLen = Math.hypot(x, y, z) || 1;
+                        x -= (x / rLen) * indent;
+                        y -= (y / rLen) * indent;
+                        z -= (z / rLen) * indent;
+                    }
                 }
 
                 pos.setXYZ(i, x, y, z);
@@ -1119,251 +1160,207 @@
             return geom;
         }
 
-        function seededRand(seed) {
-            const x = Math.sin(seed * 12.9898 + 78.233) * 43758.5453;
-            return x - Math.floor(x);
-        }
+        // Perspective-corrected sampling from Cube1_3.webp (top, left, or right face)
+        function sampleRealCubeFace(ctx, size, seedOffset) {
+            if (!refCubeImageReady || !refCubeImage.naturalWidth) return false;
 
-        function drawCrackLine(ctx, bctx, startX, startY, angle, length, segments, seed) {
-            const pts = [{ x: startX, y: startY }];
-            let curX = startX;
-            let curY = startY;
-            let curAng = angle;
-            const stepLen = length / segments;
+            const w = refCubeImage.naturalWidth;
+            const h = refCubeImage.naturalHeight;
+            const faceVariant = seedOffset % 3;
 
-            for (let i = 0; i < segments; i++) {
-                curAng += (seededRand(seed + i * 19 + 1) - 0.5) * 0.68;
-                curX += Math.cos(curAng) * stepLen;
-                curY += Math.sin(curAng) * stepLen;
-                pts.push({ x: curX, y: curY });
+            // Unwarp one of the 3 visible faces of Cube1_3.webp into an orthogonal square
+            // 0: Left face (p00=top-left, p10=center-top, p01=bottom-left, p11=bottom-center)
+            // 1: Right face (p00=center-top, p10=top-right, p01=bottom-center, p11=bottom-right)
+            // 2: Top face (p00=top-back, p10=top-right, p01=top-left, p11=center-top)
+            let p00, p10, p01, p11;
+            if (faceVariant === 0) {
+                p00 = { x: 0.21 * w, y: 0.34 * h };
+                p10 = { x: 0.48 * w, y: 0.42 * h };
+                p01 = { x: 0.23 * w, y: 0.75 * h };
+                p11 = { x: 0.48 * w, y: 0.83 * h };
+            } else if (faceVariant === 1) {
+                p00 = { x: 0.52 * w, y: 0.42 * h };
+                p10 = { x: 0.79 * w, y: 0.34 * h };
+                p01 = { x: 0.52 * w, y: 0.83 * h };
+                p11 = { x: 0.77 * w, y: 0.75 * h };
+            } else {
+                p00 = { x: 0.50 * w, y: 0.19 * h };
+                p10 = { x: 0.76 * w, y: 0.30 * h };
+                p01 = { x: 0.24 * w, y: 0.30 * h };
+                p11 = { x: 0.50 * w, y: 0.39 * h };
             }
 
-            // Light highlight edge right next to the crack
-            ctx.save();
-            ctx.strokeStyle = 'rgba(238, 240, 246, 0.42)';
-            ctx.lineWidth = 1.4;
-            ctx.beginPath();
-            pts.forEach((p, idx) => {
-                if (idx === 0) ctx.moveTo(p.x + 1.1, p.y + 1.1);
-                else ctx.lineTo(p.x + 1.1, p.y + 1.1);
-            });
-            ctx.stroke();
+            const temp = document.createElement('canvas');
+            temp.width = size;
+            temp.height = size;
+            const tctx = temp.getContext('2d');
 
-            // Main crack line
-            ctx.strokeStyle = 'rgba(42, 45, 54, 0.62)';
-            ctx.lineWidth = 1.35;
-            ctx.beginPath();
-            pts.forEach((p, idx) => {
-                if (idx === 0) ctx.moveTo(p.x, p.y);
-                else ctx.lineTo(p.x, p.y);
-            });
-            ctx.stroke();
+            const strips = 64;
+            for (let i = 0; i < strips; i++) {
+                const u0 = i / strips;
+                const u1 = (i + 1) / strips;
+                const um = (u0 + u1) * 0.5;
+
+                const topX = p00.x + (p10.x - p00.x) * um;
+                const topY = p00.y + (p10.y - p00.y) * um;
+                const botX = p01.x + (p11.x - p01.x) * um;
+                const botY = p01.y + (p11.y - p01.y) * um;
+
+                const dx = botX - topX;
+                const dy = botY - topY;
+                const segLen = Math.hypot(dx, dy) || 1;
+                const angle = Math.atan2(dy, dx) - Math.PI / 2;
+
+                tctx.save();
+                tctx.beginPath();
+                tctx.rect(u0 * size, 0, (u1 - u0) * size + 1.2, size);
+                tctx.clip();
+
+                tctx.translate(u0 * size, 0);
+                tctx.scale((size / strips) / (segLen * 0.22), size / segLen);
+                tctx.rotate(-angle);
+                tctx.translate(-topX, -topY);
+                tctx.drawImage(refCubeImage, 0, 0);
+                tctx.restore();
+            }
+
+            // Apply deterministic rotation/mirroring so every face & cube looks distinct
+            const rotStep = Math.floor(seededRand(seedOffset * 41) * 4);
+            const flipX = seededRand(seedOffset * 73) > 0.5 ? -1 : 1;
+
+            ctx.save();
+            ctx.translate(size / 2, size / 2);
+            ctx.rotate((rotStep * Math.PI) / 2);
+            ctx.scale(flipX, 1);
+            ctx.drawImage(temp, -size / 2, -size / 2, size, size);
             ctx.restore();
 
-            // Groove in bump map
-            bctx.save();
-            bctx.strokeStyle = 'rgb(44, 44, 44)';
-            bctx.lineWidth = 2.0;
-            bctx.beginPath();
-            pts.forEach((p, idx) => {
-                if (idx === 0) bctx.moveTo(p.x, p.y);
-                else bctx.lineTo(p.x, p.y);
-            });
-            bctx.stroke();
-            bctx.restore();
-
-            // Occasional small side branch
-            if (pts.length > 3 && seededRand(seed + 77) > 0.45) {
-                const mid = pts[Math.floor(pts.length * 0.55)];
-                const branchAng = curAng + (seededRand(seed + 88) > 0.5 ? 0.55 : -0.55);
-                const bLen = stepLen * 1.4;
-                const bx = mid.x + Math.cos(branchAng) * bLen;
-                const by = mid.y + Math.sin(branchAng) * bLen;
-
-                ctx.save();
-                ctx.strokeStyle = 'rgba(42, 45, 54, 0.52)';
-                ctx.lineWidth = 1.05;
-                ctx.beginPath();
-                ctx.moveTo(mid.x, mid.y);
-                ctx.lineTo(bx, by);
-                ctx.stroke();
-                ctx.restore();
-
-                bctx.save();
-                bctx.strokeStyle = 'rgb(52, 52, 52)';
-                bctx.lineWidth = 1.5;
-                bctx.beginPath();
-                bctx.moveTo(mid.x, mid.y);
-                bctx.lineTo(bx, by);
-                bctx.stroke();
-                bctx.restore();
-            }
+            return true;
         }
 
-        function drawChipFacet(ctx, bctx, cx, cy, rx, ry, rot, seed) {
-            const verts = 6;
-            ctx.save();
-            bctx.save();
-            ctx.translate(cx, cy);
-            ctx.translate(cx, cy);
-            ctx.rotate(rot);
-            ctx.rotate(rot);
-
-            ctx.beginPath();
-            bctx.beginPath();
-            for (let v = 0; v < verts; v++) {
-                const a = (v / verts) * Math.PI * 2;
-                const radMod = 0.65 + seededRand(seed + v * 17) * 0.55;
-                const px = Math.cos(a) * rx * radMod;
-                const py = Math.sin(a) * ry * radMod;
-                if (v === 0) {
-                    ctx.moveTo(px, py);
-                    bctx.moveTo(px, py);
-                } else {
-                    ctx.lineTo(px, py);
-                    bctx.lineTo(px, py);
-                }
-            }
-            ctx.closePath();
-            bctx.closePath();
-
-            // Subtle chipped stone surface (slightly brighter/cooler facet with crisp rim)
-            ctx.fillStyle = seededRand(seed + 91) > 0.5
-                ? 'rgba(214, 217, 224, 0.42)'
-                : 'rgba(174, 178, 188, 0.36)';
-            ctx.fill();
-            ctx.strokeStyle = 'rgba(44, 47, 56, 0.58)';
-            ctx.lineWidth = 1.35;
-            ctx.stroke();
-
-            bctx.fillStyle = 'rgb(96, 96, 96)';
-            bctx.fill();
-            bctx.strokeStyle = 'rgb(48, 48, 48)';
-            bctx.lineWidth = 1.8;
-            bctx.stroke();
-
-            ctx.restore();
-            bctx.restore();
-        }
-
-        function drawCube1StoneBase(ctx, bctx, size, seedOffset) {
-            // 1. Even, uniform light-gray stone color across the face
-            const toneShift = (seededRand(seedOffset * 19) - 0.5) * 4;
-            const rBase = Math.round(196 + toneShift);
-            const gBase = Math.round(197 + toneShift);
-            const bBase = Math.round(202 + toneShift);
-            ctx.fillStyle = `rgb(${rBase}, ${gBase}, ${bBase})`;
+        function drawInkEdgeCracksAndChips(ctx, bctx, size, seedOffset) {
+            // Subtle light center lift so text stays super sharp over the real stone texture
+            const centerLift = ctx.createRadialGradient(size / 2, size / 2, size * 0.05, size / 2, size / 2, size * 0.46);
+            centerLift.addColorStop(0, 'rgba(222, 224, 230, 0.34)');
+            centerLift.addColorStop(0.7, 'rgba(205, 207, 214, 0.10)');
+            centerLift.addColorStop(1, 'rgba(30, 32, 38, 0.16)');
+            ctx.fillStyle = centerLift;
             ctx.fillRect(0, 0, size, size);
 
+            // Graphic ink-lined edge chips & cracks matching Cube1_3.webp's dark seam fractures
+            const edgeNotchCount = 12;
+            for (let i = 0; i < edgeNotchCount; i++) {
+                const s = seedOffset * 317 + i * 47;
+                const side = i % 4;
+                let x = seededRand(s + 1) * size;
+                let y = seededRand(s + 2) * size;
+                const depth = 10 + seededRand(s + 3) * 18;
+                const span = 22 + seededRand(s + 4) * 38;
+
+                ctx.save();
+                bctx.save();
+                ctx.beginPath();
+                bctx.beginPath();
+
+                if (side === 0) {
+                    y = 0;
+                    ctx.moveTo(x - span * 0.5, 0);
+                    ctx.lineTo(x - span * 0.2, depth * 0.7);
+                    ctx.lineTo(x + span * 0.15, depth);
+                    ctx.lineTo(x + span * 0.5, 0);
+                } else if (side === 1) {
+                    y = size;
+                    ctx.moveTo(x - span * 0.5, size);
+                    ctx.lineTo(x - span * 0.15, size - depth);
+                    ctx.lineTo(x + span * 0.2, size - depth * 0.65);
+                    ctx.lineTo(x + span * 0.5, size);
+                } else if (side === 2) {
+                    x = 0;
+                    ctx.moveTo(0, y - span * 0.5);
+                    ctx.lineTo(depth, y - span * 0.15);
+                    ctx.lineTo(depth * 0.7, y + span * 0.2);
+                    ctx.lineTo(0, y + span * 0.5);
+                } else {
+                    x = size;
+                    ctx.moveTo(size, y - span * 0.5);
+                    ctx.lineTo(size - depth * 0.7, y - span * 0.2);
+                    ctx.lineTo(size - depth, y + span * 0.15);
+                    ctx.lineTo(size, y + span * 0.5);
+                }
+
+                ctx.closePath();
+                ctx.fillStyle = i % 2 === 0 ? 'rgba(138, 141, 150, 0.72)' : 'rgba(224, 226, 232, 0.68)';
+                ctx.fill();
+                ctx.strokeStyle = 'rgba(24, 24, 27, 0.82)';
+                ctx.lineWidth = 2.1;
+                ctx.stroke();
+
+                bctx.fillStyle = 'rgb(64, 64, 64)';
+                bctx.fill();
+                ctx.restore();
+                bctx.restore();
+            }
+
+            // Crisp outer ink border along the cube face seam (gives the hand-inked edge lines of Cube1_3.webp)
+            ctx.save();
+            ctx.strokeStyle = 'rgba(24, 24, 27, 0.68)';
+            ctx.lineWidth = 3.2;
+            ctx.strokeRect(1.6, 1.6, size - 3.2, size - 3.2);
+            ctx.restore();
+        }
+
+        function drawFallbackCube1_3Base(ctx, bctx, size, seedOffset) {
+            ctx.fillStyle = '#c4c5cb';
+            ctx.fillRect(0, 0, size, size);
             bctx.fillStyle = 'rgb(128, 128, 128)';
             bctx.fillRect(0, 0, size, size);
 
-            // 2. Very soft, low-contrast stone wash so color stays uniform (low spottiness)
-            const softCount = 5;
-            for (let i = 0; i < softCount; i++) {
-                const s = seedOffset * 137 + i * 29;
-                const px = seededRand(s + 1) * size;
-                const py = seededRand(s + 2) * size;
-                const rad = 110 + seededRand(s + 3) * 140;
-                const grad = ctx.createRadialGradient(px, py, rad * 0.1, px, py, rad);
-                if (i % 2 === 0) {
-                    grad.addColorStop(0, 'rgba(214, 216, 222, 0.14)');
-                    grad.addColorStop(1, 'rgba(214, 216, 222, 0)');
-                } else {
-                    grad.addColorStop(0, 'rgba(176, 179, 187, 0.11)');
-                    grad.addColorStop(1, 'rgba(176, 179, 187, 0)');
-                }
-                ctx.fillStyle = grad;
-                ctx.fillRect(0, 0, size, size);
-            }
+            // Angular mineral planes like Cube1_3.webp
+            const tones = ['rgba(218, 220, 226, 0.6)', 'rgba(174, 177, 186, 0.55)', 'rgba(148, 152, 162, 0.45)'];
+            for (let i = 0; i < 12; i++) {
+                const s = seedOffset * 193 + i * 31;
+                const cx = seededRand(s + 1) * size;
+                const cy = seededRand(s + 2) * size;
+                const rx = 60 + seededRand(s + 3) * 110;
+                const ry = 30 + seededRand(s + 4) * 55;
+                const ang = (seededRand(s + 5) - 0.5) * 1.4;
 
-            // 3. Coarse, gritty rough-stone surface
-            const gritCount = 1900;
-            for (let g = 0; g < gritCount; g++) {
-                const s = seedOffset * 911 + g * 13;
-                const gx = seededRand(s + 1) * size;
-                const gy = seededRand(s + 2) * size;
-                const gw = 1.1 + seededRand(s + 3) * 2.2;
-                const gh = 1.1 + seededRand(s + 4) * 2.2;
-                const pick = seededRand(s + 5);
-
-                if (pick < 0.45) {
-                    ctx.fillStyle = 'rgba(232, 234, 239, 0.34)';
-                    bctx.fillStyle = 'rgb(164, 164, 164)';
-                } else if (pick < 0.88) {
-                    ctx.fillStyle = 'rgba(146, 150, 160, 0.24)';
-                    bctx.fillStyle = 'rgb(92, 92, 92)';
-                } else {
-                    ctx.fillStyle = 'rgba(98, 102, 112, 0.26)';
-                    bctx.fillStyle = 'rgb(64, 64, 64)';
-                }
-
-                ctx.fillRect(gx, gy, gw, gh);
-                bctx.fillRect(gx, gy, gw, gh);
-            }
-
-            // 4. Fine rough brush/sand strokes for tactile stone roughness
-            for (let k = 0; k < 140; k++) {
-                const s = seedOffset * 1733 + k * 23;
-                const sx = seededRand(s + 1) * size;
-                const sy = seededRand(s + 2) * size;
-                const len = 4 + seededRand(s + 3) * 9;
-                const ang = seededRand(s + 4) * Math.PI * 2;
-                const dx = Math.cos(ang) * len;
-                const dy = Math.sin(ang) * len;
-
-                ctx.strokeStyle = k % 2 === 0 ? 'rgba(238, 240, 245, 0.25)' : 'rgba(132, 136, 146, 0.22)';
-                ctx.lineWidth = 1;
+                ctx.save();
+                ctx.translate(cx, cy);
+                ctx.rotate(ang);
                 ctx.beginPath();
-                ctx.moveTo(sx, sy);
-                ctx.lineTo(sx + dx, sy + dy);
-                ctx.stroke();
-
-                bctx.strokeStyle = k % 2 === 0 ? 'rgb(156, 156, 156)' : 'rgb(82, 82, 82)';
-                bctx.lineWidth = 1.1;
-                bctx.beginPath();
-                bctx.moveTo(sx, sy);
-                bctx.lineTo(sx + dx, sy + dy);
-                bctx.stroke();
-            }
-
-            // 5. Edge & corner chips (placed toward outer zones so center text stays clean)
-            const chipCount = 7;
-            for (let c = 0; c < chipCount; c++) {
-                const s = seedOffset * 2311 + c * 61;
-                const edgePick = c % 4;
-                let cx = 0;
-                let cy = 0;
-                if (edgePick === 0) {
-                    cx = 40 + seededRand(s + 1) * (size - 80);
-                    cy = 24 + seededRand(s + 2) * 58;
-                } else if (edgePick === 1) {
-                    cx = 40 + seededRand(s + 1) * (size - 80);
-                    cy = size - 24 - seededRand(s + 2) * 58;
-                } else if (edgePick === 2) {
-                    cx = 24 + seededRand(s + 1) * 58;
-                    cy = 40 + seededRand(s + 2) * (size - 80);
-                } else {
-                    cx = size - 24 - seededRand(s + 1) * 58;
-                    cy = 40 + seededRand(s + 2) * (size - 80);
+                for (let v = 0; v < 6; v++) {
+                    const a = (v / 6) * Math.PI * 2;
+                    const m = 0.65 + seededRand(s + v * 11) * 0.6;
+                    const px = Math.cos(a) * rx * m;
+                    const py = Math.sin(a) * ry * m;
+                    if (v === 0) ctx.moveTo(px, py);
+                    else ctx.lineTo(px, py);
                 }
-
-                const rx = 12 + seededRand(s + 3) * 18;
-                const ry = 8 + seededRand(s + 4) * 13;
-                const rot = seededRand(s + 5) * Math.PI * 2;
-                drawChipFacet(ctx, bctx, cx, cy, rx, ry, rot, s + 10);
+                ctx.closePath();
+                ctx.fillStyle = tones[i % tones.length];
+                ctx.fill();
+                ctx.restore();
             }
 
-            // 6. Cracks running across stone surface
-            const crackCount = 5;
-            for (let r = 0; r < crackCount; r++) {
-                const s = seedOffset * 2903 + r * 73;
-                const startX = 25 + seededRand(s + 1) * (size - 50);
-                const startY = 25 + seededRand(s + 2) * (size - 50);
-                const angle = seededRand(s + 3) * Math.PI * 2;
-                const length = 42 + seededRand(s + 4) * 68;
-                const segments = 4 + Math.floor(seededRand(s + 5) * 4);
-                drawCrackLine(ctx, bctx, startX, startY, angle, length, segments, s + 20);
+            // Ink-rimmed stone pits
+            for (let p = 0; p < 22; p++) {
+                const s = seedOffset * 613 + p * 23;
+                const px = 28 + seededRand(s + 1) * (size - 56);
+                const py = 28 + seededRand(s + 2) * (size - 56);
+                const rx = 2 + seededRand(s + 3) * 5;
+                const ry = rx * 0.65;
+
+                ctx.save();
+                ctx.translate(px, py);
+                ctx.fillStyle = 'rgba(110, 114, 124, 0.8)';
+                ctx.strokeStyle = 'rgba(24, 24, 27, 0.78)';
+                ctx.lineWidth = 1.3;
+                ctx.beginPath();
+                ctx.ellipse(0, 0, rx, ry, seededRand(s + 4) * Math.PI, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+                ctx.restore();
             }
         }
 
@@ -1379,7 +1376,27 @@
             bumpCanvas.height = size;
             const bctx = bumpCanvas.getContext('2d');
 
-            drawCube1StoneBase(ctx, bctx, size, seedOffset);
+            bctx.fillStyle = 'rgb(128, 128, 128)';
+            bctx.fillRect(0, 0, size, size);
+
+            const sampled = sampleRealCubeFace(ctx, size, seedOffset);
+            if (!sampled) {
+                drawFallbackCube1_3Base(ctx, bctx, size, seedOffset);
+            } else {
+                // Build grayscale bump map directly from the sampled real stone texture
+                const imgData = ctx.getImageData(0, 0, size, size);
+                const bumpData = bctx.createImageData(size, size);
+                for (let i = 0; i < imgData.data.length; i += 4) {
+                    const lum = imgData.data[i] * 0.3 + imgData.data[i + 1] * 0.59 + imgData.data[i + 2] * 0.11;
+                    bumpData.data[i] = lum;
+                    bumpData.data[i + 1] = lum;
+                    bumpData.data[i + 2] = lum;
+                    bumpData.data[i + 3] = 255;
+                }
+                bctx.putImageData(bumpData, 0, 0);
+            }
+
+            drawInkEdgeCracksAndChips(ctx, bctx, size, seedOffset);
 
             ctx.fillStyle = '#18181b';
             ctx.textAlign = 'center';
@@ -1436,6 +1453,24 @@
             return { map, bumpMap };
         }
 
+        function createOutlinedStoneCubeGroup(geom, materials, outlineScale = 1.035) {
+            const group = new THREE.Group();
+
+            const mainMesh = new THREE.Mesh(geom, materials);
+            group.add(mainMesh);
+
+            // Hand-drawn ink silhouette outline matching Cube1_3.webp outer contour
+            const outlineMat = new THREE.MeshBasicMaterial({
+                color: 0x222328,
+                side: THREE.BackSide
+            });
+            const outlineMesh = new THREE.Mesh(geom, outlineMat);
+            outlineMesh.scale.setScalar(outlineScale);
+            group.add(outlineMesh);
+
+            return group;
+        }
+
         function disposeVaultMiniCubes() {
             vaultMiniCubes.forEach((entry) => {
                 if (entry.renderer) {
@@ -1473,19 +1508,19 @@
                 if (typeof THREE !== 'undefined') {
                     const miniScene = new THREE.Scene();
                     const miniCam = new THREE.PerspectiveCamera(36, 1, 0.1, 50);
-                    miniCam.position.set(0, 0, 5.15);
+                    miniCam.position.set(0, 0, 5.25);
                     miniCam.lookAt(0, 0, 0);
 
                     const miniRenderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
                     miniRenderer.setSize(122, 122);
                     miniRenderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
 
-                    miniScene.add(new THREE.AmbientLight(0xd4d8e8, 0.85));
-                    const dLight = new THREE.DirectionalLight(0xe4e4e7, 0.65);
+                    miniScene.add(new THREE.AmbientLight(0xdce0ee, 0.88));
+                    const dLight = new THREE.DirectionalLight(0xffffff, 0.62);
                     dLight.position.set(2, 2.5, 4);
                     miniScene.add(dLight);
 
-                    const geom = createSharperStoneCubeGeometry(2.02, 0.11);
+                    const geom = createChippedStoneCubeGeometry(1.96, index + 1);
 
                     const mats = Array.from({ length: 6 }, (_, faceIdx) => {
                         const faceSeed = (index + 1) * 100 + faceIdx * 17;
@@ -1493,16 +1528,16 @@
                         return new THREE.MeshStandardMaterial({
                             map: stoneSet.map,
                             bumpMap: stoneSet.bumpMap,
-                            bumpScale: 0.065,
-                            roughness: 0.94,
+                            bumpScale: 0.045,
+                            roughness: 0.90,
                             metalness: 0.02
                         });
                     });
 
-                    const mesh = new THREE.Mesh(geom, mats);
-                    mesh.rotation.x = 0;
-                    mesh.rotation.y = THREE.MathUtils.degToRad(index * 25);
-                    miniScene.add(mesh);
+                    const cubeGroup = createOutlinedStoneCubeGroup(geom, mats, 1.038);
+                    cubeGroup.rotation.x = 0;
+                    cubeGroup.rotation.y = THREE.MathUtils.degToRad(index * 25);
+                    miniScene.add(cubeGroup);
 
                     miniRenderer.render(miniScene, miniCam);
 
@@ -1510,7 +1545,7 @@
                         scene: miniScene,
                         camera: miniCam,
                         renderer: miniRenderer,
-                        mesh,
+                        mesh: cubeGroup,
                         wordText: item.word,
                         angle: index * 25
                     });
@@ -1542,11 +1577,11 @@
         }
 
         function buildInspectionCubeMesh(wordData, cubeSeedBase = 1) {
-            if (stoneCubeMesh) {
-                scene.remove(stoneCubeMesh);
+            if (stoneCubeGroup) {
+                scene.remove(stoneCubeGroup);
             }
 
-            const geom = createSharperStoneCubeGeometry(2.04, 0.10);
+            const geom = createChippedStoneCubeGeometry(1.98, cubeSeedBase);
             const base = cubeSeedBase * 100;
 
             const faceSets = [
@@ -1561,19 +1596,19 @@
             const materials = faceSets.map((set) => new THREE.MeshStandardMaterial({
                 map: set.map,
                 bumpMap: set.bumpMap,
-                bumpScale: 0.065,
-                roughness: 0.94,
+                bumpScale: 0.045,
+                roughness: 0.90,
                 metalness: 0.02
             }));
 
-            stoneCubeMesh = new THREE.Mesh(geom, materials);
-            scene.add(stoneCubeMesh);
+            stoneCubeGroup = createOutlinedStoneCubeGroup(geom, materials, 1.03);
+            scene.add(stoneCubeGroup);
 
             targetRotX = 0;
             targetRotY = 0;
             currentRotX = 0;
             currentRotY = 0;
-            stoneCubeMesh.rotation.set(0, 0, 0);
+            stoneCubeGroup.rotation.set(0, 0, 0);
         }
 
         function initThreeCube(wordData, cubeSeedBase = 1) {
@@ -1592,10 +1627,10 @@
                 host.innerHTML = '';
                 host.appendChild(renderer.domElement);
 
-                const ambient = new THREE.AmbientLight(0xd4d8e8, 0.85);
+                const ambient = new THREE.AmbientLight(0xdce0ee, 0.88);
                 scene.add(ambient);
 
-                const keyLight = new THREE.DirectionalLight(0xe4e4e7, 0.65);
+                const keyLight = new THREE.DirectionalLight(0xffffff, 0.62);
                 keyLight.position.set(2, 2.5, 4);
                 scene.add(keyLight);
 
@@ -1618,10 +1653,10 @@
             currentRotX += (targetRotX - currentRotX) * 0.14;
             currentRotY += (targetRotY - currentRotY) * 0.14;
 
-            if (stoneCubeMesh) {
-                stoneCubeMesh.rotation.x = THREE.MathUtils.degToRad(currentRotX);
-                stoneCubeMesh.rotation.y = THREE.MathUtils.degToRad(currentRotY);
-                stoneCubeMesh.position.y = Math.sin(performance.now() * 0.0022) * 0.035;
+            if (stoneCubeGroup) {
+                stoneCubeGroup.rotation.x = THREE.MathUtils.degToRad(currentRotX);
+                stoneCubeGroup.rotation.y = THREE.MathUtils.degToRad(currentRotY);
+                stoneCubeGroup.position.y = Math.sin(performance.now() * 0.0022) * 0.035;
             }
 
             renderer.render(scene, camera);
