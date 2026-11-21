@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Alien Memory Scanner</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
@@ -829,8 +829,6 @@
         let vaultMiniCubes = [];
         let narrativeIndex = 0;
         let stoneSourceImage = null;
-        let stoneImagePromise = null;
-        const textureCache = new Map();
 
         const INTRO_NARRATIVE_PAGES = [
             "Alan wandered into an orchard and saw various fruits lying on the ground. While looking around, something suddenly fell on his head. It was red and firm. And it was...",
@@ -839,7 +837,6 @@
 
         // Main Three.js inspection cube state
         let scene, camera, renderer, stoneCubeMesh;
-        let sharedCubeGeom = null;
         let targetRotX = 0;
         let targetRotY = 0;
         let currentRotX = 0;
@@ -906,14 +903,15 @@
         };
 
         function loadStoneSourceImage() {
-            if (stoneSourceImage) return Promise.resolve(stoneSourceImage);
-            if (stoneImagePromise) return stoneImagePromise;
-
-            stoneImagePromise = new Promise((resolve) => {
+            return new Promise((resolve) => {
+                if (stoneSourceImage) {
+                    resolve(stoneSourceImage);
+                    return;
+                }
                 const img = new Image();
+                img.crossOrigin = 'anonymous';
                 img.onload = () => {
                     stoneSourceImage = img;
-                    textureCache.clear();
                     resolve(img);
                 };
                 img.onerror = () => {
@@ -921,16 +919,15 @@
                 };
                 img.src = 'Cube1.webp';
             });
-
-            return stoneImagePromise;
         }
 
         function refreshVaultTexturesFromImage() {
             if (!stoneSourceImage || vaultMiniCubes.length === 0) return;
             vaultMiniCubes.forEach((entry, idx) => {
-                const set = createMultiStoneTextures([entry.wordText], { isMiniWord: true }, idx + 1, 1024);
+                const set = createMultiStoneTextures([entry.wordText], { isMiniWord: true }, idx + 1);
                 entry.mesh.material.forEach((mat) => {
                     mat.map = set.map;
+                    mat.bumpMap = set.bumpMap;
                     mat.needsUpdate = true;
                 });
                 entry.renderer.render(entry.scene, entry.camera);
@@ -958,7 +955,7 @@
 
         function getStoredWords() {
             try {
-                const raw = localStorage.getItem('alien_memory_cubes_v23');
+                const raw = localStorage.getItem('alien_memory_cubes_v18');
                 if (raw) {
                     const parsed = JSON.parse(raw);
                     if (Array.isArray(parsed) && parsed.length > 0) return parsed;
@@ -969,7 +966,7 @@
 
         function saveStoredWords(words) {
             try {
-                localStorage.setItem('alien_memory_cubes_v23', JSON.stringify(words));
+                localStorage.setItem('alien_memory_cubes_v18', JSON.stringify(words));
             } catch (e) {}
         }
 
@@ -1122,83 +1119,158 @@
             }, 720);
         }
 
-        function createCleanCubeGeometry(size) {
-            if (sharedCubeGeom) return sharedCubeGeom;
-            sharedCubeGeom = new THREE.BoxGeometry(size, size, size);
-            return sharedCubeGeom;
+        function createSharperStoneCubeGeometry(size, rounding = 0.11) {
+            const segs = 12;
+            const geom = new THREE.BoxGeometry(size, size, size, segs, segs, segs);
+            const pos = geom.attributes.position;
+            const half = size * 0.5;
+            const r = Math.min(half * 0.9, size * rounding);
+            const inner = Math.max(0.001, half - r);
+
+            for (let i = 0; i < pos.count; i++) {
+                let x = pos.getX(i);
+                let y = pos.getY(i);
+                let z = pos.getZ(i);
+
+                const cx = Math.max(-inner, Math.min(inner, x));
+                const cy = Math.max(-inner, Math.min(inner, y));
+                const cz = Math.max(-inner, Math.min(inner, z));
+
+                const dx = x - cx;
+                const dy = y - cy;
+                const dz = z - cz;
+                const len = Math.hypot(dx, dy, dz);
+
+                if (len > 0.00001) {
+                    const targetLen = Math.min(r, len * 1.12);
+                    x = cx + (dx / len) * targetLen;
+                    y = cy + (dy / len) * targetLen;
+                    z = cz + (dz / len) * targetLen;
+                }
+
+                pos.setXYZ(i, x, y, z);
+            }
+
+            geom.computeVertexNormals();
+            return geom;
         }
 
-        function drawCleanStoneFace(ctx, size, seedOffset) {
-            // Smooth, clean stone base matching the calm look of earlier cubes without seam lines
-            ctx.fillStyle = '#c4c8d1';
+        function seededRand(seed) {
+            const x = Math.sin(seed * 12.9898 + 78.233) * 43758.5453;
+            return x - Math.floor(x);
+        }
+
+        function drawCube1StoneBase(ctx, bctx, size, seedOffset) {
+            ctx.fillStyle = '#aeb3bc';
             ctx.fillRect(0, 0, size, size);
+
+            bctx.fillStyle = '#808080';
+            bctx.fillRect(0, 0, size, size);
 
             if (stoneSourceImage && stoneSourceImage.width > 0 && stoneSourceImage.height > 0) {
                 const iw = stoneSourceImage.width;
                 const ih = stoneSourceImage.height;
 
+                // Sample from the left or right angled face of Cube1.webp
                 const useRightFacet = (seedOffset % 2) === 1;
-                const sx = useRightFacet ? Math.floor(iw * 0.55) : Math.floor(iw * 0.25);
-                const sy = Math.floor(ih * 0.42);
-                const sw = Math.floor(iw * 0.14);
-                const sh = Math.floor(ih * 0.16);
+                const sx = useRightFacet ? Math.floor(iw * 0.54) : Math.floor(iw * 0.22);
+                const sy = Math.floor(ih * 0.36);
+                const sw = Math.floor(iw * 0.24);
+                const sh = Math.floor(ih * 0.28);
 
-                ctx.save();
-                ctx.translate(size / 2, size / 2);
-                const rotDeg = ((seedOffset * 90) % 360);
-                ctx.rotate(THREE.MathUtils.degToRad(rotDeg));
+                const tmpCanvas = document.createElement('canvas');
+                tmpCanvas.width = size;
+                tmpCanvas.height = size;
+                const tctx = tmpCanvas.getContext('2d');
+
+                tctx.save();
+                tctx.translate(size / 2, size / 2);
+                const rotDeg = ((seedOffset * 37) % 4) * 90;
+                tctx.rotate(THREE.MathUtils.degToRad(rotDeg));
                 if (seedOffset % 3 === 0) {
-                    ctx.scale(-1, 1);
+                    tctx.scale(-1, 1);
                 }
-                ctx.globalAlpha = 0.72;
-                ctx.drawImage(stoneSourceImage, sx, sy, sw, sh, -size / 2, -size / 2, size, size);
-                ctx.restore();
+                const shearAngle = useRightFacet ? -0.18 : 0.18;
+                tctx.transform(1, shearAngle, 0, 1, 0, 0);
+                tctx.drawImage(stoneSourceImage, sx, sy, sw, sh, -size * 0.62, -size * 0.62, size * 1.24, size * 1.24);
+                tctx.restore();
+
+                ctx.drawImage(tmpCanvas, 0, 0, size, size);
+
+                // Derive subtle bump map from luminance of the stone texture
+                const imgData = ctx.getImageData(0, 0, size, size);
+                const bData = bctx.getImageData(0, 0, size, size);
+                const d = imgData.data;
+                const bd = bData.data;
+                for (let i = 0; i < d.length; i += 4) {
+                    const lum = (d[i] * 0.3 + d[i + 1] * 0.59 + d[i + 2] * 0.11);
+                    const h = Math.max(20, Math.min(235, Math.round(128 + (lum - 165) * 0.9)));
+                    bd[i] = h;
+                    bd[i + 1] = h;
+                    bd[i + 2] = h;
+                    bd[i + 3] = 255;
+                }
+                bctx.putImageData(bData, 0, 0);
+            } else {
+                // Fallback stone grain while Cube1.webp is loading
+                for (let i = 0; i < 10; i++) {
+                    const s = seedOffset * 100 + i * 17;
+                    const cx = seededRand(s + 1) * size;
+                    const cy = seededRand(s + 2) * size;
+                    const r = 30 + seededRand(s + 3) * 55;
+                    ctx.fillStyle = i % 2 === 0 ? 'rgba(130, 135, 145, 0.35)' : 'rgba(185, 190, 198, 0.35)';
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+                    ctx.fill();
+                }
             }
 
-            // Soft uniform veil so stone texture stays calm and even across faces (no seams)
-            ctx.fillStyle = 'rgba(216, 220, 228, 0.24)';
+            // Soft readable center wash so text always has high contrast over stone cracks/pores
+            const grad = ctx.createRadialGradient(size / 2, size / 2, size * 0.08, size / 2, size / 2, size * 0.52);
+            grad.addColorStop(0, 'rgba(236, 238, 242, 0.56)');
+            grad.addColorStop(0.72, 'rgba(205, 210, 218, 0.22)');
+            grad.addColorStop(1, 'rgba(40, 42, 48, 0.18)');
+            ctx.fillStyle = grad;
             ctx.fillRect(0, 0, size, size);
         }
 
-        function createMultiStoneTextures(lines, options = {}, seedOffset = 1, size = 1024) {
-            const cacheKey = `${lines.join('|')}__${JSON.stringify(options)}__${seedOffset}__${size}__${stoneSourceImage ? 1 : 0}`;
-            if (textureCache.has(cacheKey)) {
-                return textureCache.get(cacheKey);
-            }
-
+        function createMultiStoneTextures(lines, options = {}, seedOffset = 1) {
+            const size = 512;
             const colorCanvas = document.createElement('canvas');
             colorCanvas.width = size;
             colorCanvas.height = size;
             const ctx = colorCanvas.getContext('2d');
-            ctx.imageSmoothingEnabled = true;
-            ctx.imageSmoothingQuality = 'high';
 
-            drawCleanStoneFace(ctx, size, seedOffset);
+            const bumpCanvas = document.createElement('canvas');
+            bumpCanvas.width = size;
+            bumpCanvas.height = size;
+            const bctx = bumpCanvas.getContext('2d');
 
-            const scale = size / 512;
-            ctx.fillStyle = '#141418';
+            drawCube1StoneBase(ctx, bctx, size, seedOffset);
+
+            ctx.fillStyle = '#18181b';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
 
             if (options.isEmoji) {
-                ctx.font = `${Math.round(128 * scale)}px sans-serif`;
-                ctx.fillText(lines[0], size / 2, size / 2 + 3 * scale);
+                ctx.font = '136px sans-serif';
+                ctx.fillText(lines[0], size / 2, size / 2 + 4);
             } else if (options.isMiniWord) {
                 const word = lines[0];
-                const fontSize = (word.length > 6 ? 50 : 62) * scale;
-                ctx.font = `800 ${Math.round(fontSize)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
-                ctx.fillText(word, size / 2, size / 2 + 2 * scale);
+                const fontSize = word.length > 6 ? 54 : 66;
+                ctx.font = `900 ${fontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+                ctx.fillText(word, size / 2, size / 2 + 2);
             } else if (options.isTitle) {
-                ctx.font = `800 ${Math.round(68 * scale)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
-                ctx.fillText(lines[0], size / 2, size / 2 - 20 * scale);
+                ctx.font = '900 70px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+                ctx.fillText(lines[0], size / 2, size / 2 - 20);
                 if (lines[1]) {
-                    ctx.font = `600 ${Math.round(31 * scale)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
-                    ctx.fillStyle = '#1f1f26';
-                    ctx.fillText(lines[1], size / 2, size / 2 + 38 * scale);
+                    ctx.font = '600 32px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+                    ctx.fillStyle = '#27272a';
+                    ctx.fillText(lines[1], size / 2, size / 2 + 42);
                 }
             } else {
-                const fontSize = (options.fontSize || 34) * scale;
-                ctx.font = `600 ${Math.round(fontSize)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+                const fontSize = options.fontSize || 36;
+                ctx.font = `700 ${fontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
                 const text = lines.join(' ');
                 const words = text.split(' ');
                 const wrapped = [];
@@ -1206,7 +1278,7 @@
 
                 words.forEach((w) => {
                     const testLine = currentLine ? currentLine + ' ' + w : w;
-                    if (ctx.measureText(testLine).width > size - 96 * scale && currentLine) {
+                    if (ctx.measureText(testLine).width > size - 88 && currentLine) {
                         wrapped.push(currentLine);
                         currentLine = w;
                     } else {
@@ -1215,7 +1287,7 @@
                 });
                 if (currentLine) wrapped.push(currentLine);
 
-                const lineHeight = fontSize * 1.28;
+                const lineHeight = fontSize * 1.3;
                 const startY = size / 2 - ((wrapped.length - 1) * lineHeight) / 2;
                 wrapped.forEach((line, idx) => {
                     ctx.fillText(line, size / 2, startY + idx * lineHeight);
@@ -1223,13 +1295,12 @@
             }
 
             const map = new THREE.CanvasTexture(colorCanvas);
-            map.minFilter = THREE.LinearMipmapLinearFilter;
-            map.magFilter = THREE.LinearFilter;
-            map.needsUpdate = true;
+            map.anisotropy = 4;
 
-            const result = { map, bumpMap: null };
-            textureCache.set(cacheKey, result);
-            return result;
+            const bumpMap = new THREE.CanvasTexture(bumpCanvas);
+            bumpMap.anisotropy = 4;
+
+            return { map, bumpMap };
         }
 
         function disposeVaultMiniCubes() {
@@ -1248,7 +1319,6 @@
             grid.innerHTML = '';
 
             const visibleWords = words.slice(0, 4);
-            const geom = createCleanCubeGeometry(2.02);
 
             visibleWords.forEach((item, index) => {
                 const offset = CUBE_OFFSETS[index % CUBE_OFFSETS.length];
@@ -1273,13 +1343,23 @@
                     miniCam.position.set(0, 0, 5.15);
                     miniCam.lookAt(0, 0, 0);
 
-                    const miniRenderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: 'high-performance' });
+                    const miniRenderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
                     miniRenderer.setSize(122, 122);
                     miniRenderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
 
-                    const stoneSet = createMultiStoneTextures([item.word], { isMiniWord: true }, index + 1, 1024);
-                    const mats = Array.from({ length: 6 }, () => new THREE.MeshBasicMaterial({
-                        map: stoneSet.map
+                    miniScene.add(new THREE.AmbientLight(0xd4d8e8, 0.85));
+                    const dLight = new THREE.DirectionalLight(0xe4e4e7, 0.65);
+                    dLight.position.set(2, 2.5, 4);
+                    miniScene.add(dLight);
+
+                    const geom = createSharperStoneCubeGeometry(2.02, 0.11);
+                    const stoneSet = createMultiStoneTextures([item.word], { isMiniWord: true }, index + 1);
+                    const mats = Array.from({ length: 6 }, () => new THREE.MeshStandardMaterial({
+                        map: stoneSet.map,
+                        bumpMap: stoneSet.bumpMap,
+                        bumpScale: 0.035,
+                        roughness: 0.84,
+                        metalness: 0.05
                     }));
 
                     const mesh = new THREE.Mesh(geom, mats);
@@ -1325,30 +1405,31 @@
         }
 
         function buildInspectionCubeMesh(wordData) {
-            const geom = createCleanCubeGeometry(2.04);
+            if (stoneCubeMesh) {
+                scene.remove(stoneCubeMesh);
+            }
+
+            const geom = createSharperStoneCubeGeometry(2.04, 0.10);
 
             const faceSets = [
-                createMultiStoneTextures([wordData.ex1], { fontSize: 34 }, 11, 1024),
-                createMultiStoneTextures([wordData.ex2], { fontSize: 34 }, 12, 1024),
-                createMultiStoneTextures([wordData.definition], { fontSize: 34 }, 13, 1024),
-                createMultiStoneTextures([wordData.visual], { isEmoji: true }, 14, 1024),
-                createMultiStoneTextures([wordData.word, wordData.phonetic], { isTitle: true }, 15, 1024),
-                createMultiStoneTextures([wordData.ex3], { fontSize: 34 }, 16, 1024)
+                createMultiStoneTextures([wordData.ex1], { fontSize: 36 }, 11),
+                createMultiStoneTextures([wordData.ex2], { fontSize: 36 }, 12),
+                createMultiStoneTextures([wordData.definition], { fontSize: 36 }, 13),
+                createMultiStoneTextures([wordData.visual], { isEmoji: true }, 14),
+                createMultiStoneTextures([wordData.word, wordData.phonetic], { isTitle: true }, 15),
+                createMultiStoneTextures([wordData.ex3], { fontSize: 36 }, 16)
             ];
 
-            if (!stoneCubeMesh) {
-                const materials = faceSets.map((set) => new THREE.MeshBasicMaterial({
-                    map: set.map
-                }));
-                stoneCubeMesh = new THREE.Mesh(geom, materials);
-                scene.add(stoneCubeMesh);
-            } else {
-                stoneCubeMesh.geometry = geom;
-                stoneCubeMesh.material.forEach((mat, i) => {
-                    mat.map = faceSets[i].map;
-                    mat.needsUpdate = true;
-                });
-            }
+            const materials = faceSets.map((set) => new THREE.MeshStandardMaterial({
+                map: set.map,
+                bumpMap: set.bumpMap,
+                bumpScale: 0.035,
+                roughness: 0.84,
+                metalness: 0.05
+            }));
+
+            stoneCubeMesh = new THREE.Mesh(geom, materials);
+            scene.add(stoneCubeMesh);
 
             targetRotX = 0;
             targetRotY = 0;
@@ -1367,17 +1448,28 @@
                 camera.position.set(0, 0, 5.5);
                 camera.lookAt(0, 0, 0);
 
-                renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
+                renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
                 renderer.setSize(264, 264);
                 renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
                 host.innerHTML = '';
                 host.appendChild(renderer.domElement);
+
+                const ambient = new THREE.AmbientLight(0xd4d8e8, 0.85);
+                scene.add(ambient);
+
+                const keyLight = new THREE.DirectionalLight(0xe4e4e7, 0.65);
+                keyLight.position.set(2, 2.5, 4);
+                scene.add(keyLight);
+
+                const rimLight = new THREE.DirectionalLight(0x818cf8, 0.2);
+                rimLight.position.set(-2.5, -1.5, -2);
+                scene.add(rimLight);
             }
 
             buildInspectionCubeMesh(wordData);
 
             loadStoneSourceImage().then((img) => {
-                if (img && stoneCubeMesh && document.getElementById('cubeStage').style.display !== 'none') {
+                if (img && stoneCubeMesh) {
                     buildInspectionCubeMesh(wordData);
                 }
             });
@@ -1390,7 +1482,6 @@
         function renderThreeLoop() {
             threeAnimId = requestAnimationFrame(renderThreeLoop);
             if (!renderer || !scene || !camera) return;
-            if (document.getElementById('cubeStage').style.display === 'none') return;
 
             currentRotX += (targetRotX - currentRotX) * 0.14;
             currentRotY += (targetRotY - currentRotY) * 0.14;
@@ -1418,13 +1509,13 @@
                 sourceSlot.classList.add('picked-out');
             }
 
-            cubeStage.style.display = 'flex';
             initThreeCube(wordData);
 
             vault.classList.add('defocused');
             board.classList.add('blurred-bg');
 
             holder.classList.remove('approached');
+            cubeStage.style.display = 'flex';
             holder.offsetHeight;
 
             requestAnimationFrame(() => {
