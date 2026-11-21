@@ -958,7 +958,7 @@
 
         function getStoredWords() {
             try {
-                const raw = localStorage.getItem('alien_memory_cubes_v22');
+                const raw = localStorage.getItem('alien_memory_cubes_v23');
                 if (raw) {
                     const parsed = JSON.parse(raw);
                     if (Array.isArray(parsed) && parsed.length > 0) return parsed;
@@ -969,7 +969,7 @@
 
         function saveStoredWords(words) {
             try {
-                localStorage.setItem('alien_memory_cubes_v22', JSON.stringify(words));
+                localStorage.setItem('alien_memory_cubes_v23', JSON.stringify(words));
             } catch (e) {}
         }
 
@@ -1122,51 +1122,15 @@
             }, 720);
         }
 
-        function createSharperStoneCubeGeometry(size, rounding = 0.10) {
+        function createCleanCubeGeometry(size) {
             if (sharedCubeGeom) return sharedCubeGeom;
-            const segs = 10;
-            const geom = new THREE.BoxGeometry(size, size, size, segs, segs, segs);
-            const pos = geom.attributes.position;
-            const half = size * 0.5;
-            const r = Math.min(half * 0.9, size * rounding);
-            const inner = Math.max(0.001, half - r);
-
-            for (let i = 0; i < pos.count; i++) {
-                let x = pos.getX(i);
-                let y = pos.getY(i);
-                let z = pos.getZ(i);
-
-                const cx = Math.max(-inner, Math.min(inner, x));
-                const cy = Math.max(-inner, Math.min(inner, y));
-                const cz = Math.max(-inner, Math.min(inner, z));
-
-                const dx = x - cx;
-                const dy = y - cy;
-                const dz = z - cz;
-                const len = Math.hypot(dx, dy, dz);
-
-                if (len > 0.00001) {
-                    const targetLen = Math.min(r, len * 1.12);
-                    x = cx + (dx / len) * targetLen;
-                    y = cy + (dy / len) * targetLen;
-                    z = cz + (dz / len) * targetLen;
-                }
-
-                pos.setXYZ(i, x, y, z);
-            }
-
-            geom.computeVertexNormals();
-            sharedCubeGeom = geom;
-            return geom;
+            sharedCubeGeom = new THREE.BoxGeometry(size, size, size);
+            return sharedCubeGeom;
         }
 
-        function seededRand(seed) {
-            const x = Math.sin(seed * 12.9898 + 78.233) * 43758.5453;
-            return x - Math.floor(x);
-        }
-
-        function drawSharpStoneBase(ctx, size, seedOffset) {
-            ctx.fillStyle = '#b6bbc4';
+        function drawCleanStoneFace(ctx, size, seedOffset) {
+            // Smooth, clean stone base matching the calm look of earlier cubes without seam lines
+            ctx.fillStyle = '#c4c8d1';
             ctx.fillRect(0, 0, size, size);
 
             if (stoneSourceImage && stoneSourceImage.width > 0 && stoneSourceImage.height > 0) {
@@ -1174,10 +1138,10 @@
                 const ih = stoneSourceImage.height;
 
                 const useRightFacet = (seedOffset % 2) === 1;
-                const sx = useRightFacet ? Math.floor(iw * 0.54) : Math.floor(iw * 0.24);
-                const sy = Math.floor(ih * 0.41);
-                const sw = Math.floor(iw * 0.16);
-                const sh = Math.floor(ih * 0.18);
+                const sx = useRightFacet ? Math.floor(iw * 0.55) : Math.floor(iw * 0.25);
+                const sy = Math.floor(ih * 0.42);
+                const sw = Math.floor(iw * 0.14);
+                const sh = Math.floor(ih * 0.16);
 
                 ctx.save();
                 ctx.translate(size / 2, size / 2);
@@ -1186,29 +1150,17 @@
                 if (seedOffset % 3 === 0) {
                     ctx.scale(-1, 1);
                 }
+                ctx.globalAlpha = 0.72;
                 ctx.drawImage(stoneSourceImage, sx, sy, sw, sh, -size / 2, -size / 2, size, size);
                 ctx.restore();
             }
 
-            // Crisp micro-grain & fine stone specks at full canvas resolution
-            for (let g = 0; g < 900; g++) {
-                const gs = seedOffset * 1300 + g * 17;
-                const gx = Math.floor(seededRand(gs + 1) * size);
-                const gy = Math.floor(seededRand(gs + 2) * size);
-                const isLight = seededRand(gs + 3) > 0.52;
-                ctx.fillStyle = isLight ? 'rgba(255, 255, 255, 0.11)' : 'rgba(20, 20, 24, 0.11)';
-                ctx.fillRect(gx, gy, 3, 3);
-            }
-
-            // Crisp graphic border line
-            ctx.save();
-            ctx.strokeStyle = 'rgba(20, 20, 24, 0.55)';
-            ctx.lineWidth = Math.max(8, Math.round(size * 0.008));
-            ctx.strokeRect(4, 4, size - 8, size - 8);
-            ctx.restore();
+            // Soft uniform veil so stone texture stays calm and even across faces (no seams)
+            ctx.fillStyle = 'rgba(216, 220, 228, 0.24)';
+            ctx.fillRect(0, 0, size, size);
         }
 
-        function createMultiStoneTextures(lines, options = {}, seedOffset = 1, size = 1536) {
+        function createMultiStoneTextures(lines, options = {}, seedOffset = 1, size = 1024) {
             const cacheKey = `${lines.join('|')}__${JSON.stringify(options)}__${seedOffset}__${size}__${stoneSourceImage ? 1 : 0}`;
             if (textureCache.has(cacheKey)) {
                 return textureCache.get(cacheKey);
@@ -1221,32 +1173,32 @@
             ctx.imageSmoothingEnabled = true;
             ctx.imageSmoothingQuality = 'high';
 
-            drawSharpStoneBase(ctx, size, seedOffset);
+            drawCleanStoneFace(ctx, size, seedOffset);
 
             const scale = size / 512;
-            ctx.fillStyle = '#0e0e11';
+            ctx.fillStyle = '#141418';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
 
             if (options.isEmoji) {
-                ctx.font = `${Math.round(132 * scale)}px sans-serif`;
+                ctx.font = `${Math.round(128 * scale)}px sans-serif`;
                 ctx.fillText(lines[0], size / 2, size / 2 + 3 * scale);
             } else if (options.isMiniWord) {
                 const word = lines[0];
-                const fontSize = (word.length > 6 ? 52 : 64) * scale;
-                ctx.font = `900 ${Math.round(fontSize)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+                const fontSize = (word.length > 6 ? 50 : 62) * scale;
+                ctx.font = `800 ${Math.round(fontSize)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
                 ctx.fillText(word, size / 2, size / 2 + 2 * scale);
             } else if (options.isTitle) {
-                ctx.font = `900 ${Math.round(70 * scale)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+                ctx.font = `800 ${Math.round(68 * scale)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
                 ctx.fillText(lines[0], size / 2, size / 2 - 20 * scale);
                 if (lines[1]) {
-                    ctx.font = `700 ${Math.round(32 * scale)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
-                    ctx.fillStyle = '#141418';
-                    ctx.fillText(lines[1], size / 2, size / 2 + 40 * scale);
+                    ctx.font = `600 ${Math.round(31 * scale)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+                    ctx.fillStyle = '#1f1f26';
+                    ctx.fillText(lines[1], size / 2, size / 2 + 38 * scale);
                 }
             } else {
-                const fontSize = (options.fontSize || 36) * scale;
-                ctx.font = `700 ${Math.round(fontSize)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+                const fontSize = (options.fontSize || 34) * scale;
+                ctx.font = `600 ${Math.round(fontSize)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
                 const text = lines.join(' ');
                 const words = text.split(' ');
                 const wrapped = [];
@@ -1254,7 +1206,7 @@
 
                 words.forEach((w) => {
                     const testLine = currentLine ? currentLine + ' ' + w : w;
-                    if (ctx.measureText(testLine).width > size - 88 * scale && currentLine) {
+                    if (ctx.measureText(testLine).width > size - 96 * scale && currentLine) {
                         wrapped.push(currentLine);
                         currentLine = w;
                     } else {
@@ -1271,8 +1223,7 @@
             }
 
             const map = new THREE.CanvasTexture(colorCanvas);
-            map.generateMipmaps = false;
-            map.minFilter = THREE.LinearFilter;
+            map.minFilter = THREE.LinearMipmapLinearFilter;
             map.magFilter = THREE.LinearFilter;
             map.needsUpdate = true;
 
@@ -1297,7 +1248,7 @@
             grid.innerHTML = '';
 
             const visibleWords = words.slice(0, 4);
-            const geom = createSharperStoneCubeGeometry(2.02, 0.10);
+            const geom = createCleanCubeGeometry(2.02);
 
             visibleWords.forEach((item, index) => {
                 const offset = CUBE_OFFSETS[index % CUBE_OFFSETS.length];
@@ -1324,7 +1275,7 @@
 
                     const miniRenderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: 'high-performance' });
                     miniRenderer.setSize(122, 122);
-                    miniRenderer.setPixelRatio(Math.min((window.devicePixelRatio || 1) * 1.5, 3));
+                    miniRenderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
 
                     const stoneSet = createMultiStoneTextures([item.word], { isMiniWord: true }, index + 1, 1024);
                     const mats = Array.from({ length: 6 }, () => new THREE.MeshBasicMaterial({
@@ -1374,15 +1325,15 @@
         }
 
         function buildInspectionCubeMesh(wordData) {
-            const geom = createSharperStoneCubeGeometry(2.04, 0.10);
+            const geom = createCleanCubeGeometry(2.04);
 
             const faceSets = [
-                createMultiStoneTextures([wordData.ex1], { fontSize: 36 }, 11, 1536),
-                createMultiStoneTextures([wordData.ex2], { fontSize: 36 }, 12, 1536),
-                createMultiStoneTextures([wordData.definition], { fontSize: 36 }, 13, 1536),
-                createMultiStoneTextures([wordData.visual], { isEmoji: true }, 14, 1536),
-                createMultiStoneTextures([wordData.word, wordData.phonetic], { isTitle: true }, 15, 1536),
-                createMultiStoneTextures([wordData.ex3], { fontSize: 36 }, 16, 1536)
+                createMultiStoneTextures([wordData.ex1], { fontSize: 34 }, 11, 1024),
+                createMultiStoneTextures([wordData.ex2], { fontSize: 34 }, 12, 1024),
+                createMultiStoneTextures([wordData.definition], { fontSize: 34 }, 13, 1024),
+                createMultiStoneTextures([wordData.visual], { isEmoji: true }, 14, 1024),
+                createMultiStoneTextures([wordData.word, wordData.phonetic], { isTitle: true }, 15, 1024),
+                createMultiStoneTextures([wordData.ex3], { fontSize: 34 }, 16, 1024)
             ];
 
             if (!stoneCubeMesh) {
@@ -1418,7 +1369,7 @@
 
                 renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
                 renderer.setSize(264, 264);
-                renderer.setPixelRatio(Math.min((window.devicePixelRatio || 1) * 1.5, 3));
+                renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
                 host.innerHTML = '';
                 host.appendChild(renderer.domElement);
             }
