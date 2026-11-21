@@ -1124,6 +1124,128 @@
             return x - Math.floor(x);
         }
 
+        function drawCrackLine(ctx, bctx, startX, startY, angle, length, segments, seed) {
+            const pts = [{ x: startX, y: startY }];
+            let curX = startX;
+            let curY = startY;
+            let curAng = angle;
+            const stepLen = length / segments;
+
+            for (let i = 0; i < segments; i++) {
+                curAng += (seededRand(seed + i * 19 + 1) - 0.5) * 0.68;
+                curX += Math.cos(curAng) * stepLen;
+                curY += Math.sin(curAng) * stepLen;
+                pts.push({ x: curX, y: curY });
+            }
+
+            // Light highlight edge right next to the crack
+            ctx.save();
+            ctx.strokeStyle = 'rgba(238, 240, 246, 0.42)';
+            ctx.lineWidth = 1.4;
+            ctx.beginPath();
+            pts.forEach((p, idx) => {
+                if (idx === 0) ctx.moveTo(p.x + 1.1, p.y + 1.1);
+                else ctx.lineTo(p.x + 1.1, p.y + 1.1);
+            });
+            ctx.stroke();
+
+            // Main crack line
+            ctx.strokeStyle = 'rgba(42, 45, 54, 0.62)';
+            ctx.lineWidth = 1.35;
+            ctx.beginPath();
+            pts.forEach((p, idx) => {
+                if (idx === 0) ctx.moveTo(p.x, p.y);
+                else ctx.lineTo(p.x, p.y);
+            });
+            ctx.stroke();
+            ctx.restore();
+
+            // Groove in bump map
+            bctx.save();
+            bctx.strokeStyle = 'rgb(44, 44, 44)';
+            bctx.lineWidth = 2.0;
+            bctx.beginPath();
+            pts.forEach((p, idx) => {
+                if (idx === 0) bctx.moveTo(p.x, p.y);
+                else bctx.lineTo(p.x, p.y);
+            });
+            bctx.stroke();
+            bctx.restore();
+
+            // Occasional small side branch
+            if (pts.length > 3 && seededRand(seed + 77) > 0.45) {
+                const mid = pts[Math.floor(pts.length * 0.55)];
+                const branchAng = curAng + (seededRand(seed + 88) > 0.5 ? 0.55 : -0.55);
+                const bLen = stepLen * 1.4;
+                const bx = mid.x + Math.cos(branchAng) * bLen;
+                const by = mid.y + Math.sin(branchAng) * bLen;
+
+                ctx.save();
+                ctx.strokeStyle = 'rgba(42, 45, 54, 0.52)';
+                ctx.lineWidth = 1.05;
+                ctx.beginPath();
+                ctx.moveTo(mid.x, mid.y);
+                ctx.lineTo(bx, by);
+                ctx.stroke();
+                ctx.restore();
+
+                bctx.save();
+                bctx.strokeStyle = 'rgb(52, 52, 52)';
+                bctx.lineWidth = 1.5;
+                bctx.beginPath();
+                bctx.moveTo(mid.x, mid.y);
+                bctx.lineTo(bx, by);
+                bctx.stroke();
+                bctx.restore();
+            }
+        }
+
+        function drawChipFacet(ctx, bctx, cx, cy, rx, ry, rot, seed) {
+            const verts = 6;
+            ctx.save();
+            bctx.save();
+            ctx.translate(cx, cy);
+            ctx.translate(cx, cy);
+            ctx.rotate(rot);
+            ctx.rotate(rot);
+
+            ctx.beginPath();
+            bctx.beginPath();
+            for (let v = 0; v < verts; v++) {
+                const a = (v / verts) * Math.PI * 2;
+                const radMod = 0.65 + seededRand(seed + v * 17) * 0.55;
+                const px = Math.cos(a) * rx * radMod;
+                const py = Math.sin(a) * ry * radMod;
+                if (v === 0) {
+                    ctx.moveTo(px, py);
+                    bctx.moveTo(px, py);
+                } else {
+                    ctx.lineTo(px, py);
+                    bctx.lineTo(px, py);
+                }
+            }
+            ctx.closePath();
+            bctx.closePath();
+
+            // Subtle chipped stone surface (slightly brighter/cooler facet with crisp rim)
+            ctx.fillStyle = seededRand(seed + 91) > 0.5
+                ? 'rgba(214, 217, 224, 0.42)'
+                : 'rgba(174, 178, 188, 0.36)';
+            ctx.fill();
+            ctx.strokeStyle = 'rgba(44, 47, 56, 0.58)';
+            ctx.lineWidth = 1.35;
+            ctx.stroke();
+
+            bctx.fillStyle = 'rgb(96, 96, 96)';
+            bctx.fill();
+            bctx.strokeStyle = 'rgb(48, 48, 48)';
+            bctx.lineWidth = 1.8;
+            bctx.stroke();
+
+            ctx.restore();
+            bctx.restore();
+        }
+
         function drawCube1StoneBase(ctx, bctx, size, seedOffset) {
             // 1. Even, uniform light-gray stone color across the face
             const toneShift = (seededRand(seedOffset * 19) - 0.5) * 4;
@@ -1155,7 +1277,7 @@
                 ctx.fillRect(0, 0, size, size);
             }
 
-            // 3. Coarse, gritty rough-stone surface (fine tactile grit + micro-pits without dark blotches)
+            // 3. Coarse, gritty rough-stone surface
             const gritCount = 1900;
             for (let g = 0; g < gritCount; g++) {
                 const s = seedOffset * 911 + g * 13;
@@ -1172,7 +1294,6 @@
                     ctx.fillStyle = 'rgba(146, 150, 160, 0.24)';
                     bctx.fillStyle = 'rgb(92, 92, 92)';
                 } else {
-                    // Subtle rough micro-grain
                     ctx.fillStyle = 'rgba(98, 102, 112, 0.26)';
                     bctx.fillStyle = 'rgb(64, 64, 64)';
                 }
@@ -1204,6 +1325,45 @@
                 bctx.moveTo(sx, sy);
                 bctx.lineTo(sx + dx, sy + dy);
                 bctx.stroke();
+            }
+
+            // 5. Edge & corner chips (placed toward outer zones so center text stays clean)
+            const chipCount = 7;
+            for (let c = 0; c < chipCount; c++) {
+                const s = seedOffset * 2311 + c * 61;
+                const edgePick = c % 4;
+                let cx = 0;
+                let cy = 0;
+                if (edgePick === 0) {
+                    cx = 40 + seededRand(s + 1) * (size - 80);
+                    cy = 24 + seededRand(s + 2) * 58;
+                } else if (edgePick === 1) {
+                    cx = 40 + seededRand(s + 1) * (size - 80);
+                    cy = size - 24 - seededRand(s + 2) * 58;
+                } else if (edgePick === 2) {
+                    cx = 24 + seededRand(s + 1) * 58;
+                    cy = 40 + seededRand(s + 2) * (size - 80);
+                } else {
+                    cx = size - 24 - seededRand(s + 1) * 58;
+                    cy = 40 + seededRand(s + 2) * (size - 80);
+                }
+
+                const rx = 12 + seededRand(s + 3) * 18;
+                const ry = 8 + seededRand(s + 4) * 13;
+                const rot = seededRand(s + 5) * Math.PI * 2;
+                drawChipFacet(ctx, bctx, cx, cy, rx, ry, rot, s + 10);
+            }
+
+            // 6. Cracks running across stone surface
+            const crackCount = 5;
+            for (let r = 0; r < crackCount; r++) {
+                const s = seedOffset * 2903 + r * 73;
+                const startX = 25 + seededRand(s + 1) * (size - 50);
+                const startY = 25 + seededRand(s + 2) * (size - 50);
+                const angle = seededRand(s + 3) * Math.PI * 2;
+                const length = 42 + seededRand(s + 4) * 68;
+                const segments = 4 + Math.floor(seededRand(s + 5) * 4);
+                drawCrackLine(ctx, bctx, startX, startY, angle, length, segments, s + 20);
             }
         }
 
@@ -1333,7 +1493,7 @@
                         return new THREE.MeshStandardMaterial({
                             map: stoneSet.map,
                             bumpMap: stoneSet.bumpMap,
-                            bumpScale: 0.06,
+                            bumpScale: 0.065,
                             roughness: 0.94,
                             metalness: 0.02
                         });
@@ -1401,7 +1561,7 @@
             const materials = faceSets.map((set) => new THREE.MeshStandardMaterial({
                 map: set.map,
                 bumpMap: set.bumpMap,
-                bumpScale: 0.06,
+                bumpScale: 0.065,
                 roughness: 0.94,
                 metalness: 0.02
             }));
