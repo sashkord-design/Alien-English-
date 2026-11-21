@@ -828,7 +828,6 @@
         let activePickedSlot = null;
         let vaultMiniCubes = [];
         let narrativeIndex = 0;
-        let stoneSourceImage = null;
 
         const INTRO_NARRATIVE_PAGES = [
             "Alan wandered into an orchard and saw various fruits lying on the ground. While looking around, something suddenly fell on his head. It was red and firm. And it was...",
@@ -901,38 +900,6 @@
             ex3: 'This green apple tastes quite sour.',
             visual: '🍎'
         };
-
-        function loadStoneSourceImage() {
-            return new Promise((resolve) => {
-                if (stoneSourceImage) {
-                    resolve(stoneSourceImage);
-                    return;
-                }
-                const img = new Image();
-                img.crossOrigin = 'anonymous';
-                img.onload = () => {
-                    stoneSourceImage = img;
-                    resolve(img);
-                };
-                img.onerror = () => {
-                    resolve(null);
-                };
-                img.src = 'Cube1.webp';
-            });
-        }
-
-        function refreshVaultTexturesFromImage() {
-            if (!stoneSourceImage || vaultMiniCubes.length === 0) return;
-            vaultMiniCubes.forEach((entry, idx) => {
-                const set = createMultiStoneTextures([entry.wordText], { isMiniWord: true }, idx + 1);
-                entry.mesh.material.forEach((mat) => {
-                    mat.map = set.map;
-                    mat.bumpMap = set.bumpMap;
-                    mat.needsUpdate = true;
-                });
-                entry.renderer.render(entry.scene, entry.camera);
-            });
-        }
 
         function updateNarrativeView() {
             const textEl = document.getElementById('narrativeText');
@@ -1074,9 +1041,6 @@
             }
 
             renderVaultGrid(words);
-            loadStoneSourceImage().then((img) => {
-                if (img) refreshVaultTexturesFromImage();
-            });
 
             board.classList.remove('clouds-bg', 'blurred-bg');
             board.classList.add('vault-bg');
@@ -1160,76 +1124,165 @@
             return x - Math.floor(x);
         }
 
+        function drawStoneStrataPolygon(ctx, bctx, cx, cy, rx, ry, angle, verticesCount, seed, fillCol, bumpVal) {
+            ctx.save();
+            bctx.save();
+            ctx.translate(cx, cy);
+            bctx.translate(cx, cy);
+            ctx.rotate(angle);
+            bctx.rotate(angle);
+
+            ctx.beginPath();
+            bctx.beginPath();
+            for (let v = 0; v < verticesCount; v++) {
+                const a = (v / verticesCount) * Math.PI * 2;
+                const jitter = 0.62 + seededRand(seed + v * 13) * 0.65;
+                const px = Math.cos(a) * rx * jitter;
+                const py = Math.sin(a) * ry * jitter;
+                if (v === 0) {
+                    ctx.moveTo(px, py);
+                    bctx.moveTo(px, py);
+                } else {
+                    ctx.lineTo(px, py);
+                    bctx.lineTo(px, py);
+                }
+            }
+            ctx.closePath();
+            bctx.closePath();
+
+            ctx.fillStyle = fillCol;
+            ctx.fill();
+
+            bctx.fillStyle = `rgb(${bumpVal}, ${bumpVal}, ${bumpVal})`;
+            bctx.fill();
+
+            ctx.restore();
+            bctx.restore();
+        }
+
         function drawCube1StoneBase(ctx, bctx, size, seedOffset) {
-            ctx.fillStyle = '#aeb3bc';
+            // 1. Base cel-shaded mineral tone matching Cube1_2.webp
+            const baseToneShift = (seededRand(seedOffset * 19) - 0.5) * 10;
+            const rBase = Math.round(196 + baseToneShift);
+            const gBase = Math.round(197 + baseToneShift);
+            const bBase = Math.round(203 + baseToneShift);
+            ctx.fillStyle = `rgb(${rBase}, ${gBase}, ${bBase})`;
             ctx.fillRect(0, 0, size, size);
 
             bctx.fillStyle = '#808080';
             bctx.fillRect(0, 0, size, size);
 
-            if (stoneSourceImage && stoneSourceImage.width > 0 && stoneSourceImage.height > 0) {
-                const iw = stoneSourceImage.width;
-                const ih = stoneSourceImage.height;
+            // 2. Layered angular sedimentary / mineral patches (unique per seedOffset)
+            const strataColors = [
+                { col: 'rgba(218, 219, 224, 0.68)', bump: 146 },
+                { col: 'rgba(176, 179, 188, 0.58)', bump: 112 },
+                { col: 'rgba(154, 158, 168, 0.46)', bump: 98 },
+                { col: 'rgba(210, 211, 216, 0.55)', bump: 138 }
+            ];
 
-                // Sample from the left or right angled face of Cube1.webp
-                const useRightFacet = (seedOffset % 2) === 1;
-                const sx = useRightFacet ? Math.floor(iw * 0.54) : Math.floor(iw * 0.22);
-                const sy = Math.floor(ih * 0.36);
-                const sw = Math.floor(iw * 0.24);
-                const sh = Math.floor(ih * 0.28);
-
-                const tmpCanvas = document.createElement('canvas');
-                tmpCanvas.width = size;
-                tmpCanvas.height = size;
-                const tctx = tmpCanvas.getContext('2d');
-
-                tctx.save();
-                tctx.translate(size / 2, size / 2);
-                const rotDeg = ((seedOffset * 37) % 4) * 90;
-                tctx.rotate(THREE.MathUtils.degToRad(rotDeg));
-                if (seedOffset % 3 === 0) {
-                    tctx.scale(-1, 1);
-                }
-                const shearAngle = useRightFacet ? -0.18 : 0.18;
-                tctx.transform(1, shearAngle, 0, 1, 0, 0);
-                tctx.drawImage(stoneSourceImage, sx, sy, sw, sh, -size * 0.62, -size * 0.62, size * 1.24, size * 1.24);
-                tctx.restore();
-
-                ctx.drawImage(tmpCanvas, 0, 0, size, size);
-
-                // Derive subtle bump map from luminance of the stone texture
-                const imgData = ctx.getImageData(0, 0, size, size);
-                const bData = bctx.getImageData(0, 0, size, size);
-                const d = imgData.data;
-                const bd = bData.data;
-                for (let i = 0; i < d.length; i += 4) {
-                    const lum = (d[i] * 0.3 + d[i + 1] * 0.59 + d[i + 2] * 0.11);
-                    const h = Math.max(20, Math.min(235, Math.round(128 + (lum - 165) * 0.9)));
-                    bd[i] = h;
-                    bd[i + 1] = h;
-                    bd[i + 2] = h;
-                    bd[i + 3] = 255;
-                }
-                bctx.putImageData(bData, 0, 0);
-            } else {
-                // Fallback stone grain while Cube1.webp is loading
-                for (let i = 0; i < 10; i++) {
-                    const s = seedOffset * 100 + i * 17;
-                    const cx = seededRand(s + 1) * size;
-                    const cy = seededRand(s + 2) * size;
-                    const r = 30 + seededRand(s + 3) * 55;
-                    ctx.fillStyle = i % 2 === 0 ? 'rgba(130, 135, 145, 0.35)' : 'rgba(185, 190, 198, 0.35)';
-                    ctx.beginPath();
-                    ctx.arc(cx, cy, r, 0, Math.PI * 2);
-                    ctx.fill();
-                }
+            const diagBaseAngle = (seededRand(seedOffset * 31) - 0.5) * Math.PI;
+            const strataCount = 13;
+            for (let i = 0; i < strataCount; i++) {
+                const s = seedOffset * 211 + i * 37;
+                const palette = strataColors[i % strataColors.length];
+                const px = seededRand(s + 1) * size;
+                const py = seededRand(s + 2) * size;
+                const rx = 55 + seededRand(s + 3) * 115;
+                const ry = 26 + seededRand(s + 4) * 58;
+                const ang = diagBaseAngle + (seededRand(s + 5) - 0.5) * 0.55;
+                drawStoneStrataPolygon(ctx, bctx, px, py, rx, ry, ang, 7, s + 10, palette.col, palette.bump);
             }
 
-            // Soft readable center wash so text always has high contrast over stone cracks/pores
-            const grad = ctx.createRadialGradient(size / 2, size / 2, size * 0.08, size / 2, size / 2, size * 0.52);
-            grad.addColorStop(0, 'rgba(236, 238, 242, 0.56)');
-            grad.addColorStop(0.72, 'rgba(205, 210, 218, 0.22)');
-            grad.addColorStop(1, 'rgba(40, 42, 48, 0.18)');
+            // 3. Darker chipped rock facets near outer edges (like Cube1_2.webp corners/edges)
+            const edgeChipCount = 10;
+            for (let c = 0; c < edgeChipCount; c++) {
+                const s = seedOffset * 509 + c * 53;
+                const side = c % 4;
+                let ex = seededRand(s + 1) * size;
+                let ey = seededRand(s + 2) * size;
+                if (side === 0) ey = seededRand(s + 2) * (size * 0.14);
+                if (side === 1) ey = size - seededRand(s + 2) * (size * 0.14);
+                if (side === 2) ex = seededRand(s + 1) * (size * 0.14);
+                if (side === 3) ex = size - seededRand(s + 1) * (size * 0.14);
+
+                const rx = 18 + seededRand(s + 3) * 34;
+                const ry = 12 + seededRand(s + 4) * 24;
+                const ang = seededRand(s + 5) * Math.PI;
+                drawStoneStrataPolygon(ctx, bctx, ex, ey, rx, ry, ang, 6, s + 20, 'rgba(136, 140, 150, 0.62)', 82);
+
+                // Thin graphic crack line along edge chip
+                ctx.save();
+                ctx.strokeStyle = 'rgba(32, 34, 40, 0.52)';
+                ctx.lineWidth = 1.6;
+                ctx.beginPath();
+                ctx.moveTo(ex - rx * 0.5, ey - ry * 0.2);
+                ctx.lineTo(ex + (seededRand(s + 6) - 0.5) * 14, ey + (seededRand(s + 7) - 0.5) * 14);
+                ctx.lineTo(ex + rx * 0.5, ey + ry * 0.25);
+                ctx.stroke();
+                ctx.restore();
+            }
+
+            // 4. Hand-drawn style stone pores & dark mineral pits (characteristic of Cube1_2.webp)
+            const pitCount = 26;
+            for (let p = 0; p < pitCount; p++) {
+                const s = seedOffset * 887 + p * 29;
+                const px = 22 + seededRand(s + 1) * (size - 44);
+                const py = 22 + seededRand(s + 2) * (size - 44);
+                const rx = 2.0 + seededRand(s + 3) * 5.8;
+                const ry = rx * (0.52 + seededRand(s + 4) * 0.42);
+                const ang = seededRand(s + 5) * Math.PI;
+
+                // Subtle rim highlight under pore
+                ctx.save();
+                ctx.translate(px, py + 1.2);
+                ctx.rotate(ang);
+                ctx.fillStyle = 'rgba(238, 240, 245, 0.65)';
+                ctx.beginPath();
+                ctx.ellipse(0, 0, rx + 0.8, ry + 0.6, 0, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+
+                // Dark pit interior + crisp ink rim
+                ctx.save();
+                ctx.translate(px, py);
+                ctx.rotate(ang);
+                ctx.fillStyle = p % 3 === 0 ? 'rgba(92, 96, 106, 0.82)' : 'rgba(122, 126, 136, 0.78)';
+                ctx.strokeStyle = 'rgba(28, 30, 36, 0.75)';
+                ctx.lineWidth = rx > 4 ? 1.5 : 1.1;
+                ctx.beginPath();
+                ctx.ellipse(0, 0, rx, ry, 0, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+                ctx.restore();
+
+                // Indentation in bump map
+                bctx.save();
+                bctx.translate(px, py);
+                bctx.rotate(ang);
+                bctx.fillStyle = '#363636';
+                bctx.beginPath();
+                bctx.ellipse(0, 0, rx + 1, ry + 1, 0, 0, Math.PI * 2);
+                bctx.fill();
+                bctx.restore();
+            }
+
+            // 5. Fine mineral flecks
+            for (let d = 0; d < 75; d++) {
+                const s = seedOffset * 1301 + d * 19;
+                const dx = seededRand(s + 1) * size;
+                const dy = seededRand(s + 2) * size;
+                const r = 0.8 + seededRand(s + 3) * 1.4;
+                ctx.fillStyle = d % 2 === 0 ? 'rgba(42, 44, 52, 0.36)' : 'rgba(244, 246, 250, 0.45)';
+                ctx.beginPath();
+                ctx.arc(dx, dy, r, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // 6. Soft center lift so text stays super readable without hiding stone texture
+            const grad = ctx.createRadialGradient(size / 2, size / 2, size * 0.06, size / 2, size / 2, size * 0.5);
+            grad.addColorStop(0, 'rgba(236, 238, 242, 0.42)');
+            grad.addColorStop(0.68, 'rgba(210, 213, 220, 0.14)');
+            grad.addColorStop(1, 'rgba(55, 58, 66, 0.12)');
             ctx.fillStyle = grad;
             ctx.fillRect(0, 0, size, size);
         }
@@ -1334,7 +1387,7 @@
                 canvas.height = 244;
                 slot.appendChild(canvas);
 
-                slot.onclick = () => inspectMemoryCube(item, slot);
+                slot.onclick = () => inspectMemoryCube(item, slot, index + 1);
                 grid.appendChild(slot);
 
                 if (typeof THREE !== 'undefined') {
@@ -1353,14 +1406,19 @@
                     miniScene.add(dLight);
 
                     const geom = createSharperStoneCubeGeometry(2.02, 0.11);
-                    const stoneSet = createMultiStoneTextures([item.word], { isMiniWord: true }, index + 1);
-                    const mats = Array.from({ length: 6 }, () => new THREE.MeshStandardMaterial({
-                        map: stoneSet.map,
-                        bumpMap: stoneSet.bumpMap,
-                        bumpScale: 0.035,
-                        roughness: 0.84,
-                        metalness: 0.05
-                    }));
+
+                    // Unique stone texture per cube AND per face so all 4 cubes look distinct
+                    const mats = Array.from({ length: 6 }, (_, faceIdx) => {
+                        const faceSeed = (index + 1) * 100 + faceIdx * 17;
+                        const stoneSet = createMultiStoneTextures([item.word], { isMiniWord: true }, faceSeed);
+                        return new THREE.MeshStandardMaterial({
+                            map: stoneSet.map,
+                            bumpMap: stoneSet.bumpMap,
+                            bumpScale: 0.038,
+                            roughness: 0.84,
+                            metalness: 0.05
+                        });
+                    });
 
                     const mesh = new THREE.Mesh(geom, mats);
                     mesh.rotation.x = 0;
@@ -1404,26 +1462,27 @@
             vaultSpinRaf = requestAnimationFrame(step);
         }
 
-        function buildInspectionCubeMesh(wordData) {
+        function buildInspectionCubeMesh(wordData, cubeSeedBase = 1) {
             if (stoneCubeMesh) {
                 scene.remove(stoneCubeMesh);
             }
 
             const geom = createSharperStoneCubeGeometry(2.04, 0.10);
+            const base = cubeSeedBase * 100;
 
             const faceSets = [
-                createMultiStoneTextures([wordData.ex1], { fontSize: 36 }, 11),
-                createMultiStoneTextures([wordData.ex2], { fontSize: 36 }, 12),
-                createMultiStoneTextures([wordData.definition], { fontSize: 36 }, 13),
-                createMultiStoneTextures([wordData.visual], { isEmoji: true }, 14),
-                createMultiStoneTextures([wordData.word, wordData.phonetic], { isTitle: true }, 15),
-                createMultiStoneTextures([wordData.ex3], { fontSize: 36 }, 16)
+                createMultiStoneTextures([wordData.ex1], { fontSize: 36 }, base + 11),
+                createMultiStoneTextures([wordData.ex2], { fontSize: 36 }, base + 23),
+                createMultiStoneTextures([wordData.definition], { fontSize: 36 }, base + 37),
+                createMultiStoneTextures([wordData.visual], { isEmoji: true }, base + 51),
+                createMultiStoneTextures([wordData.word, wordData.phonetic], { isTitle: true }, base + 67),
+                createMultiStoneTextures([wordData.ex3], { fontSize: 36 }, base + 83)
             ];
 
             const materials = faceSets.map((set) => new THREE.MeshStandardMaterial({
                 map: set.map,
                 bumpMap: set.bumpMap,
-                bumpScale: 0.035,
+                bumpScale: 0.038,
                 roughness: 0.84,
                 metalness: 0.05
             }));
@@ -1438,7 +1497,7 @@
             stoneCubeMesh.rotation.set(0, 0, 0);
         }
 
-        function initThreeCube(wordData) {
+        function initThreeCube(wordData, cubeSeedBase = 1) {
             const host = document.getElementById('threeCanvasHost');
             if (!host || typeof THREE === 'undefined') return;
 
@@ -1466,13 +1525,7 @@
                 scene.add(rimLight);
             }
 
-            buildInspectionCubeMesh(wordData);
-
-            loadStoneSourceImage().then((img) => {
-                if (img && stoneCubeMesh) {
-                    buildInspectionCubeMesh(wordData);
-                }
-            });
+            buildInspectionCubeMesh(wordData, cubeSeedBase);
 
             if (!threeAnimId) {
                 renderThreeLoop();
@@ -1495,7 +1548,7 @@
             renderer.render(scene, camera);
         }
 
-        function inspectMemoryCube(wordData, sourceSlot) {
+        function inspectMemoryCube(wordData, sourceSlot, cubeSeedBase = 1) {
             const vault = document.getElementById('memoryVault');
             const cubeStage = document.getElementById('cubeStage');
             const holder = document.getElementById('cubeDepthHolder');
@@ -1509,7 +1562,7 @@
                 sourceSlot.classList.add('picked-out');
             }
 
-            initThreeCube(wordData);
+            initThreeCube(wordData, cubeSeedBase);
 
             vault.classList.add('defocused');
             board.classList.add('blurred-bg');
@@ -1569,7 +1622,6 @@
             targetRotY += 180;
         }
 
-        loadStoneSourceImage();
         updateNarrativeView();
     </script>
 </body>
