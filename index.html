@@ -828,7 +828,6 @@
         let activePickedSlot = null;
         let vaultMiniCubes = [];
         let narrativeIndex = 0;
-        let stoneSourceImage = null;
 
         const INTRO_NARRATIVE_PAGES = [
             "Alan wandered into an orchard and saw various fruits lying on the ground. While looking around, something suddenly fell on his head. It was red and firm. And it was...",
@@ -902,38 +901,6 @@
             visual: '🍎'
         };
 
-        function loadStoneSourceImage() {
-            return new Promise((resolve) => {
-                if (stoneSourceImage) {
-                    resolve(stoneSourceImage);
-                    return;
-                }
-                const img = new Image();
-                img.crossOrigin = 'anonymous';
-                img.onload = () => {
-                    stoneSourceImage = img;
-                    resolve(img);
-                };
-                img.onerror = () => {
-                    resolve(null);
-                };
-                img.src = 'Cube1.webp';
-            });
-        }
-
-        function refreshVaultTexturesFromImage() {
-            if (!stoneSourceImage || vaultMiniCubes.length === 0) return;
-            vaultMiniCubes.forEach((entry, idx) => {
-                const set = createMultiStoneTextures([entry.wordText], { isMiniWord: true }, idx + 1);
-                entry.mesh.material.forEach((mat) => {
-                    mat.map = set.map;
-                    mat.bumpMap = set.bumpMap;
-                    mat.needsUpdate = true;
-                });
-                entry.renderer.render(entry.scene, entry.camera);
-            });
-        }
-
         function updateNarrativeView() {
             const textEl = document.getElementById('narrativeText');
             const indicatorEl = document.getElementById('narrativePageIndicator');
@@ -955,7 +922,7 @@
 
         function getStoredWords() {
             try {
-                const raw = localStorage.getItem('alien_memory_cubes_v18');
+                const raw = localStorage.getItem('alien_memory_cubes_v17');
                 if (raw) {
                     const parsed = JSON.parse(raw);
                     if (Array.isArray(parsed) && parsed.length > 0) return parsed;
@@ -966,7 +933,7 @@
 
         function saveStoredWords(words) {
             try {
-                localStorage.setItem('alien_memory_cubes_v18', JSON.stringify(words));
+                localStorage.setItem('alien_memory_cubes_v17', JSON.stringify(words));
             } catch (e) {}
         }
 
@@ -1074,10 +1041,6 @@
             }
 
             renderVaultGrid(words);
-            loadStoneSourceImage().then((img) => {
-                if (img) refreshVaultTexturesFromImage();
-            });
-
             board.classList.remove('clouds-bg', 'blurred-bg');
             board.classList.add('vault-bg');
             vault.classList.remove('defocused');
@@ -1160,80 +1123,6 @@
             return x - Math.floor(x);
         }
 
-        function drawCube1StoneBase(ctx, bctx, size, seedOffset) {
-            ctx.fillStyle = '#aeb3bc';
-            ctx.fillRect(0, 0, size, size);
-
-            bctx.fillStyle = '#808080';
-            bctx.fillRect(0, 0, size, size);
-
-            if (stoneSourceImage && stoneSourceImage.width > 0 && stoneSourceImage.height > 0) {
-                const iw = stoneSourceImage.width;
-                const ih = stoneSourceImage.height;
-
-                // Sample from the left or right angled face of Cube1.webp
-                const useRightFacet = (seedOffset % 2) === 1;
-                const sx = useRightFacet ? Math.floor(iw * 0.54) : Math.floor(iw * 0.22);
-                const sy = Math.floor(ih * 0.36);
-                const sw = Math.floor(iw * 0.24);
-                const sh = Math.floor(ih * 0.28);
-
-                const tmpCanvas = document.createElement('canvas');
-                tmpCanvas.width = size;
-                tmpCanvas.height = size;
-                const tctx = tmpCanvas.getContext('2d');
-
-                tctx.save();
-                tctx.translate(size / 2, size / 2);
-                const rotDeg = ((seedOffset * 37) % 4) * 90;
-                tctx.rotate(THREE.MathUtils.degToRad(rotDeg));
-                if (seedOffset % 3 === 0) {
-                    tctx.scale(-1, 1);
-                }
-                const shearAngle = useRightFacet ? -0.18 : 0.18;
-                tctx.transform(1, shearAngle, 0, 1, 0, 0);
-                tctx.drawImage(stoneSourceImage, sx, sy, sw, sh, -size * 0.62, -size * 0.62, size * 1.24, size * 1.24);
-                tctx.restore();
-
-                ctx.drawImage(tmpCanvas, 0, 0, size, size);
-
-                // Derive subtle bump map from luminance of the stone texture
-                const imgData = ctx.getImageData(0, 0, size, size);
-                const bData = bctx.getImageData(0, 0, size, size);
-                const d = imgData.data;
-                const bd = bData.data;
-                for (let i = 0; i < d.length; i += 4) {
-                    const lum = (d[i] * 0.3 + d[i + 1] * 0.59 + d[i + 2] * 0.11);
-                    const h = Math.max(20, Math.min(235, Math.round(128 + (lum - 165) * 0.9)));
-                    bd[i] = h;
-                    bd[i + 1] = h;
-                    bd[i + 2] = h;
-                    bd[i + 3] = 255;
-                }
-                bctx.putImageData(bData, 0, 0);
-            } else {
-                // Fallback stone grain while Cube1.webp is loading
-                for (let i = 0; i < 10; i++) {
-                    const s = seedOffset * 100 + i * 17;
-                    const cx = seededRand(s + 1) * size;
-                    const cy = seededRand(s + 2) * size;
-                    const r = 30 + seededRand(s + 3) * 55;
-                    ctx.fillStyle = i % 2 === 0 ? 'rgba(130, 135, 145, 0.35)' : 'rgba(185, 190, 198, 0.35)';
-                    ctx.beginPath();
-                    ctx.arc(cx, cy, r, 0, Math.PI * 2);
-                    ctx.fill();
-                }
-            }
-
-            // Soft readable center wash so text always has high contrast over stone cracks/pores
-            const grad = ctx.createRadialGradient(size / 2, size / 2, size * 0.08, size / 2, size / 2, size * 0.52);
-            grad.addColorStop(0, 'rgba(236, 238, 242, 0.56)');
-            grad.addColorStop(0.72, 'rgba(205, 210, 218, 0.22)');
-            grad.addColorStop(1, 'rgba(40, 42, 48, 0.18)');
-            ctx.fillStyle = grad;
-            ctx.fillRect(0, 0, size, size);
-        }
-
         function createMultiStoneTextures(lines, options = {}, seedOffset = 1) {
             const size = 512;
             const colorCanvas = document.createElement('canvas');
@@ -1246,7 +1135,130 @@
             bumpCanvas.height = size;
             const bctx = bumpCanvas.getContext('2d');
 
-            drawCube1StoneBase(ctx, bctx, size, seedOffset);
+            ctx.fillStyle = '#9ea3ac';
+            ctx.fillRect(0, 0, size, size);
+
+            bctx.fillStyle = '#808080';
+            bctx.fillRect(0, 0, size, size);
+
+            const greyPatches = [
+                'rgba(138, 143, 152, 0.45)',
+                'rgba(118, 123, 132, 0.42)',
+                'rgba(154, 158, 166, 0.36)',
+                'rgba(108, 113, 124, 0.35)',
+                'rgba(122, 124, 148, 0.14)',
+                'rgba(132, 122, 148, 0.13)'
+            ];
+
+            for (let i = 0; i < 12; i++) {
+                const s = seedOffset * 100 + i * 17;
+                const cx = seededRand(s + 1) * size;
+                const cy = seededRand(s + 2) * size;
+                const rx = 24 + seededRand(s + 3) * 60;
+                const ry = 20 + seededRand(s + 4) * 50;
+                const verts = 5 + Math.floor(seededRand(s + 5) * 3);
+                const rot = seededRand(s + 6) * Math.PI * 2;
+                const col = greyPatches[i % greyPatches.length];
+
+                ctx.save();
+                ctx.translate(cx, cy);
+                ctx.rotate(rot);
+                ctx.beginPath();
+                for (let v = 0; v < verts; v++) {
+                    const ang = (v / verts) * Math.PI * 2;
+                    const radScale = 0.7 + seededRand(s + 10 + v) * 0.45;
+                    const px = Math.cos(ang) * rx * radScale;
+                    const py = Math.sin(ang) * ry * radScale;
+                    if (v === 0) ctx.moveTo(px, py);
+                    else ctx.lineTo(px, py);
+                }
+                ctx.closePath();
+                ctx.fillStyle = col;
+                ctx.fill();
+                ctx.restore();
+
+                bctx.save();
+                bctx.translate(cx, cy);
+                bctx.rotate(rot);
+                bctx.beginPath();
+                for (let v = 0; v < verts; v++) {
+                    const ang = (v / verts) * Math.PI * 2;
+                    const radScale = 0.7 + seededRand(s + 10 + v) * 0.45;
+                    const px = Math.cos(ang) * rx * radScale;
+                    const py = Math.sin(ang) * ry * radScale;
+                    if (v === 0) bctx.moveTo(px, py);
+                    else bctx.lineTo(px, py);
+                }
+                bctx.closePath();
+                bctx.fillStyle = i % 2 === 0 ? 'rgba(156, 156, 156, 0.34)' : 'rgba(102, 102, 102, 0.34)';
+                bctx.fill();
+                bctx.restore();
+            }
+
+            const sheen = ctx.createLinearGradient(0, 0, size, size);
+            sheen.addColorStop(0, 'rgba(99, 102, 241, 0.08)');
+            sheen.addColorStop(0.55, 'rgba(139, 92, 246, 0.06)');
+            sheen.addColorStop(1, 'rgba(59, 130, 246, 0.04)');
+            ctx.fillStyle = sheen;
+            ctx.fillRect(0, 0, size, size);
+
+            for (let c = 0; c < 14; c++) {
+                const sc = seedOffset * 300 + c * 29;
+                let x = 24 + seededRand(sc + 1) * (size - 48);
+                let y = 24 + seededRand(sc + 2) * (size - 48);
+                let ang = seededRand(sc + 3) * Math.PI * 2;
+                const steps = 4 + Math.floor(seededRand(sc + 4) * 4);
+
+                ctx.strokeStyle = 'rgba(24, 24, 27, 0.25)';
+                ctx.lineWidth = 1.2 + seededRand(sc + 5) * 1.1;
+                ctx.beginPath();
+                ctx.moveTo(x, y);
+
+                bctx.strokeStyle = 'rgba(35, 35, 35, 0.75)';
+                bctx.lineWidth = 1.8;
+                bctx.beginPath();
+                bctx.moveTo(x, y);
+
+                for (let st = 0; st < steps; st++) {
+                    ang += (seededRand(sc + 10 + st) - 0.5) * 0.9;
+                    const segLen = 8 + seededRand(sc + 20 + st) * 14;
+                    x += Math.cos(ang) * segLen;
+                    y += Math.sin(ang) * segLen;
+                    ctx.lineTo(x, y);
+                    bctx.lineTo(x, y);
+                }
+                ctx.stroke();
+                bctx.stroke();
+            }
+
+            for (let p = 0; p < 44; p++) {
+                const sp = seedOffset * 500 + p * 31;
+                const px = 14 + seededRand(sp + 1) * (size - 28);
+                const py = 14 + seededRand(sp + 2) * (size - 28);
+                const pr = 1.2 + seededRand(sp + 3) * 3.4;
+
+                ctx.fillStyle = p % 4 === 0 ? 'rgba(226, 232, 240, 0.22)' : 'rgba(24, 24, 27, 0.24)';
+                ctx.beginPath();
+                ctx.arc(px, py, pr, 0, Math.PI * 2);
+                ctx.fill();
+
+                bctx.fillStyle = p % 4 === 0 ? 'rgba(205, 205, 205, 0.55)' : 'rgba(45, 45, 45, 0.65)';
+                bctx.beginPath();
+                bctx.arc(px, py, pr + 0.8, 0, Math.PI * 2);
+                bctx.fill();
+            }
+
+            for (let g = 0; g < 750; g++) {
+                const gs = seedOffset * 900 + g * 13;
+                const gx = seededRand(gs + 1) * size;
+                const gy = seededRand(gs + 2) * size;
+                const isLight = seededRand(gs + 3) > 0.5;
+                ctx.fillStyle = isLight ? 'rgba(255, 255, 255, 0.08)' : 'rgba(24, 24, 27, 0.07)';
+                ctx.fillRect(gx, gy, 2, 2);
+
+                bctx.fillStyle = isLight ? 'rgba(185, 185, 185, 0.30)' : 'rgba(70, 70, 70, 0.30)';
+                bctx.fillRect(gx, gy, 2, 2);
+            }
 
             ctx.fillStyle = '#18181b';
             ctx.textAlign = 'center';
@@ -1374,7 +1386,6 @@
                         camera: miniCam,
                         renderer: miniRenderer,
                         mesh,
-                        wordText: item.word,
                         angle: index * 25
                     });
                 }
@@ -1404,7 +1415,34 @@
             vaultSpinRaf = requestAnimationFrame(step);
         }
 
-        function buildInspectionCubeMesh(wordData) {
+        function initThreeCube(wordData) {
+            const host = document.getElementById('threeCanvasHost');
+            if (!host || typeof THREE === 'undefined') return;
+
+            if (!renderer) {
+                scene = new THREE.Scene();
+                camera = new THREE.PerspectiveCamera(38, 1, 0.1, 100);
+                camera.position.set(0, 0, 5.5);
+                camera.lookAt(0, 0, 0);
+
+                renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+                renderer.setSize(264, 264);
+                renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+                host.innerHTML = '';
+                host.appendChild(renderer.domElement);
+
+                const ambient = new THREE.AmbientLight(0xd4d8e8, 0.85);
+                scene.add(ambient);
+
+                const keyLight = new THREE.DirectionalLight(0xe4e4e7, 0.65);
+                keyLight.position.set(2, 2.5, 4);
+                scene.add(keyLight);
+
+                const rimLight = new THREE.DirectionalLight(0x818cf8, 0.2);
+                rimLight.position.set(-2.5, -1.5, -2);
+                scene.add(rimLight);
+            }
+
             if (stoneCubeMesh) {
                 scene.remove(stoneCubeMesh);
             }
@@ -1436,43 +1474,6 @@
             currentRotX = 0;
             currentRotY = 0;
             stoneCubeMesh.rotation.set(0, 0, 0);
-        }
-
-        function initThreeCube(wordData) {
-            const host = document.getElementById('threeCanvasHost');
-            if (!host || typeof THREE === 'undefined') return;
-
-            if (!renderer) {
-                scene = new THREE.Scene();
-                camera = new THREE.PerspectiveCamera(38, 1, 0.1, 100);
-                camera.position.set(0, 0, 5.5);
-                camera.lookAt(0, 0, 0);
-
-                renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-                renderer.setSize(264, 264);
-                renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-                host.innerHTML = '';
-                host.appendChild(renderer.domElement);
-
-                const ambient = new THREE.AmbientLight(0xd4d8e8, 0.85);
-                scene.add(ambient);
-
-                const keyLight = new THREE.DirectionalLight(0xe4e4e7, 0.65);
-                keyLight.position.set(2, 2.5, 4);
-                scene.add(keyLight);
-
-                const rimLight = new THREE.DirectionalLight(0x818cf8, 0.2);
-                rimLight.position.set(-2.5, -1.5, -2);
-                scene.add(rimLight);
-            }
-
-            buildInspectionCubeMesh(wordData);
-
-            loadStoneSourceImage().then((img) => {
-                if (img && stoneCubeMesh) {
-                    buildInspectionCubeMesh(wordData);
-                }
-            });
 
             if (!threeAnimId) {
                 renderThreeLoop();
@@ -1569,7 +1570,6 @@
             targetRotY += 180;
         }
 
-        loadStoneSourceImage();
         updateNarrativeView();
     </script>
 </body>
