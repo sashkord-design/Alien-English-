@@ -8,7 +8,7 @@
     <style>
         :root {
             --ink-dark: #18181b;
-            --milk-bg: #f7f5ef;
+            --story-bg: #ece5d5;
             --wrong-text: #7e22ce;
             --correct-text: #15803d;
         }
@@ -25,7 +25,7 @@
         html, body {
             width: 100%;
             height: 100%;
-            background-color: var(--milk-bg);
+            background-color: var(--story-bg);
             color: var(--ink-dark);
             overflow: hidden;
         }
@@ -33,7 +33,7 @@
         .retro-board {
             width: 100vw;
             height: 100dvh;
-            background-color: var(--milk-bg);
+            background-color: var(--story-bg);
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -56,7 +56,10 @@
         }
 
         .bg-first-page {
-            background-color: var(--milk-bg);
+            background:
+                radial-gradient(circle at 50% 24%, rgba(255, 250, 238, 0.72) 0%, rgba(236, 229, 213, 0.25) 58%, rgba(212, 201, 178, 0.65) 100%),
+                repeating-radial-gradient(circle at 20% 30%, rgba(24, 24, 27, 0.025) 0 1px, transparent 1px 6px);
+            background-color: var(--story-bg);
             opacity: 1;
         }
 
@@ -151,9 +154,9 @@
 
         .intro-frame-box {
             width: 100%;
-            height: 29dvh;
-            min-height: 145px;
-            max-height: 250px;
+            height: 30dvh;
+            min-height: 150px;
+            max-height: 260px;
             background-image: url('frame.png');
             background-size: cover;
             background-position: center;
@@ -176,9 +179,9 @@
 
         .narrative-box {
             width: 100%;
-            height: 33dvh;
-            min-height: 145px;
-            max-height: 270px;
+            height: 36dvh;
+            min-height: 155px;
+            max-height: 290px;
             background-image: url('frame.png');
             background-size: cover;
             background-position: center;
@@ -203,7 +206,7 @@
         .narrative-text {
             width: 100%;
             font-size: 12px;
-            line-height: 1.42;
+            line-height: 1.44;
             color: var(--ink-dark);
             font-weight: 500;
             text-align: justify;
@@ -258,7 +261,7 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 8px;
+            padding: 4px 0 2px;
             flex-shrink: 0;
         }
 
@@ -274,8 +277,8 @@
             border-radius: 12px;
             overflow: hidden;
             color: var(--ink-dark);
-            padding: 9px 18px;
-            font-size: 11.5px;
+            padding: 11px 18px;
+            font-size: 12px;
             font-weight: 800;
             letter-spacing: 0.05em;
             text-transform: uppercase;
@@ -298,58 +301,8 @@
             z-index: 1;
         }
 
-        .enter-lesson-btn:active {
-            transform: translate(2px, 2px);
-            box-shadow: 1px 1px 0px var(--ink-dark);
-        }
-
-        .intro-arrows-row {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 14px;
-        }
-
-        .arrow-yellow-btn {
-            position: relative;
-            background-color: #fcd34d;
-            background-image: url('frame.png');
-            background-size: cover;
-            background-position: center;
-            border: 2px solid var(--ink-dark);
-            border-radius: 11px;
-            overflow: hidden;
-            color: var(--ink-dark);
-            width: 42px;
-            height: 32px;
-            font-size: 14px;
-            font-weight: 900;
-            line-height: 1;
-            cursor: pointer;
-            box-shadow: 2px 2px 0px var(--ink-dark);
-            transition: transform 0.16s ease, box-shadow 0.16s ease;
-            user-select: none;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .arrow-yellow-btn::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background-color: rgba(252, 211, 77, 0.78);
-            pointer-events: none;
-            z-index: 0;
-        }
-
-        .arrow-yellow-btn span {
-            position: relative;
-            z-index: 1;
-        }
-
-        .arrow-yellow-btn:active,
-        .arrow-yellow-btn.pressed {
+        .enter-lesson-btn:active,
+        .enter-lesson-btn.pressed {
             transform: translate(2px, 2px);
             box-shadow: 1px 1px 0px var(--ink-dark);
         }
@@ -755,10 +708,6 @@
 
                 <div class="intro-bottom-group">
                     <button class="enter-lesson-btn" id="enterLessonBtn" onclick="startScan(this)"><span>Start Exercise</span></button>
-                    <div class="intro-arrows-row">
-                        <button class="arrow-yellow-btn" id="prevArrowBtn" onclick="pulseArrow(this)" aria-label="Previous"><span>←</span></button>
-                        <button class="arrow-yellow-btn" id="nextArrowBtn" onclick="startScan(this)" aria-label="Next"><span>→</span></button>
-                    </div>
                 </div>
             </div>
 
@@ -970,7 +919,7 @@
 
         function getStoredWords() {
             try {
-                const raw = localStorage.getItem('alien_memory_cubes_v15');
+                const raw = localStorage.getItem('alien_memory_cubes_v16');
                 if (raw) {
                     const parsed = JSON.parse(raw);
                     if (Array.isArray(parsed) && parsed.length > 0) return parsed;
@@ -981,7 +930,7 @@
 
         function saveStoredWords(words) {
             try {
-                localStorage.setItem('alien_memory_cubes_v15', JSON.stringify(words));
+                localStorage.setItem('alien_memory_cubes_v16', JSON.stringify(words));
             } catch (e) {}
         }
 
@@ -1007,12 +956,6 @@
                 fromEl.style.display = 'none';
                 fromEl.classList.remove('exit-to-left');
             }, 720);
-        }
-
-        function pulseArrow(btn) {
-            if (!btn) return;
-            btn.classList.add('pressed');
-            setTimeout(() => btn.classList.remove('pressed'), 160);
         }
 
         function startScan(btn) {
