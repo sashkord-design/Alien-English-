@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
     <title>Alien Memory Scanner</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
@@ -923,8 +923,9 @@
 
         function refreshVaultTexturesFromImage() {
             if (!stoneSourceImage || vaultMiniCubes.length === 0) return;
+            const maxAniso = renderer ? renderer.capabilities.getMaxAnisotropy() : 8;
             vaultMiniCubes.forEach((entry, idx) => {
-                const set = createMultiStoneTextures([entry.wordText], { isMiniWord: true }, idx + 1);
+                const set = createMultiStoneTextures([entry.wordText], { isMiniWord: true }, idx + 1, maxAniso);
                 entry.mesh.material.forEach((mat) => {
                     mat.map = set.map;
                     mat.bumpMap = set.bumpMap;
@@ -955,7 +956,7 @@
 
         function getStoredWords() {
             try {
-                const raw = localStorage.getItem('alien_memory_cubes_v18');
+                const raw = localStorage.getItem('alien_memory_cubes_v19');
                 if (raw) {
                     const parsed = JSON.parse(raw);
                     if (Array.isArray(parsed) && parsed.length > 0) return parsed;
@@ -966,7 +967,7 @@
 
         function saveStoredWords(words) {
             try {
-                localStorage.setItem('alien_memory_cubes_v18', JSON.stringify(words));
+                localStorage.setItem('alien_memory_cubes_v19', JSON.stringify(words));
             } catch (e) {}
         }
 
@@ -1161,7 +1162,7 @@
         }
 
         function drawCube1StoneBase(ctx, bctx, size, seedOffset) {
-            ctx.fillStyle = '#aeb3bc';
+            ctx.fillStyle = '#c4c7ce';
             ctx.fillRect(0, 0, size, size);
 
             bctx.fillStyle = '#808080';
@@ -1171,17 +1172,19 @@
                 const iw = stoneSourceImage.width;
                 const ih = stoneSourceImage.height;
 
-                // Sample from the left or right angled face of Cube1.webp
+                // Sample from the left or right angled face of Cube1.webp at high fidelity
                 const useRightFacet = (seedOffset % 2) === 1;
-                const sx = useRightFacet ? Math.floor(iw * 0.54) : Math.floor(iw * 0.22);
-                const sy = Math.floor(ih * 0.36);
-                const sw = Math.floor(iw * 0.24);
-                const sh = Math.floor(ih * 0.28);
+                const sx = useRightFacet ? Math.floor(iw * 0.50) : Math.floor(iw * 0.18);
+                const sy = Math.floor(ih * 0.32);
+                const sw = Math.floor(iw * 0.30);
+                const sh = Math.floor(ih * 0.36);
 
                 const tmpCanvas = document.createElement('canvas');
                 tmpCanvas.width = size;
                 tmpCanvas.height = size;
                 const tctx = tmpCanvas.getContext('2d');
+                tctx.imageSmoothingEnabled = true;
+                tctx.imageSmoothingQuality = 'high';
 
                 tctx.save();
                 tctx.translate(size / 2, size / 2);
@@ -1190,52 +1193,41 @@
                 if (seedOffset % 3 === 0) {
                     tctx.scale(-1, 1);
                 }
-                const shearAngle = useRightFacet ? -0.18 : 0.18;
+                const shearAngle = useRightFacet ? -0.14 : 0.14;
                 tctx.transform(1, shearAngle, 0, 1, 0, 0);
-                tctx.drawImage(stoneSourceImage, sx, sy, sw, sh, -size * 0.62, -size * 0.62, size * 1.24, size * 1.24);
+                tctx.drawImage(stoneSourceImage, sx, sy, sw, sh, -size * 0.56, -size * 0.56, size * 1.12, size * 1.12);
                 tctx.restore();
 
+                ctx.imageSmoothingEnabled = true;
+                ctx.imageSmoothingQuality = 'high';
                 ctx.drawImage(tmpCanvas, 0, 0, size, size);
 
-                // Derive subtle bump map from luminance of the stone texture
+                // Derive crisp bump map from luminance
                 const imgData = ctx.getImageData(0, 0, size, size);
                 const bData = bctx.getImageData(0, 0, size, size);
                 const d = imgData.data;
                 const bd = bData.data;
                 for (let i = 0; i < d.length; i += 4) {
                     const lum = (d[i] * 0.3 + d[i + 1] * 0.59 + d[i + 2] * 0.11);
-                    const h = Math.max(20, Math.min(235, Math.round(128 + (lum - 165) * 0.9)));
+                    const h = Math.max(15, Math.min(240, Math.round(128 + (lum - 170) * 1.05)));
                     bd[i] = h;
                     bd[i + 1] = h;
                     bd[i + 2] = h;
                     bd[i + 3] = 255;
                 }
                 bctx.putImageData(bData, 0, 0);
-            } else {
-                // Fallback stone grain while Cube1.webp is loading
-                for (let i = 0; i < 10; i++) {
-                    const s = seedOffset * 100 + i * 17;
-                    const cx = seededRand(s + 1) * size;
-                    const cy = seededRand(s + 2) * size;
-                    const r = 30 + seededRand(s + 3) * 55;
-                    ctx.fillStyle = i % 2 === 0 ? 'rgba(130, 135, 145, 0.35)' : 'rgba(185, 190, 198, 0.35)';
-                    ctx.beginPath();
-                    ctx.arc(cx, cy, r, 0, Math.PI * 2);
-                    ctx.fill();
-                }
             }
 
-            // Soft readable center wash so text always has high contrast over stone cracks/pores
-            const grad = ctx.createRadialGradient(size / 2, size / 2, size * 0.08, size / 2, size / 2, size * 0.52);
-            grad.addColorStop(0, 'rgba(236, 238, 242, 0.56)');
-            grad.addColorStop(0.72, 'rgba(205, 210, 218, 0.22)');
-            grad.addColorStop(1, 'rgba(40, 42, 48, 0.18)');
-            ctx.fillStyle = grad;
-            ctx.fillRect(0, 0, size, size);
+            // Crisp graphic border matching Cube1.webp illustrated outline
+            ctx.save();
+            ctx.strokeStyle = 'rgba(24, 24, 27, 0.42)';
+            ctx.lineWidth = Math.max(8, Math.round(size * 0.014));
+            ctx.strokeRect(4, 4, size - 8, size - 8);
+            ctx.restore();
         }
 
-        function createMultiStoneTextures(lines, options = {}, seedOffset = 1) {
-            const size = 512;
+        function createMultiStoneTextures(lines, options = {}, seedOffset = 1, maxAniso = 8) {
+            const size = 1024;
             const colorCanvas = document.createElement('canvas');
             colorCanvas.width = size;
             colorCanvas.height = size;
@@ -1248,28 +1240,28 @@
 
             drawCube1StoneBase(ctx, bctx, size, seedOffset);
 
-            ctx.fillStyle = '#18181b';
+            ctx.fillStyle = '#141417';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
 
             if (options.isEmoji) {
-                ctx.font = '136px sans-serif';
-                ctx.fillText(lines[0], size / 2, size / 2 + 4);
+                ctx.font = '272px sans-serif';
+                ctx.fillText(lines[0], size / 2, size / 2 + 8);
             } else if (options.isMiniWord) {
                 const word = lines[0];
-                const fontSize = word.length > 6 ? 54 : 66;
+                const fontSize = word.length > 6 ? 108 : 132;
                 ctx.font = `900 ${fontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
-                ctx.fillText(word, size / 2, size / 2 + 2);
+                ctx.fillText(word, size / 2, size / 2 + 4);
             } else if (options.isTitle) {
-                ctx.font = '900 70px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-                ctx.fillText(lines[0], size / 2, size / 2 - 20);
+                ctx.font = '900 144px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+                ctx.fillText(lines[0], size / 2, size / 2 - 42);
                 if (lines[1]) {
-                    ctx.font = '600 32px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-                    ctx.fillStyle = '#27272a';
-                    ctx.fillText(lines[1], size / 2, size / 2 + 42);
+                    ctx.font = '700 66px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+                    ctx.fillStyle = '#1f1f24';
+                    ctx.fillText(lines[1], size / 2, size / 2 + 86);
                 }
             } else {
-                const fontSize = options.fontSize || 36;
+                const fontSize = (options.fontSize || 36) * 2;
                 ctx.font = `700 ${fontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
                 const text = lines.join(' ');
                 const words = text.split(' ');
@@ -1278,7 +1270,7 @@
 
                 words.forEach((w) => {
                     const testLine = currentLine ? currentLine + ' ' + w : w;
-                    if (ctx.measureText(testLine).width > size - 88 && currentLine) {
+                    if (ctx.measureText(testLine).width > size - 176 && currentLine) {
                         wrapped.push(currentLine);
                         currentLine = w;
                     } else {
@@ -1295,10 +1287,10 @@
             }
 
             const map = new THREE.CanvasTexture(colorCanvas);
-            map.anisotropy = 4;
+            map.anisotropy = maxAniso;
 
             const bumpMap = new THREE.CanvasTexture(bumpCanvas);
-            bumpMap.anisotropy = 4;
+            bumpMap.anisotropy = maxAniso;
 
             return { map, bumpMap };
         }
@@ -1345,21 +1337,22 @@
 
                     const miniRenderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
                     miniRenderer.setSize(122, 122);
-                    miniRenderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+                    miniRenderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 3));
+                    const maxAniso = miniRenderer.capabilities.getMaxAnisotropy();
 
-                    miniScene.add(new THREE.AmbientLight(0xd4d8e8, 0.85));
-                    const dLight = new THREE.DirectionalLight(0xe4e4e7, 0.65);
+                    miniScene.add(new THREE.AmbientLight(0xe4e7f0, 0.92));
+                    const dLight = new THREE.DirectionalLight(0xf4f4f6, 0.55);
                     dLight.position.set(2, 2.5, 4);
                     miniScene.add(dLight);
 
                     const geom = createSharperStoneCubeGeometry(2.02, 0.11);
-                    const stoneSet = createMultiStoneTextures([item.word], { isMiniWord: true }, index + 1);
+                    const stoneSet = createMultiStoneTextures([item.word], { isMiniWord: true }, index + 1, maxAniso);
                     const mats = Array.from({ length: 6 }, () => new THREE.MeshStandardMaterial({
                         map: stoneSet.map,
                         bumpMap: stoneSet.bumpMap,
-                        bumpScale: 0.035,
-                        roughness: 0.84,
-                        metalness: 0.05
+                        bumpScale: 0.03,
+                        roughness: 0.86,
+                        metalness: 0.03
                     }));
 
                     const mesh = new THREE.Mesh(geom, mats);
@@ -1410,22 +1403,23 @@
             }
 
             const geom = createSharperStoneCubeGeometry(2.04, 0.10);
+            const maxAniso = renderer ? renderer.capabilities.getMaxAnisotropy() : 8;
 
             const faceSets = [
-                createMultiStoneTextures([wordData.ex1], { fontSize: 36 }, 11),
-                createMultiStoneTextures([wordData.ex2], { fontSize: 36 }, 12),
-                createMultiStoneTextures([wordData.definition], { fontSize: 36 }, 13),
-                createMultiStoneTextures([wordData.visual], { isEmoji: true }, 14),
-                createMultiStoneTextures([wordData.word, wordData.phonetic], { isTitle: true }, 15),
-                createMultiStoneTextures([wordData.ex3], { fontSize: 36 }, 16)
+                createMultiStoneTextures([wordData.ex1], { fontSize: 36 }, 11, maxAniso),
+                createMultiStoneTextures([wordData.ex2], { fontSize: 36 }, 12, maxAniso),
+                createMultiStoneTextures([wordData.definition], { fontSize: 36 }, 13, maxAniso),
+                createMultiStoneTextures([wordData.visual], { isEmoji: true }, 14, maxAniso),
+                createMultiStoneTextures([wordData.word, wordData.phonetic], { isTitle: true }, 15, maxAniso),
+                createMultiStoneTextures([wordData.ex3], { fontSize: 36 }, 16, maxAniso)
             ];
 
             const materials = faceSets.map((set) => new THREE.MeshStandardMaterial({
                 map: set.map,
                 bumpMap: set.bumpMap,
-                bumpScale: 0.035,
-                roughness: 0.84,
-                metalness: 0.05
+                bumpScale: 0.03,
+                roughness: 0.86,
+                metalness: 0.03
             }));
 
             stoneCubeMesh = new THREE.Mesh(geom, materials);
@@ -1450,18 +1444,18 @@
 
                 renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
                 renderer.setSize(264, 264);
-                renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+                renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 3));
                 host.innerHTML = '';
                 host.appendChild(renderer.domElement);
 
-                const ambient = new THREE.AmbientLight(0xd4d8e8, 0.85);
+                const ambient = new THREE.AmbientLight(0xe4e7f0, 0.92);
                 scene.add(ambient);
 
-                const keyLight = new THREE.DirectionalLight(0xe4e4e7, 0.65);
+                const keyLight = new THREE.DirectionalLight(0xf4f4f6, 0.55);
                 keyLight.position.set(2, 2.5, 4);
                 scene.add(keyLight);
 
-                const rimLight = new THREE.DirectionalLight(0x818cf8, 0.2);
+                const rimLight = new THREE.DirectionalLight(0xa5b4fc, 0.14);
                 rimLight.position.set(-2.5, -1.5, -2);
                 scene.add(rimLight);
             }
