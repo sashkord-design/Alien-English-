@@ -8,6 +8,7 @@
     <style>
         :root {
             --ink-dark: #18181b;
+            --milk-bg: #f7f5ef;
             --wrong-text: #7e22ce;
             --correct-text: #15803d;
         }
@@ -24,7 +25,7 @@
         html, body {
             width: 100%;
             height: 100%;
-            background-color: #145359;
+            background-color: var(--milk-bg);
             color: var(--ink-dark);
             overflow: hidden;
         }
@@ -32,12 +33,12 @@
         .retro-board {
             width: 100vw;
             height: 100dvh;
-            background-color: #145359;
+            background-color: var(--milk-bg);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 12px 14px 16px;
+            padding: 12px 14px;
             position: relative;
             overflow: hidden;
         }
@@ -55,10 +56,7 @@
         }
 
         .bg-first-page {
-            background-image: url('background%20first%20page.png');
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
+            background-color: var(--milk-bg);
             opacity: 1;
         }
 
@@ -139,7 +137,7 @@
             transform: translateX(0);
         }
 
-        /* 1. INTRO SCREEN */
+        /* 1. INTRO SCREEN (30% image / ~5% spacing / 45% text / 20% actions) */
         .intro-screen {
             width: 100%;
             height: 100%;
@@ -147,54 +145,165 @@
             flex-direction: column;
             align-items: center;
             justify-content: space-between;
-            padding-top: 2px;
-            padding-bottom: 6px;
+            gap: 8px;
+            padding: 2px 0;
         }
 
-        .intro-illustration {
+        .intro-frame-box {
             width: 100%;
-            max-width: 100%;
-            max-height: 49dvh;
-            height: auto;
-            object-fit: contain;
-            object-position: top center;
-            border: 2px solid var(--ink-dark);
-            border-radius: 14px;
-            box-shadow: 2px 3px 0px var(--ink-dark);
-            user-select: none;
-            -webkit-user-drag: none;
-            flex-shrink: 1;
-        }
-
-        .intro-bottom-group {
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            margin-top: 10px;
-            flex-shrink: 0;
-        }
-
-        .narrative-box {
-            width: 100%;
+            height: 30dvh;
+            min-height: 155px;
+            max-height: 270px;
             background-image: url('frame.png');
             background-size: cover;
             background-position: center;
             border: 2px solid var(--ink-dark);
             border-radius: 14px;
             overflow: hidden;
-            padding: 11px 14px;
-            margin-bottom: 12px;
             box-shadow: 2px 3px 0px var(--ink-dark);
+            flex-shrink: 0;
+        }
+
+        .intro-illustration {
+            width: 100%;
+            height: 100%;
+            display: block;
+            object-fit: cover;
+            object-position: center 22%;
+            user-select: none;
+            -webkit-user-drag: none;
+        }
+
+        .narrative-box {
+            width: 100%;
+            height: 45dvh;
+            min-height: 190px;
+            max-height: 380px;
+            background-image: url('frame.png');
+            background-size: cover;
+            background-position: center;
+            border: 2px solid var(--ink-dark);
+            border-radius: 14px;
+            overflow: hidden;
+            padding: 14px 16px 12px;
+            box-shadow: 2px 3px 0px var(--ink-dark);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            flex-shrink: 0;
+        }
+
+        .narrative-body {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            overflow-y: auto;
         }
 
         .narrative-text {
-            font-size: 11.5px;
-            line-height: 1.38;
+            width: 100%;
+            font-size: 12.5px;
+            line-height: 1.45;
             color: var(--ink-dark);
             font-weight: 500;
             text-align: justify;
             text-align-last: left;
+        }
+
+        .narrative-pager {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding-top: 8px;
+            flex-shrink: 0;
+        }
+
+        .mini-text-arrow {
+            width: 28px;
+            height: 24px;
+            border: 1.5px solid var(--ink-dark);
+            border-radius: 7px;
+            background-color: rgba(252, 211, 77, 0.85);
+            color: var(--ink-dark);
+            font-size: 13px;
+            font-weight: 900;
+            line-height: 1;
+            cursor: pointer;
+            box-shadow: 1px 2px 0px var(--ink-dark);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.14s ease, opacity 0.14s ease;
+        }
+
+        .mini-text-arrow:active {
+            transform: translate(1px, 1px);
+            box-shadow: 0 1px 0px var(--ink-dark);
+        }
+
+        .mini-text-arrow:disabled {
+            opacity: 0.42;
+            cursor: default;
+        }
+
+        .narrative-page-indicator {
+            font-size: 10.5px;
+            font-weight: 700;
+            color: var(--ink-dark);
+            letter-spacing: 0.04em;
+        }
+
+        .intro-bottom-group {
+            width: 100%;
+            min-height: 16dvh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .enter-lesson-btn {
+            position: relative;
+            width: 100%;
+            max-width: 260px;
+            background-color: #fcd34d;
+            background-image: url('frame.png');
+            background-size: cover;
+            background-position: center;
+            border: 2px solid var(--ink-dark);
+            border-radius: 12px;
+            overflow: hidden;
+            color: var(--ink-dark);
+            padding: 10px 18px;
+            font-size: 11.5px;
+            font-weight: 800;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            cursor: pointer;
+            box-shadow: 2px 2px 0px var(--ink-dark);
+            transition: transform 0.16s ease, box-shadow 0.16s ease;
+        }
+
+        .enter-lesson-btn::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-color: rgba(252, 211, 77, 0.78);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .enter-lesson-btn span {
+            position: relative;
+            z-index: 1;
+        }
+
+        .enter-lesson-btn:active {
+            transform: translate(2px, 2px);
+            box-shadow: 1px 1px 0px var(--ink-dark);
         }
 
         .intro-arrows-row {
@@ -214,9 +323,9 @@
             border-radius: 11px;
             overflow: hidden;
             color: var(--ink-dark);
-            width: 44px;
-            height: 36px;
-            font-size: 15px;
+            width: 42px;
+            height: 32px;
+            font-size: 14px;
             font-weight: 900;
             line-height: 1;
             cursor: pointer;
@@ -630,15 +739,25 @@
 
             <!-- Screen 1: Intro Narrative -->
             <div class="intro-screen page-slide active-center" id="introScreen">
-                <img src="Alan%20and%20the%20apple.jpg" alt="Alan in the orchard" class="intro-illustration">
+                <div class="intro-frame-box">
+                    <img src="Alan%20and%20the%20apple.jpg" alt="Alan in the orchard" class="intro-illustration">
+                </div>
 
-                <div class="intro-bottom-group">
-                    <div class="narrative-box">
-                        <p class="narrative-text">
+                <div class="narrative-box">
+                    <div class="narrative-body">
+                        <p class="narrative-text" id="narrativeText">
                             Alan wandered into an orchard and saw various fruits lying on the ground. While looking around, something suddenly fell on his head. It was red and firm. And it was...
                         </p>
                     </div>
+                    <div class="narrative-pager">
+                        <button class="mini-text-arrow" id="textPrevBtn" onclick="cycleNarrativeText(-1)" aria-label="Previous text"><span>‹</span></button>
+                        <span class="narrative-page-indicator" id="narrativePageIndicator">1 / 2</span>
+                        <button class="mini-text-arrow" id="textNextBtn" onclick="cycleNarrativeText(1)" aria-label="Next text"><span>›</span></button>
+                    </div>
+                </div>
 
+                <div class="intro-bottom-group">
+                    <button class="enter-lesson-btn" id="enterLessonBtn" onclick="startScan(this)"><span>Start Exercise</span></button>
                     <div class="intro-arrows-row">
                         <button class="arrow-yellow-btn" id="prevArrowBtn" onclick="pulseArrow(this)" aria-label="Previous"><span>←</span></button>
                         <button class="arrow-yellow-btn" id="nextArrowBtn" onclick="startScan(this)" aria-label="Next"><span>→</span></button>
@@ -759,6 +878,12 @@
         let vaultSpinRaf = null;
         let activePickedSlot = null;
         let vaultMiniCubes = [];
+        let narrativeIndex = 0;
+
+        const INTRO_NARRATIVE_PAGES = [
+            "Alan wandered into an orchard and saw various fruits lying on the ground. While looking around, something suddenly fell on his head. It was red and firm. And it was...",
+            "He picked it up and turned it over in his purple hands. Every new object in this strange world holds a word worth remembering before the next step."
+        ];
 
         // Main Three.js inspection cube state
         let scene, camera, renderer, stoneCubeMesh;
@@ -827,9 +952,28 @@
             visual: '🍎'
         };
 
+        function updateNarrativeView() {
+            const textEl = document.getElementById('narrativeText');
+            const indicatorEl = document.getElementById('narrativePageIndicator');
+            const prevBtn = document.getElementById('textPrevBtn');
+            const nextBtn = document.getElementById('textNextBtn');
+
+            if (textEl) textEl.textContent = INTRO_NARRATIVE_PAGES[narrativeIndex];
+            if (indicatorEl) indicatorEl.textContent = `${narrativeIndex + 1} / ${INTRO_NARRATIVE_PAGES.length}`;
+            if (prevBtn) prevBtn.disabled = narrativeIndex === 0;
+            if (nextBtn) nextBtn.disabled = narrativeIndex === INTRO_NARRATIVE_PAGES.length - 1;
+        }
+
+        function cycleNarrativeText(delta) {
+            const nextIdx = narrativeIndex + delta;
+            if (nextIdx < 0 || nextIdx >= INTRO_NARRATIVE_PAGES.length) return;
+            narrativeIndex = nextIdx;
+            updateNarrativeView();
+        }
+
         function getStoredWords() {
             try {
-                const raw = localStorage.getItem('alien_memory_cubes_v13');
+                const raw = localStorage.getItem('alien_memory_cubes_v14');
                 if (raw) {
                     const parsed = JSON.parse(raw);
                     if (Array.isArray(parsed) && parsed.length > 0) return parsed;
@@ -840,7 +984,7 @@
 
         function saveStoredWords(words) {
             try {
-                localStorage.setItem('alien_memory_cubes_v13', JSON.stringify(words));
+                localStorage.setItem('alien_memory_cubes_v14', JSON.stringify(words));
             } catch (e) {}
         }
 
@@ -1482,6 +1626,8 @@
             targetRotX = 0;
             targetRotY += 180;
         }
+
+        updateNarrativeView();
     </script>
 </body>
 </html>
