@@ -928,7 +928,7 @@
         function refreshVaultTexturesFromImage() {
             if (!stoneSourceImage || vaultMiniCubes.length === 0) return;
             vaultMiniCubes.forEach((entry, idx) => {
-                const set = createMultiStoneTextures([entry.wordText], { isMiniWord: true }, idx + 1, 4);
+                const set = createMultiStoneTextures([entry.wordText], { isMiniWord: true }, idx + 1, 1024);
                 entry.mesh.material.forEach((mat) => {
                     mat.map = set.map;
                     mat.needsUpdate = true;
@@ -958,7 +958,7 @@
 
         function getStoredWords() {
             try {
-                const raw = localStorage.getItem('alien_memory_cubes_v21');
+                const raw = localStorage.getItem('alien_memory_cubes_v22');
                 if (raw) {
                     const parsed = JSON.parse(raw);
                     if (Array.isArray(parsed) && parsed.length > 0) return parsed;
@@ -969,7 +969,7 @@
 
         function saveStoredWords(words) {
             try {
-                localStorage.setItem('alien_memory_cubes_v21', JSON.stringify(words));
+                localStorage.setItem('alien_memory_cubes_v22', JSON.stringify(words));
             } catch (e) {}
         }
 
@@ -1160,9 +1160,13 @@
             return geom;
         }
 
-        function drawCrispStoneBase(ctx, size, seedOffset) {
-            // Crisp neutral stone surface without over-stretching the source image
-            ctx.fillStyle = '#b4b9c2';
+        function seededRand(seed) {
+            const x = Math.sin(seed * 12.9898 + 78.233) * 43758.5453;
+            return x - Math.floor(x);
+        }
+
+        function drawSharpStoneBase(ctx, size, seedOffset) {
+            ctx.fillStyle = '#b6bbc4';
             ctx.fillRect(0, 0, size, size);
 
             if (stoneSourceImage && stoneSourceImage.width > 0 && stoneSourceImage.height > 0) {
@@ -1182,56 +1186,67 @@
                 if (seedOffset % 3 === 0) {
                     ctx.scale(-1, 1);
                 }
-                // 1:1 clean fit to avoid stretching blur
                 ctx.drawImage(stoneSourceImage, sx, sy, sw, sh, -size / 2, -size / 2, size, size);
                 ctx.restore();
             }
 
-            // Sharp graphic edge line
+            // Crisp micro-grain & fine stone specks at full canvas resolution
+            for (let g = 0; g < 900; g++) {
+                const gs = seedOffset * 1300 + g * 17;
+                const gx = Math.floor(seededRand(gs + 1) * size);
+                const gy = Math.floor(seededRand(gs + 2) * size);
+                const isLight = seededRand(gs + 3) > 0.52;
+                ctx.fillStyle = isLight ? 'rgba(255, 255, 255, 0.11)' : 'rgba(20, 20, 24, 0.11)';
+                ctx.fillRect(gx, gy, 3, 3);
+            }
+
+            // Crisp graphic border line
             ctx.save();
-            ctx.strokeStyle = 'rgba(24, 24, 27, 0.52)';
-            ctx.lineWidth = Math.max(6, Math.round(size * 0.01));
-            ctx.strokeRect(3, 3, size - 6, size - 6);
+            ctx.strokeStyle = 'rgba(20, 20, 24, 0.55)';
+            ctx.lineWidth = Math.max(8, Math.round(size * 0.008));
+            ctx.strokeRect(4, 4, size - 8, size - 8);
             ctx.restore();
         }
 
-        function createMultiStoneTextures(lines, options = {}, seedOffset = 1, maxAniso = 4) {
-            const cacheKey = `${lines.join('|')}__${JSON.stringify(options)}__${seedOffset}__${stoneSourceImage ? 1 : 0}`;
+        function createMultiStoneTextures(lines, options = {}, seedOffset = 1, size = 1536) {
+            const cacheKey = `${lines.join('|')}__${JSON.stringify(options)}__${seedOffset}__${size}__${stoneSourceImage ? 1 : 0}`;
             if (textureCache.has(cacheKey)) {
                 return textureCache.get(cacheKey);
             }
 
-            const size = 1024;
             const colorCanvas = document.createElement('canvas');
             colorCanvas.width = size;
             colorCanvas.height = size;
             const ctx = colorCanvas.getContext('2d');
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
 
-            drawCrispStoneBase(ctx, size, seedOffset);
+            drawSharpStoneBase(ctx, size, seedOffset);
 
-            ctx.fillStyle = '#111114';
+            const scale = size / 512;
+            ctx.fillStyle = '#0e0e11';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
 
             if (options.isEmoji) {
-                ctx.font = '264px sans-serif';
-                ctx.fillText(lines[0], size / 2, size / 2 + 6);
+                ctx.font = `${Math.round(132 * scale)}px sans-serif`;
+                ctx.fillText(lines[0], size / 2, size / 2 + 3 * scale);
             } else if (options.isMiniWord) {
                 const word = lines[0];
-                const fontSize = word.length > 6 ? 104 : 128;
-                ctx.font = `900 ${fontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
-                ctx.fillText(word, size / 2, size / 2 + 4);
+                const fontSize = (word.length > 6 ? 52 : 64) * scale;
+                ctx.font = `900 ${Math.round(fontSize)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+                ctx.fillText(word, size / 2, size / 2 + 2 * scale);
             } else if (options.isTitle) {
-                ctx.font = '900 138px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-                ctx.fillText(lines[0], size / 2, size / 2 - 38);
+                ctx.font = `900 ${Math.round(70 * scale)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+                ctx.fillText(lines[0], size / 2, size / 2 - 20 * scale);
                 if (lines[1]) {
-                    ctx.font = '700 62px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-                    ctx.fillStyle = '#18181b';
-                    ctx.fillText(lines[1], size / 2, size / 2 + 80);
+                    ctx.font = `700 ${Math.round(32 * scale)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+                    ctx.fillStyle = '#141418';
+                    ctx.fillText(lines[1], size / 2, size / 2 + 40 * scale);
                 }
             } else {
-                const fontSize = (options.fontSize || 36) * 2;
-                ctx.font = `700 ${fontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+                const fontSize = (options.fontSize || 36) * scale;
+                ctx.font = `700 ${Math.round(fontSize)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
                 const text = lines.join(' ');
                 const words = text.split(' ');
                 const wrapped = [];
@@ -1239,7 +1254,7 @@
 
                 words.forEach((w) => {
                     const testLine = currentLine ? currentLine + ' ' + w : w;
-                    if (ctx.measureText(testLine).width > size - 176 && currentLine) {
+                    if (ctx.measureText(testLine).width > size - 88 * scale && currentLine) {
                         wrapped.push(currentLine);
                         currentLine = w;
                     } else {
@@ -1256,7 +1271,10 @@
             }
 
             const map = new THREE.CanvasTexture(colorCanvas);
-            map.anisotropy = maxAniso;
+            map.generateMipmaps = false;
+            map.minFilter = THREE.LinearFilter;
+            map.magFilter = THREE.LinearFilter;
+            map.needsUpdate = true;
 
             const result = { map, bumpMap: null };
             textureCache.set(cacheKey, result);
@@ -1306,11 +1324,9 @@
 
                     const miniRenderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: 'high-performance' });
                     miniRenderer.setSize(122, 122);
-                    miniRenderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+                    miniRenderer.setPixelRatio(Math.min((window.devicePixelRatio || 1) * 1.5, 3));
 
-                    miniScene.add(new THREE.AmbientLight(0xffffff, 1.0));
-
-                    const stoneSet = createMultiStoneTextures([item.word], { isMiniWord: true }, index + 1, 4);
+                    const stoneSet = createMultiStoneTextures([item.word], { isMiniWord: true }, index + 1, 1024);
                     const mats = Array.from({ length: 6 }, () => new THREE.MeshBasicMaterial({
                         map: stoneSet.map
                     }));
@@ -1359,15 +1375,14 @@
 
         function buildInspectionCubeMesh(wordData) {
             const geom = createSharperStoneCubeGeometry(2.04, 0.10);
-            const maxAniso = renderer ? Math.min(renderer.capabilities.getMaxAnisotropy(), 8) : 4;
 
             const faceSets = [
-                createMultiStoneTextures([wordData.ex1], { fontSize: 36 }, 11, maxAniso),
-                createMultiStoneTextures([wordData.ex2], { fontSize: 36 }, 12, maxAniso),
-                createMultiStoneTextures([wordData.definition], { fontSize: 36 }, 13, maxAniso),
-                createMultiStoneTextures([wordData.visual], { isEmoji: true }, 14, maxAniso),
-                createMultiStoneTextures([wordData.word, wordData.phonetic], { isTitle: true }, 15, maxAniso),
-                createMultiStoneTextures([wordData.ex3], { fontSize: 36 }, 16, maxAniso)
+                createMultiStoneTextures([wordData.ex1], { fontSize: 36 }, 11, 1536),
+                createMultiStoneTextures([wordData.ex2], { fontSize: 36 }, 12, 1536),
+                createMultiStoneTextures([wordData.definition], { fontSize: 36 }, 13, 1536),
+                createMultiStoneTextures([wordData.visual], { isEmoji: true }, 14, 1536),
+                createMultiStoneTextures([wordData.word, wordData.phonetic], { isTitle: true }, 15, 1536),
+                createMultiStoneTextures([wordData.ex3], { fontSize: 36 }, 16, 1536)
             ];
 
             if (!stoneCubeMesh) {
@@ -1403,7 +1418,7 @@
 
                 renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
                 renderer.setSize(264, 264);
-                renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+                renderer.setPixelRatio(Math.min((window.devicePixelRatio || 1) * 1.5, 3));
                 host.innerHTML = '';
                 host.appendChild(renderer.domElement);
             }
