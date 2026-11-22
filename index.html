@@ -1097,12 +1097,13 @@
             return x - Math.floor(x);
         }
 
+        // Chipped edges & beveled corners, while keeping the central face zone completely flat so letters never warp
         function createChippedStoneCubeGeometry(size, seedOffset = 1) {
-            const segs = 18;
+            const segs = 22;
             const geom = new THREE.BoxGeometry(size, size, size, segs, segs, segs);
             const pos = geom.attributes.position;
             const half = size * 0.5;
-            const bevel = size * 0.085;
+            const bevel = size * 0.08;
             const inner = half - bevel;
 
             for (let i = 0; i < pos.count; i++) {
@@ -1130,17 +1131,19 @@
                     z = cz + (dz / len) * edgeFactor;
                 }
 
-                const nearX = ax > half * 0.72;
-                const nearY = ay > half * 0.72;
-                const nearZ = az > half * 0.72;
-                const isEdgeOrCorner = (nearX && nearY) || (nearY && nearZ) || (nearX && nearZ);
+                // Restrict chips strictly to the outer 13% rim so the central text area remains 100% planar and straight
+                const rimThreshold = half * 0.87;
+                const nearX = ax > rimThreshold;
+                const nearY = ay > rimThreshold;
+                const nearZ = az > rimThreshold;
+                const isRimOrCorner = (nearX && nearY) || (nearY && nearZ) || (nearX && nearZ);
 
-                if (isEdgeOrCorner) {
+                if (isRimOrCorner) {
                     const n1 = Math.sin(x * 7.5 + y * 5.2 + seedOffset * 3.1) * Math.cos(z * 6.8 - seedOffset * 2.4);
                     const n2 = Math.sin((x - y + z) * 13.0 + seedOffset * 5.7);
                     const chipDepth = Math.max(0, n1 * 0.65 + n2 * 0.35);
                     if (chipDepth > 0.18) {
-                        const indent = (chipDepth - 0.18) * size * 0.055;
+                        const indent = (chipDepth - 0.18) * size * 0.048;
                         const rLen = Math.hypot(x, y, z) || 1;
                         x -= (x / rLen) * indent;
                         y -= (y / rLen) * indent;
@@ -1185,7 +1188,7 @@
             temp.height = size;
             const tctx = temp.getContext('2d');
 
-            const strips = 64;
+            const strips = 96;
             for (let i = 0; i < strips; i++) {
                 const u0 = i / strips;
                 const u1 = (i + 1) / strips;
@@ -1203,7 +1206,7 @@
 
                 tctx.save();
                 tctx.beginPath();
-                tctx.rect(u0 * size, 0, (u1 - u0) * size + 1.2, size);
+                tctx.rect(u0 * size, 0, (u1 - u0) * size + 1.5, size);
                 tctx.clip();
 
                 tctx.translate(u0 * size, 0);
@@ -1231,13 +1234,14 @@
             ctx.fillStyle = '#c4c5cb';
             ctx.fillRect(0, 0, size, size);
 
+            const scale = size / 512;
             const tones = ['rgba(218, 220, 226, 0.6)', 'rgba(174, 177, 186, 0.55)', 'rgba(148, 152, 162, 0.45)'];
             for (let i = 0; i < 12; i++) {
                 const s = seedOffset * 193 + i * 31;
                 const cx = seededRand(s + 1) * size;
                 const cy = seededRand(s + 2) * size;
-                const rx = 60 + seededRand(s + 3) * 110;
-                const ry = 30 + seededRand(s + 4) * 55;
+                const rx = (60 + seededRand(s + 3) * 110) * scale;
+                const ry = (30 + seededRand(s + 4) * 55) * scale;
                 const ang = (seededRand(s + 5) - 0.5) * 1.4;
 
                 ctx.save();
@@ -1260,16 +1264,16 @@
 
             for (let p = 0; p < 22; p++) {
                 const s = seedOffset * 613 + p * 23;
-                const px = 28 + seededRand(s + 1) * (size - 56);
-                const py = 28 + seededRand(s + 2) * (size - 56);
-                const rx = 2 + seededRand(s + 3) * 5;
+                const px = (28 + seededRand(s + 1) * 456) * scale;
+                const py = (28 + seededRand(s + 2) * 456) * scale;
+                const rx = (2 + seededRand(s + 3) * 5) * scale;
                 const ry = rx * 0.65;
 
                 ctx.save();
                 ctx.translate(px, py);
                 ctx.fillStyle = 'rgba(110, 114, 124, 0.8)';
                 ctx.strokeStyle = 'rgba(24, 24, 27, 0.78)';
-                ctx.lineWidth = 1.3;
+                ctx.lineWidth = 1.3 * scale;
                 ctx.beginPath();
                 ctx.ellipse(0, 0, rx, ry, seededRand(s + 4) * Math.PI, 0, Math.PI * 2);
                 ctx.fill();
@@ -1278,8 +1282,8 @@
             }
         }
 
-        // Tactile surface roughness: sandy grain + micro-relief in both color and bump maps
         function applySurfaceRoughness(ctx, bctx, size, seedOffset) {
+            const scale = size / 512;
             bctx.fillStyle = 'rgb(128, 128, 128)';
             bctx.fillRect(0, 0, size, size);
 
@@ -1288,8 +1292,8 @@
                 const s = seedOffset * 977 + g * 13;
                 const gx = seededRand(s + 1) * size;
                 const gy = seededRand(s + 2) * size;
-                const gw = 1.0 + seededRand(s + 3) * 1.9;
-                const gh = 1.0 + seededRand(s + 4) * 1.9;
+                const gw = (1.0 + seededRand(s + 3) * 1.9) * scale;
+                const gh = (1.0 + seededRand(s + 4) * 1.9) * scale;
                 const pick = seededRand(s + 5);
 
                 if (pick < 0.46) {
@@ -1307,25 +1311,24 @@
                 bctx.fillRect(gx, gy, gw, gh);
             }
 
-            // Fine rough micro-scratches along the surface
             for (let k = 0; k < 120; k++) {
                 const s = seedOffset * 1811 + k * 29;
                 const sx = seededRand(s + 1) * size;
                 const sy = seededRand(s + 2) * size;
-                const len = 3 + seededRand(s + 3) * 8;
+                const len = (3 + seededRand(s + 3) * 8) * scale;
                 const ang = seededRand(s + 4) * Math.PI * 2;
                 const dx = Math.cos(ang) * len;
                 const dy = Math.sin(ang) * len;
 
                 ctx.strokeStyle = k % 2 === 0 ? 'rgba(240, 242, 248, 0.20)' : 'rgba(92, 96, 106, 0.18)';
-                ctx.lineWidth = 1;
+                ctx.lineWidth = scale;
                 ctx.beginPath();
                 ctx.moveTo(sx, sy);
                 ctx.lineTo(sx + dx, sy + dy);
                 ctx.stroke();
 
                 bctx.strokeStyle = k % 2 === 0 ? 'rgb(154, 154, 154)' : 'rgb(84, 84, 84)';
-                bctx.lineWidth = 1;
+                bctx.lineWidth = scale;
                 bctx.beginPath();
                 bctx.moveTo(sx, sy);
                 bctx.lineTo(sx + dx, sy + dy);
@@ -1334,14 +1337,15 @@
         }
 
         function drawInkEdgeCracksAndChips(ctx, bctx, size, seedOffset) {
+            const scale = size / 512;
             const edgeNotchCount = 12;
             for (let i = 0; i < edgeNotchCount; i++) {
                 const s = seedOffset * 317 + i * 47;
                 const side = i % 4;
                 let x = seededRand(s + 1) * size;
                 let y = seededRand(s + 2) * size;
-                const depth = 9 + seededRand(s + 3) * 15;
-                const span = 20 + seededRand(s + 4) * 34;
+                const depth = (9 + seededRand(s + 3) * 15) * scale;
+                const span = (20 + seededRand(s + 4) * 34) * scale;
 
                 ctx.save();
                 bctx.save();
@@ -1377,7 +1381,7 @@
                 ctx.fillStyle = i % 2 === 0 ? 'rgba(138, 141, 150, 0.72)' : 'rgba(224, 226, 232, 0.68)';
                 ctx.fill();
                 ctx.strokeStyle = 'rgba(24, 24, 27, 0.82)';
-                ctx.lineWidth = 2.1;
+                ctx.lineWidth = 2.1 * scale;
                 ctx.stroke();
 
                 bctx.fillStyle = 'rgb(64, 64, 64)';
@@ -1388,20 +1392,22 @@
 
             ctx.save();
             ctx.strokeStyle = 'rgba(24, 24, 27, 0.68)';
-            ctx.lineWidth = 3.2;
-            ctx.strokeRect(1.6, 1.6, size - 3.2, size - 3.2);
+            ctx.lineWidth = 3.2 * scale;
+            ctx.strokeRect(1.6 * scale, 1.6 * scale, size - 3.2 * scale, size - 3.2 * scale);
             ctx.restore();
         }
 
-        // Clean, high-contrast text overlay drawn AFTER the stone & roughness layers
+        // Crisp high-DPI text rendered cleanly over the flat central stone zone
         function drawReadableFaceText(ctx, size, lines, options = {}) {
-            // Soft central reading veil so text never clashes with dark spots or seams
-            const veil = ctx.createRadialGradient(size / 2, size / 2, size * 0.04, size / 2, size / 2, size * 0.36);
-            veil.addColorStop(0, 'rgba(232, 234, 240, 0.68)');
-            veil.addColorStop(0.65, 'rgba(225, 227, 233, 0.42)');
-            veil.addColorStop(1, 'rgba(225, 227, 233, 0)');
+            const scale = size / 512;
+
+            // Soft central reading veil so letters stand out clearly against any underlying dark speckles
+            const veil = ctx.createRadialGradient(size / 2, size / 2, size * 0.04, size / 2, size / 2, size * 0.40);
+            veil.addColorStop(0, 'rgba(235, 237, 243, 0.76)');
+            veil.addColorStop(0.7, 'rgba(228, 230, 236, 0.48)');
+            veil.addColorStop(1, 'rgba(228, 230, 236, 0)');
             ctx.fillStyle = veil;
-            ctx.fillRect(size * 0.12, size * 0.18, size * 0.76, size * 0.64);
+            ctx.fillRect(size * 0.10, size * 0.15, size * 0.80, size * 0.70);
 
             ctx.save();
             ctx.textAlign = 'center';
@@ -1412,8 +1418,8 @@
             const drawCrispText = (txt, x, y, fontStr, fillStr = '#111215', haloWidth = 6) => {
                 ctx.font = fontStr;
                 if (haloWidth > 0) {
-                    ctx.strokeStyle = 'rgba(240, 242, 247, 0.92)';
-                    ctx.lineWidth = haloWidth;
+                    ctx.strokeStyle = 'rgba(242, 244, 248, 0.95)';
+                    ctx.lineWidth = haloWidth * scale;
                     ctx.strokeText(txt, x, y);
                 }
                 ctx.fillStyle = fillStr;
@@ -1421,15 +1427,15 @@
             };
 
             if (options.isEmoji) {
-                drawCrispText(lines[0], size / 2, size / 2 + 4, '132px sans-serif', '#111215', 8);
+                drawCrispText(lines[0], size / 2, size / 2 + 4 * scale, `${Math.round(132 * scale)}px sans-serif`, '#111215', 8);
             } else if (options.isMiniWord) {
                 const word = lines[0];
-                const fontSize = word.length > 6 ? 50 : 62;
+                const baseFont = word.length > 6 ? 50 : 62;
                 drawCrispText(
                     word,
                     size / 2,
-                    size / 2 + 2,
-                    `900 ${fontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`,
+                    size / 2 + 2 * scale,
+                    `900 ${Math.round(baseFont * scale)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`,
                     '#111215',
                     7
                 );
@@ -1437,8 +1443,8 @@
                 drawCrispText(
                     lines[0],
                     size / 2,
-                    size / 2 - 20,
-                    '900 66px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+                    size / 2 - 20 * scale,
+                    `900 ${Math.round(66 * scale)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`,
                     '#111215',
                     7
                 );
@@ -1446,20 +1452,23 @@
                     drawCrispText(
                         lines[1],
                         size / 2,
-                        size / 2 + 42,
-                        '700 30px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+                        size / 2 + 42 * scale,
+                        `700 ${Math.round(30 * scale)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`,
                         '#1f2026',
                         5
                     );
                 }
             } else {
-                const fontSize = options.fontSize || 34;
-                ctx.font = `700 ${fontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+                const baseFont = options.fontSize || 34;
+                const fontPx = Math.round(baseFont * scale);
+                const fontStr = `700 ${fontPx}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+                ctx.font = fontStr;
                 const text = lines.join(' ');
                 const words = text.split(' ');
                 const wrapped = [];
                 let currentLine = '';
-                const maxLineWidth = size - 118;
+                // Keep generous left/right margins (150px at 512 scale) so first & last letters stay well inside the flat zone
+                const maxLineWidth = size - 150 * scale;
 
                 words.forEach((w) => {
                     const testLine = currentLine ? currentLine + ' ' + w : w;
@@ -1472,14 +1481,14 @@
                 });
                 if (currentLine) wrapped.push(currentLine);
 
-                const lineHeight = fontSize * 1.32;
+                const lineHeight = fontPx * 1.34;
                 const startY = size / 2 - ((wrapped.length - 1) * lineHeight) / 2;
                 wrapped.forEach((line, idx) => {
                     drawCrispText(
                         line,
                         size / 2,
                         startY + idx * lineHeight,
-                        `700 ${fontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`,
+                        fontStr,
                         '#111215',
                         6
                     );
@@ -1490,7 +1499,7 @@
         }
 
         function createMultiStoneTextures(lines, options = {}, seedOffset = 1) {
-            const size = 512;
+            const size = options.isMiniWord ? 512 : 1024;
             const colorCanvas = document.createElement('canvas');
             colorCanvas.width = size;
             colorCanvas.height = size;
@@ -1501,13 +1510,13 @@
             bumpCanvas.height = size;
             const bctx = bumpCanvas.getContext('2d');
 
-            // 1. Stone color base (from Cube1_3.webp if available, else fallback)
+            // 1. Stone color base
             const sampled = sampleRealCubeFace(ctx, size, seedOffset);
             if (!sampled) {
                 drawFallbackCube1_3Base(ctx, size, seedOffset);
             }
 
-            // 2. Surface roughness (tactile grit + bump map strictly from stone, never from text)
+            // 2. Surface roughness
             applySurfaceRoughness(ctx, bctx, size, seedOffset);
 
             // 3. Edge chips & ink seams
@@ -1516,11 +1525,15 @@
             // 4. Crisp, legible text on top
             drawReadableFaceText(ctx, size, lines, options);
 
+            const maxAniso = renderer ? Math.min(8, renderer.capabilities.getMaxAnisotropy()) : 4;
+
             const map = new THREE.CanvasTexture(colorCanvas);
-            map.anisotropy = 4;
+            map.anisotropy = maxAniso;
+            map.minFilter = THREE.LinearMipmapLinearFilter;
+            map.magFilter = THREE.LinearFilter;
 
             const bumpMap = new THREE.CanvasTexture(bumpCanvas);
-            bumpMap.anisotropy = 4;
+            bumpMap.anisotropy = maxAniso;
 
             return { map, bumpMap };
         }
@@ -1694,7 +1707,7 @@
 
                 renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
                 renderer.setSize(264, 264);
-                renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+                renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 3));
                 host.innerHTML = '';
                 host.appendChild(renderer.domElement);
 
