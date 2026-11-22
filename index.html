@@ -4,8 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Alan">
+    <link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22Alan%20the%20Alien%22%2C%22short_name%22%3A%22Alan%22%2C%22display%22%3A%22standalone%22%2C%22orientation%22%3A%22portrait%22%2C%22background_color%22%3A%22%232c6b98%22%2C%22theme_color%22%3A%22%232c6b98%22%7D">
     <title>Alan the Alien — English through stories</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
@@ -28,9 +30,9 @@
         html, body {
             position: fixed;
             inset: 0;
-            width: 100%;
-            height: 100%;
-            background-color: #1c192b;
+            width: 100vw;
+            height: 100vh;
+            background-color: #2c6b98;
             color: var(--ink-dark);
             overflow: hidden;
             overscroll-behavior: none;
@@ -39,28 +41,28 @@
         .retro-board {
             position: fixed;
             inset: 0;
-            width: 100%;
-            height: 100%;
+            width: 100vw;
+            height: 100vh;
             background-color: var(--story-bg);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: max(12px, env(safe-area-inset-top)) 14px max(14px, env(safe-area-inset-bottom));
+            padding: max(12px, env(safe-area-inset-top)) 0 max(16px, env(safe-area-inset-bottom));
             overflow: hidden;
         }
 
-        /* 0. FULLSCREEN START SPLASH PAGE */
+        /* 0. FULLSCREEN START SPLASH PAGE (NATURAL ASPECT RATIO, NO SQUASHING) */
         .start-splash {
             position: fixed;
             inset: 0;
-            width: 100%;
-            height: 100%;
+            width: 100vw;
+            height: 100vh;
             z-index: 60;
             background-color: #2c6b98;
             background-image: url('start%20page.webp');
-            background-size: 100% 100%;
-            background-position: center;
+            background-size: cover;
+            background-position: center bottom;
             background-repeat: no-repeat;
             display: flex;
             flex-direction: column;
@@ -82,7 +84,7 @@
             inset: 0;
             background: linear-gradient(
                 to top,
-                rgba(16, 24, 39, 0.28) 0%,
+                rgba(16, 24, 39, 0.25) 0%,
                 rgba(16, 24, 39, 0.04) 22%,
                 rgba(16, 24, 39, 0) 50%
             );
@@ -144,12 +146,12 @@
             }
         }
 
-        /* Background layers */
+        /* Background layers expanded by 24px beyond edges so blur never creates an edge halo */
         .bg-layer {
             position: fixed;
-            inset: -4px;
-            width: calc(100% + 8px);
-            height: calc(100% + 8px);
+            inset: -24px;
+            width: calc(100vw + 48px);
+            height: calc(100vh + 48px);
             z-index: 0;
             pointer-events: none;
             transition: opacity 0.45s ease, filter 0.45s ease;
@@ -199,12 +201,11 @@
         }
 
         .retro-board.blurred-bg .bg-layer {
-            filter: blur(5px) brightness(0.86);
+            filter: blur(6px) brightness(0.88);
         }
 
         .content-wrap {
-            width: 100%;
-            max-width: 360px;
+            width: 100vw;
             height: 100%;
             z-index: 2;
             position: relative;
@@ -243,13 +244,14 @@
         /* 1. INTRO SCREEN */
         .intro-screen {
             width: 100%;
+            max-width: 360px;
             height: 100%;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: space-between;
             gap: 8px;
-            padding: 2px 0 4px;
+            padding: 2px 14px 4px;
         }
 
         .intro-frame-box {
@@ -428,10 +430,12 @@
         /* 2. SCAN WORKSPACE */
         .scan-workspace {
             width: 100%;
+            max-width: 360px;
             height: fit-content;
             display: none;
             flex-direction: column;
             align-items: center;
+            padding: 0 14px;
         }
 
         .riddle-box {
@@ -596,14 +600,15 @@
             box-shadow: 1px 1px 0px var(--ink-dark);
         }
 
-        /* 3. MEMORY STORAGE CENTERED 2x2 FULL-BLEED HORIZONTAL SCROLL */
+        /* 3. MEMORY STORAGE: 6 CUBES (2x3) WITH GENEROUS SPACING & FULL-WIDTH SWIPE */
         .memory-vault {
             display: none;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-            width: 100%;
+            justify-content: space-between;
+            width: 100vw;
             height: 100%;
+            padding: 10px 0 10px;
             position: relative;
             transition: transform 0.65s cubic-bezier(0.16, 1, 0.3, 1), filter 0.45s ease;
         }
@@ -613,17 +618,16 @@
             pointer-events: none;
         }
 
-        /* Full viewport width so scrolling cubes never get clipped inside narrow margins */
         .vault-scroll {
             position: relative;
             width: 100vw;
-            margin-left: calc(50% - 50vw);
+            flex: 1;
             overflow-x: auto;
             overflow-y: hidden;
             -webkit-overflow-scrolling: touch;
             overscroll-behavior-x: contain;
             scrollbar-width: none;
-            padding: 8px 24px;
+            padding: 4px 28px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -639,20 +643,20 @@
 
         .vault-grid {
             display: grid;
-            grid-template-rows: repeat(2, 122px);
+            grid-template-rows: repeat(3, 114px);
             grid-auto-flow: column;
-            grid-auto-columns: 122px;
-            row-gap: 10px;
-            column-gap: 14px;
+            grid-auto-columns: 114px;
+            row-gap: 16px;
+            column-gap: 28px;
             width: max-content;
             align-items: center;
             justify-items: center;
-            padding: 4px;
+            padding: 6px 8px;
         }
 
         .vault-node-slot {
-            width: 122px;
-            height: 122px;
+            width: 114px;
+            height: 114px;
             cursor: pointer;
             animation: node-levitate 4.4s ease-in-out infinite;
             flex-shrink: 0;
@@ -672,15 +676,16 @@
         }
 
         .vault-mini-canvas {
-            width: 122px;
-            height: 122px;
+            width: 114px;
+            height: 114px;
             display: block;
         }
 
-        /* Shared pink action button placed cleanly in flow below cubes */
+        /* Shared pink action button lowered cleanly toward bottom */
         .bottom-nav-btn {
             position: relative;
-            margin-top: 26px;
+            margin-top: 10px;
+            margin-bottom: 6px;
             background-color: #d9779a;
             background-image: url('frame.png');
             background-size: cover;
@@ -689,7 +694,7 @@
             border-radius: 12px;
             overflow: hidden;
             color: var(--ink-dark);
-            padding: 10px 20px;
+            padding: 10px 22px;
             font-size: 11.5px;
             font-weight: 800;
             letter-spacing: 0.05em;
@@ -725,8 +730,8 @@
             display: none;
             position: fixed;
             inset: 0;
-            width: 100%;
-            height: 100%;
+            width: 100vw;
+            height: 100vh;
             flex-direction: column;
             align-items: center;
             justify-content: center;
@@ -745,6 +750,7 @@
             justify-content: center;
             transform: scale(0.88);
             transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+            margin-bottom: 18px;
         }
 
         .webgl-cube-holder.approached {
@@ -896,7 +902,7 @@
                 </div>
             </div>
 
-            <!-- Screen 3: Memory Storage Centered 2x2 with Horizontal Scroll -->
+            <!-- Screen 3: Memory Storage 6 Cubes (2x3) -->
             <div class="memory-vault page-slide" id="memoryVault">
                 <div class="vault-scroll" id="vaultScroll">
                     <div class="vault-grid" id="vaultGrid"></div>
@@ -957,7 +963,8 @@
 
         const CUBE_OFFSETS = [
             { x: -1, y: 1 },  { x: 1, y: -1 },
-            { x: 1, y: 1 },   { x: -1, y: -1 }
+            { x: 1, y: 1 },   { x: -1, y: -1 },
+            { x: -1, y: 0 },  { x: 1, y: 1 }
         ];
 
         const DEFAULT_WORDS = [
@@ -1000,6 +1007,16 @@
                 ex2: 'He rubbed the top of his head in surprise.',
                 ex3: 'A clever idea popped into his head.',
                 visual: '👽'
+            },
+            {
+                id: 'red',
+                word: 'RED',
+                phonetic: '/red/',
+                definition: 'Having the color of ripe apples or blood',
+                ex1: 'The fallen fruit was bright red and shiny.',
+                ex2: 'Alan looked closely at the red skin.',
+                ex3: 'She wore a warm red scarf in autumn.',
+                visual: '🍒'
             }
         ];
 
@@ -1043,7 +1060,6 @@
                 splash.classList.remove('slide-out');
             });
 
-            // Reset inner screens back to initial Intro state so next "to start" opens cleanly
             setTimeout(() => {
                 board.classList.remove('clouds-bg', 'vault-bg', 'blurred-bg');
                 workspace.style.display = 'none';
@@ -1075,18 +1091,18 @@
 
         function getStoredWords() {
             try {
-                const raw = localStorage.getItem('alien_memory_cubes_v18');
+                const raw = localStorage.getItem('alien_memory_cubes_v20');
                 if (raw) {
                     const parsed = JSON.parse(raw);
-                    if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+                    if (Array.isArray(parsed) && parsed.length >= 6) return parsed;
                 }
             } catch (e) {}
-            return [...DEFAULT_WORDS];
+            return [APPLE_WORD, ...DEFAULT_WORDS];
         }
 
         function saveStoredWords(words) {
             try {
-                localStorage.setItem('alien_memory_cubes_v18', JSON.stringify(words));
+                localStorage.setItem('alien_memory_cubes_v20', JSON.stringify(words));
             } catch (e) {}
         }
 
@@ -1173,10 +1189,7 @@
             const board = document.getElementById('retroBoard');
 
             const words = getStoredWords();
-            if (!words.some(w => w.id === 'apple')) {
-                words.unshift(APPLE_WORD);
-                saveStoredWords(words);
-            }
+            saveStoredWords(words);
 
             board.classList.remove('clouds-bg', 'blurred-bg');
             board.classList.add('vault-bg');
@@ -1459,8 +1472,8 @@
                 bctx.strokeStyle = k % 2 === 0 ? 'rgb(154, 154, 154)' : 'rgb(84, 84, 84)';
                 bctx.lineWidth = scale;
                 bctx.beginPath();
-                ctx.moveTo(sx, sy);
-                ctx.lineTo(sx + dx, sy + dy);
+                bctx.moveTo(sx, sy);
+                bctx.lineTo(sx + dx, sy + dy);
                 bctx.stroke();
             }
         }
@@ -1679,7 +1692,7 @@
             disposeVaultMiniCubes();
             grid.innerHTML = '';
 
-            const visibleWords = words.slice(0, 4);
+            const visibleWords = words.slice(0, 6);
 
             visibleWords.forEach((item, index) => {
                 const offset = CUBE_OFFSETS[index % CUBE_OFFSETS.length];
@@ -1691,8 +1704,8 @@
 
                 const canvas = document.createElement('canvas');
                 canvas.className = 'vault-mini-canvas';
-                canvas.width = 244;
-                canvas.height = 244;
+                canvas.width = 228;
+                canvas.height = 228;
                 slot.appendChild(canvas);
 
                 slot.onclick = () => inspectMemoryCube(item, slot, index + 1);
@@ -1705,7 +1718,7 @@
                     miniCam.lookAt(0, 0, 0);
 
                     const miniRenderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
-                    miniRenderer.setSize(122, 122);
+                    miniRenderer.setSize(114, 114);
                     miniRenderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
 
                     miniScene.add(new THREE.AmbientLight(0xc8cddc, 0.85));
