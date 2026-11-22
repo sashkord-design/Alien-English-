@@ -65,17 +65,28 @@
             height: 100%;
             z-index: 60;
             background-color: #3d759d;
-            background-image: url('start%20page_2.webp');
-            background-size: cover;
-            background-position: center 45%;
-            background-repeat: no-repeat;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: flex-end;
             padding: 24px 20px max(24px, env(safe-area-inset-bottom));
+            overflow: hidden;
             transition: transform 0.65s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.45s ease;
             will-change: transform, opacity;
+        }
+
+        .splash-bg-img {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center 45%;
+            display: block;
+            z-index: 0;
+            pointer-events: none;
+            user-select: none;
+            -webkit-user-drag: none;
         }
 
         .start-splash.slide-out {
@@ -94,7 +105,7 @@
                 rgba(16, 24, 39, 0) 50%
             );
             pointer-events: none;
-            z-index: 0;
+            z-index: 1;
         }
 
         .splash-start-btn {
@@ -817,6 +828,13 @@
 
     <!-- Screen 0: Fullscreen Splash Page -->
     <div class="start-splash" id="startSplash">
+        <img
+            id="splashBgImg"
+            class="splash-bg-img"
+            src="start%20page_2.webp"
+            alt="Alan the Alien"
+            onerror="handleSplashImgError(this)"
+        >
         <button class="splash-start-btn" id="splashStartBtn" onclick="enterFromSplash(this)"><span>to start</span></button>
     </div>
 
@@ -960,6 +978,23 @@
     </div>
 
     <script>
+        const SPLASH_CANDIDATES = [
+            'start%20page_2.webp',
+            'start page_2.webp',
+            'start_page_2.webp',
+            'start%20page.webp'
+        ];
+        let splashCandidateIdx = 0;
+
+        function handleSplashImgError(imgEl) {
+            splashCandidateIdx += 1;
+            if (splashCandidateIdx < SPLASH_CANDIDATES.length) {
+                imgEl.src = SPLASH_CANDIDATES[splashCandidateIdx];
+            } else {
+                imgEl.style.display = 'none';
+            }
+        }
+
         let isSolved = false;
         let vaultSpinRaf = null;
         let activePickedSlot = null;
@@ -1115,7 +1150,7 @@
 
         function getStoredWords() {
             try {
-                const raw = localStorage.getItem('alien_memory_cubes_v23');
+                const raw = localStorage.getItem('alien_memory_cubes_v24');
                 if (raw) {
                     const parsed = JSON.parse(raw);
                     if (Array.isArray(parsed) && parsed.length >= 6) return parsed;
@@ -1126,7 +1161,7 @@
 
         function saveStoredWords(words) {
             try {
-                localStorage.setItem('alien_memory_cubes_v23', JSON.stringify(words));
+                localStorage.setItem('alien_memory_cubes_v24', JSON.stringify(words));
             } catch (e) {}
         }
 
@@ -1498,7 +1533,7 @@
                 ctx.beginPath();
                 ctx.moveTo(sx, sy);
                 ctx.lineTo(sx + dx, sy + dy);
-                ctx.stroke();
+                bctx.stroke();
             }
         }
 
