@@ -123,7 +123,7 @@
             margin: auto;
             width: 100%;
             opacity: 1;
-            transition: transform 0.72s cubic-bezier(0.16, 1, 0.3, 1), filter 0.45s ease;
+            transition: transform 0.65s cubic-bezier(0.16, 1, 0.3, 1), filter 0.45s ease;
             will-change: transform, filter;
         }
 
@@ -505,7 +505,7 @@
             width: 100%;
             height: 100%;
             position: relative;
-            transition: transform 0.72s cubic-bezier(0.16, 1, 0.3, 1), filter 0.45s ease;
+            transition: transform 0.65s cubic-bezier(0.16, 1, 0.3, 1), filter 0.45s ease;
         }
 
         .memory-vault.defocused {
@@ -838,9 +838,6 @@
         let refCubeImageReady = false;
         refCubeImage.onload = () => {
             refCubeImageReady = true;
-            if (document.getElementById('memoryVault').style.display === 'flex') {
-                renderVaultGrid(getStoredWords());
-            }
         };
         refCubeImage.src = 'Cube1_3.webp';
 
@@ -961,13 +958,13 @@
             });
 
             if (typeof onAfterShow === 'function') {
-                onAfterShow();
+                requestAnimationFrame(() => onAfterShow());
             }
 
             setTimeout(() => {
                 fromEl.style.display = 'none';
                 fromEl.classList.remove('exit-to-left');
-            }, 720);
+            }, 650);
         }
 
         function startScan(btn) {
@@ -982,7 +979,7 @@
                 board.classList.remove('vault-bg');
                 board.classList.add('clouds-bg');
                 slideBetweenPages(intro, workspace);
-            }, 160);
+            }, 140);
         }
 
         function handleCardTap(slot) {
@@ -1049,13 +1046,13 @@
                 saveStoredWords(words);
             }
 
-            renderVaultGrid(words);
-
             board.classList.remove('clouds-bg', 'blurred-bg');
             board.classList.add('vault-bg');
             vault.classList.remove('defocused');
 
+            // Start slide immediately, then build mini cubes right after transition kicks off
             slideBetweenPages(workspace, vault, () => {
+                renderVaultGrid(words);
                 startVaultSpinning();
             });
         }
@@ -1089,7 +1086,7 @@
             setTimeout(() => {
                 vault.style.display = 'none';
                 vault.classList.remove('exit-to-left');
-            }, 720);
+            }, 650);
         }
 
         function seededRand(seed) {
@@ -1097,9 +1094,8 @@
             return x - Math.floor(x);
         }
 
-        // Chipped edges & beveled corners, while keeping the central face zone completely flat so letters never warp
         function createChippedStoneCubeGeometry(size, seedOffset = 1) {
-            const segs = 22;
+            const segs = 20;
             const geom = new THREE.BoxGeometry(size, size, size, segs, segs, segs);
             const pos = geom.attributes.position;
             const half = size * 0.5;
@@ -1131,7 +1127,6 @@
                     z = cz + (dz / len) * edgeFactor;
                 }
 
-                // Restrict chips strictly to the outer 13% rim so the central text area remains 100% planar and straight
                 const rimThreshold = half * 0.87;
                 const nearX = ax > rimThreshold;
                 const nearY = ay > rimThreshold;
@@ -1188,7 +1183,7 @@
             temp.height = size;
             const tctx = temp.getContext('2d');
 
-            const strips = 96;
+            const strips = 64;
             for (let i = 0; i < strips; i++) {
                 const u0 = i / strips;
                 const u1 = (i + 1) / strips;
@@ -1227,15 +1222,19 @@
             ctx.drawImage(temp, -size / 2, -size / 2, size, size);
             ctx.restore();
 
+            // Gentle cool-gray tone normalization so over-bright white patches become soft stone gray
+            ctx.fillStyle = 'rgba(150, 154, 166, 0.22)';
+            ctx.fillRect(0, 0, size, size);
+
             return true;
         }
 
         function drawFallbackCube1_3Base(ctx, size, seedOffset) {
-            ctx.fillStyle = '#c4c5cb';
+            ctx.fillStyle = '#aeb1ba';
             ctx.fillRect(0, 0, size, size);
 
             const scale = size / 512;
-            const tones = ['rgba(218, 220, 226, 0.6)', 'rgba(174, 177, 186, 0.55)', 'rgba(148, 152, 162, 0.45)'];
+            const tones = ['rgba(186, 189, 198, 0.55)', 'rgba(154, 158, 168, 0.55)', 'rgba(134, 138, 148, 0.45)'];
             for (let i = 0; i < 12; i++) {
                 const s = seedOffset * 193 + i * 31;
                 const cx = seededRand(s + 1) * size;
@@ -1271,7 +1270,7 @@
 
                 ctx.save();
                 ctx.translate(px, py);
-                ctx.fillStyle = 'rgba(110, 114, 124, 0.8)';
+                ctx.fillStyle = 'rgba(102, 106, 116, 0.8)';
                 ctx.strokeStyle = 'rgba(24, 24, 27, 0.78)';
                 ctx.lineWidth = 1.3 * scale;
                 ctx.beginPath();
@@ -1287,23 +1286,23 @@
             bctx.fillStyle = 'rgb(128, 128, 128)';
             bctx.fillRect(0, 0, size, size);
 
-            const grainCount = 2400;
+            const grainCount = 1200;
             for (let g = 0; g < grainCount; g++) {
                 const s = seedOffset * 977 + g * 13;
                 const gx = seededRand(s + 1) * size;
                 const gy = seededRand(s + 2) * size;
-                const gw = (1.0 + seededRand(s + 3) * 1.9) * scale;
-                const gh = (1.0 + seededRand(s + 4) * 1.9) * scale;
+                const gw = (1.1 + seededRand(s + 3) * 1.9) * scale;
+                const gh = (1.1 + seededRand(s + 4) * 1.9) * scale;
                 const pick = seededRand(s + 5);
 
-                if (pick < 0.46) {
-                    ctx.fillStyle = 'rgba(236, 238, 244, 0.24)';
+                if (pick < 0.42) {
+                    ctx.fillStyle = 'rgba(204, 207, 214, 0.20)';
                     bctx.fillStyle = 'rgb(162, 162, 162)';
-                } else if (pick < 0.90) {
-                    ctx.fillStyle = 'rgba(118, 122, 132, 0.20)';
+                } else if (pick < 0.88) {
+                    ctx.fillStyle = 'rgba(112, 116, 126, 0.22)';
                     bctx.fillStyle = 'rgb(90, 90, 90)';
                 } else {
-                    ctx.fillStyle = 'rgba(72, 75, 84, 0.24)';
+                    ctx.fillStyle = 'rgba(72, 75, 84, 0.25)';
                     bctx.fillStyle = 'rgb(58, 58, 58)';
                 }
 
@@ -1311,7 +1310,7 @@
                 bctx.fillRect(gx, gy, gw, gh);
             }
 
-            for (let k = 0; k < 120; k++) {
+            for (let k = 0; k < 80; k++) {
                 const s = seedOffset * 1811 + k * 29;
                 const sx = seededRand(s + 1) * size;
                 const sy = seededRand(s + 2) * size;
@@ -1320,7 +1319,7 @@
                 const dx = Math.cos(ang) * len;
                 const dy = Math.sin(ang) * len;
 
-                ctx.strokeStyle = k % 2 === 0 ? 'rgba(240, 242, 248, 0.20)' : 'rgba(92, 96, 106, 0.18)';
+                ctx.strokeStyle = k % 2 === 0 ? 'rgba(208, 211, 218, 0.16)' : 'rgba(92, 96, 106, 0.20)';
                 ctx.lineWidth = scale;
                 ctx.beginPath();
                 ctx.moveTo(sx, sy);
@@ -1378,7 +1377,7 @@
                 }
 
                 ctx.closePath();
-                ctx.fillStyle = i % 2 === 0 ? 'rgba(138, 141, 150, 0.72)' : 'rgba(224, 226, 232, 0.68)';
+                ctx.fillStyle = i % 2 === 0 ? 'rgba(130, 134, 144, 0.72)' : 'rgba(186, 189, 198, 0.65)';
                 ctx.fill();
                 ctx.strokeStyle = 'rgba(24, 24, 27, 0.82)';
                 ctx.lineWidth = 2.1 * scale;
@@ -1397,17 +1396,9 @@
             ctx.restore();
         }
 
-        // Crisp high-DPI text rendered cleanly over the flat central stone zone
+        // Crisp text without white wash over the whole face so the stone stays a uniform soft gray
         function drawReadableFaceText(ctx, size, lines, options = {}) {
             const scale = size / 512;
-
-            // Soft central reading veil so letters stand out clearly against any underlying dark speckles
-            const veil = ctx.createRadialGradient(size / 2, size / 2, size * 0.04, size / 2, size / 2, size * 0.40);
-            veil.addColorStop(0, 'rgba(235, 237, 243, 0.76)');
-            veil.addColorStop(0.7, 'rgba(228, 230, 236, 0.48)');
-            veil.addColorStop(1, 'rgba(228, 230, 236, 0)');
-            ctx.fillStyle = veil;
-            ctx.fillRect(size * 0.10, size * 0.15, size * 0.80, size * 0.70);
 
             ctx.save();
             ctx.textAlign = 'center';
@@ -1415,10 +1406,10 @@
             ctx.lineJoin = 'round';
             ctx.lineCap = 'round';
 
-            const drawCrispText = (txt, x, y, fontStr, fillStr = '#111215', haloWidth = 6) => {
+            const drawCrispText = (txt, x, y, fontStr, fillStr = '#111215', haloWidth = 4.5) => {
                 ctx.font = fontStr;
                 if (haloWidth > 0) {
-                    ctx.strokeStyle = 'rgba(242, 244, 248, 0.95)';
+                    ctx.strokeStyle = 'rgba(202, 205, 212, 0.78)';
                     ctx.lineWidth = haloWidth * scale;
                     ctx.strokeText(txt, x, y);
                 }
@@ -1427,7 +1418,7 @@
             };
 
             if (options.isEmoji) {
-                drawCrispText(lines[0], size / 2, size / 2 + 4 * scale, `${Math.round(132 * scale)}px sans-serif`, '#111215', 8);
+                drawCrispText(lines[0], size / 2, size / 2 + 4 * scale, `${Math.round(132 * scale)}px sans-serif`, '#111215', 5);
             } else if (options.isMiniWord) {
                 const word = lines[0];
                 const baseFont = word.length > 6 ? 50 : 62;
@@ -1437,7 +1428,7 @@
                     size / 2 + 2 * scale,
                     `900 ${Math.round(baseFont * scale)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`,
                     '#111215',
-                    7
+                    5
                 );
             } else if (options.isTitle) {
                 drawCrispText(
@@ -1446,7 +1437,7 @@
                     size / 2 - 20 * scale,
                     `900 ${Math.round(66 * scale)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`,
                     '#111215',
-                    7
+                    5
                 );
                 if (lines[1]) {
                     drawCrispText(
@@ -1455,7 +1446,7 @@
                         size / 2 + 42 * scale,
                         `700 ${Math.round(30 * scale)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`,
                         '#1f2026',
-                        5
+                        4
                     );
                 }
             } else {
@@ -1467,7 +1458,6 @@
                 const words = text.split(' ');
                 const wrapped = [];
                 let currentLine = '';
-                // Keep generous left/right margins (150px at 512 scale) so first & last letters stay well inside the flat zone
                 const maxLineWidth = size - 150 * scale;
 
                 words.forEach((w) => {
@@ -1490,7 +1480,7 @@
                         startY + idx * lineHeight,
                         fontStr,
                         '#111215',
-                        6
+                        4.5
                     );
                 });
             }
@@ -1499,7 +1489,7 @@
         }
 
         function createMultiStoneTextures(lines, options = {}, seedOffset = 1) {
-            const size = options.isMiniWord ? 512 : 1024;
+            const size = options.isMiniWord ? 384 : 768;
             const colorCanvas = document.createElement('canvas');
             colorCanvas.width = size;
             colorCanvas.height = size;
@@ -1510,30 +1500,20 @@
             bumpCanvas.height = size;
             const bctx = bumpCanvas.getContext('2d');
 
-            // 1. Stone color base
             const sampled = sampleRealCubeFace(ctx, size, seedOffset);
             if (!sampled) {
                 drawFallbackCube1_3Base(ctx, size, seedOffset);
             }
 
-            // 2. Surface roughness
             applySurfaceRoughness(ctx, bctx, size, seedOffset);
-
-            // 3. Edge chips & ink seams
             drawInkEdgeCracksAndChips(ctx, bctx, size, seedOffset);
-
-            // 4. Crisp, legible text on top
             drawReadableFaceText(ctx, size, lines, options);
 
-            const maxAniso = renderer ? Math.min(8, renderer.capabilities.getMaxAnisotropy()) : 4;
-
             const map = new THREE.CanvasTexture(colorCanvas);
-            map.anisotropy = maxAniso;
-            map.minFilter = THREE.LinearMipmapLinearFilter;
-            map.magFilter = THREE.LinearFilter;
+            map.anisotropy = 4;
 
             const bumpMap = new THREE.CanvasTexture(bumpCanvas);
-            bumpMap.anisotropy = maxAniso;
+            bumpMap.anisotropy = 4;
 
             return { map, bumpMap };
         }
@@ -1599,8 +1579,8 @@
                     miniRenderer.setSize(122, 122);
                     miniRenderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
 
-                    miniScene.add(new THREE.AmbientLight(0xdce0ee, 0.88));
-                    const dLight = new THREE.DirectionalLight(0xffffff, 0.62);
+                    miniScene.add(new THREE.AmbientLight(0xc8cddc, 0.85));
+                    const dLight = new THREE.DirectionalLight(0xe4e6ed, 0.52);
                     dLight.position.set(2, 2.5, 4);
                     miniScene.add(dLight);
 
@@ -1707,14 +1687,14 @@
 
                 renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
                 renderer.setSize(264, 264);
-                renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 3));
+                renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
                 host.innerHTML = '';
                 host.appendChild(renderer.domElement);
 
-                const ambient = new THREE.AmbientLight(0xdce0ee, 0.88);
+                const ambient = new THREE.AmbientLight(0xc8cddc, 0.85);
                 scene.add(ambient);
 
-                const keyLight = new THREE.DirectionalLight(0xffffff, 0.62);
+                const keyLight = new THREE.DirectionalLight(0xe4e6ed, 0.52);
                 keyLight.position.set(2, 2.5, 4);
                 scene.add(keyLight);
 
