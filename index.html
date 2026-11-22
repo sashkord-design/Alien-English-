@@ -7,13 +7,14 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Alan">
-    <link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22Alan%20the%20Alien%22%2C%22short_name%22%3A%22Alan%22%2C%22display%22%3A%22standalone%22%2C%22orientation%22%3A%22portrait%22%2C%22background_color%22%3A%22%232c6b98%22%2C%22theme_color%22%3A%22%232c6b98%22%7D">
+    <link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22Alan%20the%20Alien%22%2C%22short_name%22%3A%22Alan%22%2C%22display%22%3A%22standalone%22%2C%22orientation%22%3A%22portrait%22%2C%22background_color%22%3A%22%2322183a%22%2C%22theme_color%22%3A%22%2322183a%22%7D">
     <title>Alan the Alien — English through stories</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
         :root {
             --ink-dark: #18181b;
             --story-bg: #ece5d5;
+            --vault-base: #22183a;
             --wrong-text: #7e22ce;
             --correct-text: #15803d;
         }
@@ -30,7 +31,7 @@
         html, body {
             width: 100%;
             height: 100%;
-            background-color: #2c6b98;
+            background-color: var(--vault-base);
             color: var(--ink-dark);
             overflow: hidden;
             overscroll-behavior: none;
@@ -38,10 +39,13 @@
 
         .retro-board {
             position: fixed;
-            inset: 0;
-            width: 100vw;
-            height: 100vh;
-            background-color: var(--story-bg);
+            left: 0;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--vault-base);
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -53,9 +57,12 @@
         /* 0. FULLSCREEN START SPLASH PAGE */
         .start-splash {
             position: fixed;
-            inset: 0;
-            width: 100vw;
-            height: 100vh;
+            left: 0;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            width: 100%;
+            height: 100%;
             z-index: 60;
             background-color: #2c6b98;
             background-image: url('start%20page.webp');
@@ -72,7 +79,7 @@
         }
 
         .start-splash.slide-out {
-            transform: translateX(-110vw);
+            transform: translateX(-110%);
             pointer-events: none;
         }
 
@@ -144,12 +151,16 @@
             }
         }
 
-        /* Background layers */
+        /* Background layers anchored on all sides with dark backing */
         .bg-layer {
             position: fixed;
-            inset: 0;
-            width: 100vw;
-            height: 100vh;
+            left: -8px;
+            right: -8px;
+            top: -8px;
+            bottom: -8px;
+            width: auto;
+            height: auto;
+            background-color: var(--vault-base);
             z-index: 0;
             pointer-events: none;
             transform: scale(1);
@@ -165,6 +176,7 @@
         }
 
         .bg-clouds-page {
+            background-color: #2b4c6f;
             background-image: url('Background1.webp');
             background-size: cover;
             background-position: center;
@@ -174,6 +186,7 @@
         }
 
         .bg-vault-page {
+            background-color: var(--vault-base);
             background-image: url('Background2.webp');
             background-size: cover;
             background-position: center;
@@ -199,25 +212,25 @@
             opacity: 1;
         }
 
-        /* Scale slightly when blurred so WebKit blur edge never appears inside viewport */
         .retro-board.blurred-bg .bg-layer {
-            transform: scale(1.06);
+            transform: scale(1.08);
             filter: blur(6px) brightness(0.88);
         }
 
         .retro-board.blurred-bg .bg-clouds-page {
-            transform: scale(1.06);
+            transform: scale(1.08);
             filter: blur(6px) saturate(0.8) brightness(0.9);
         }
 
         .content-wrap {
-            width: 100vw;
+            width: 100%;
             height: 100%;
             z-index: 2;
             position: relative;
             display: flex;
             align-items: center;
             justify-content: center;
+            overflow: hidden;
         }
 
         /* Horizontal page slide transitions */
@@ -235,11 +248,11 @@
         }
 
         .page-slide.enter-from-right {
-            transform: translateX(120vw);
+            transform: translateX(110%);
         }
 
         .page-slide.exit-to-left {
-            transform: translateX(-120vw);
+            transform: translateX(-110%);
             pointer-events: none;
         }
 
@@ -565,7 +578,7 @@
             width: 100%;
             opacity: 1;
             visibility: hidden;
-            transform: translateX(-120vw);
+            transform: translateX(-110%);
             pointer-events: none;
             transition: transform 0.65s cubic-bezier(0.16, 1, 0.3, 1), visibility 0s linear 0.65s;
             will-change: transform;
@@ -606,16 +619,17 @@
             box-shadow: 1px 1px 0px var(--ink-dark);
         }
 
-        /* 3. MEMORY STORAGE: 6 CUBES (2x3) WITH TIGHTER HORIZONTAL GAP */
+        /* 3. MEMORY STORAGE: 6 CUBES (2x3) WITHOUT SIDE GAPS */
         .memory-vault {
             display: none;
             flex-direction: column;
             align-items: center;
             justify-content: space-between;
-            width: 100vw;
+            width: 100%;
             height: 100%;
             padding: 10px 0 8px;
             position: relative;
+            overflow: hidden;
             transition: transform 0.65s cubic-bezier(0.16, 1, 0.3, 1), filter 0.45s ease;
         }
 
@@ -626,14 +640,15 @@
 
         .vault-scroll {
             position: relative;
-            width: 100vw;
+            width: 100%;
             flex: 1;
             overflow-x: auto;
             overflow-y: hidden;
             -webkit-overflow-scrolling: touch;
             overscroll-behavior-x: contain;
+            touch-action: pan-x;
             scrollbar-width: none;
-            padding: 4px 20px;
+            padding: 4px 16px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -735,9 +750,12 @@
         .cube-stage {
             display: none;
             position: fixed;
-            inset: 0;
-            width: 100vw;
-            height: 100vh;
+            left: 0;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            width: 100%;
+            height: 100%;
             flex-direction: column;
             align-items: center;
             justify-content: center;
@@ -1097,7 +1115,7 @@
 
         function getStoredWords() {
             try {
-                const raw = localStorage.getItem('alien_memory_cubes_v21');
+                const raw = localStorage.getItem('alien_memory_cubes_v22');
                 if (raw) {
                     const parsed = JSON.parse(raw);
                     if (Array.isArray(parsed) && parsed.length >= 6) return parsed;
@@ -1108,7 +1126,7 @@
 
         function saveStoredWords(words) {
             try {
-                localStorage.setItem('alien_memory_cubes_v21', JSON.stringify(words));
+                localStorage.setItem('alien_memory_cubes_v22', JSON.stringify(words));
             } catch (e) {}
         }
 
