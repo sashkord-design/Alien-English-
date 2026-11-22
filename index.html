@@ -834,7 +834,6 @@
             "He picked it up and turned it over in his purple hands. Every new object in this strange world holds a word worth remembering before the next step."
         ];
 
-        // Preload real Cube1_3.webp reference image so we can sample authentic patches from it
         const refCubeImage = new Image();
         let refCubeImageReady = false;
         refCubeImage.onload = () => {
@@ -845,7 +844,6 @@
         };
         refCubeImage.src = 'Cube1_3.webp';
 
-        // Main Three.js inspection cube state
         let scene, camera, renderer, stoneCubeGroup;
         let targetRotX = 0;
         let targetRotY = 0;
@@ -1099,7 +1097,6 @@
             return x - Math.floor(x);
         }
 
-        // Chipped & beveled stone cube geometry matching Cube1_3.webp silhouette
         function createChippedStoneCubeGeometry(size, seedOffset = 1) {
             const segs = 18;
             const geom = new THREE.BoxGeometry(size, size, size, segs, segs, segs);
@@ -1117,7 +1114,6 @@
                 const ay = Math.abs(y);
                 const az = Math.abs(z);
 
-                // Chamfered corners and edges (like cut stone in Cube1_3.webp)
                 const cx = Math.max(-inner, Math.min(inner, x));
                 const cy = Math.max(-inner, Math.min(inner, y));
                 const cz = Math.max(-inner, Math.min(inner, z));
@@ -1134,7 +1130,6 @@
                     z = cz + (dz / len) * edgeFactor;
                 }
 
-                // Irregular chips & notches strictly along edges and corners (keeping flat face centers clean for text)
                 const nearX = ax > half * 0.72;
                 const nearY = ay > half * 0.72;
                 const nearZ = az > half * 0.72;
@@ -1160,7 +1155,6 @@
             return geom;
         }
 
-        // Perspective-corrected sampling from Cube1_3.webp (top, left, or right face)
         function sampleRealCubeFace(ctx, size, seedOffset) {
             if (!refCubeImageReady || !refCubeImage.naturalWidth) return false;
 
@@ -1168,10 +1162,6 @@
             const h = refCubeImage.naturalHeight;
             const faceVariant = seedOffset % 3;
 
-            // Unwarp one of the 3 visible faces of Cube1_3.webp into an orthogonal square
-            // 0: Left face (p00=top-left, p10=center-top, p01=bottom-left, p11=bottom-center)
-            // 1: Right face (p00=center-top, p10=top-right, p01=bottom-center, p11=bottom-right)
-            // 2: Top face (p00=top-back, p10=top-right, p01=top-left, p11=center-top)
             let p00, p10, p01, p11;
             if (faceVariant === 0) {
                 p00 = { x: 0.21 * w, y: 0.34 * h };
@@ -1224,7 +1214,6 @@
                 tctx.restore();
             }
 
-            // Apply deterministic rotation/mirroring so every face & cube looks distinct
             const rotStep = Math.floor(seededRand(seedOffset * 41) * 4);
             const flipX = seededRand(seedOffset * 73) > 0.5 ? -1 : 1;
 
@@ -1238,29 +1227,125 @@
             return true;
         }
 
-        function drawInkEdgeCracksAndChips(ctx, bctx, size, seedOffset) {
-            // Subtle light center lift so text stays super sharp over the real stone texture
-            const centerLift = ctx.createRadialGradient(size / 2, size / 2, size * 0.05, size / 2, size / 2, size * 0.46);
-            centerLift.addColorStop(0, 'rgba(222, 224, 230, 0.34)');
-            centerLift.addColorStop(0.7, 'rgba(205, 207, 214, 0.10)');
-            centerLift.addColorStop(1, 'rgba(30, 32, 38, 0.16)');
-            ctx.fillStyle = centerLift;
+        function drawFallbackCube1_3Base(ctx, size, seedOffset) {
+            ctx.fillStyle = '#c4c5cb';
             ctx.fillRect(0, 0, size, size);
 
-            // Graphic ink-lined edge chips & cracks matching Cube1_3.webp's dark seam fractures
+            const tones = ['rgba(218, 220, 226, 0.6)', 'rgba(174, 177, 186, 0.55)', 'rgba(148, 152, 162, 0.45)'];
+            for (let i = 0; i < 12; i++) {
+                const s = seedOffset * 193 + i * 31;
+                const cx = seededRand(s + 1) * size;
+                const cy = seededRand(s + 2) * size;
+                const rx = 60 + seededRand(s + 3) * 110;
+                const ry = 30 + seededRand(s + 4) * 55;
+                const ang = (seededRand(s + 5) - 0.5) * 1.4;
+
+                ctx.save();
+                ctx.translate(cx, cy);
+                ctx.rotate(ang);
+                ctx.beginPath();
+                for (let v = 0; v < 6; v++) {
+                    const a = (v / 6) * Math.PI * 2;
+                    const m = 0.65 + seededRand(s + v * 11) * 0.6;
+                    const px = Math.cos(a) * rx * m;
+                    const py = Math.sin(a) * ry * m;
+                    if (v === 0) ctx.moveTo(px, py);
+                    else ctx.lineTo(px, py);
+                }
+                ctx.closePath();
+                ctx.fillStyle = tones[i % tones.length];
+                ctx.fill();
+                ctx.restore();
+            }
+
+            for (let p = 0; p < 22; p++) {
+                const s = seedOffset * 613 + p * 23;
+                const px = 28 + seededRand(s + 1) * (size - 56);
+                const py = 28 + seededRand(s + 2) * (size - 56);
+                const rx = 2 + seededRand(s + 3) * 5;
+                const ry = rx * 0.65;
+
+                ctx.save();
+                ctx.translate(px, py);
+                ctx.fillStyle = 'rgba(110, 114, 124, 0.8)';
+                ctx.strokeStyle = 'rgba(24, 24, 27, 0.78)';
+                ctx.lineWidth = 1.3;
+                ctx.beginPath();
+                ctx.ellipse(0, 0, rx, ry, seededRand(s + 4) * Math.PI, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+                ctx.restore();
+            }
+        }
+
+        // Tactile surface roughness: sandy grain + micro-relief in both color and bump maps
+        function applySurfaceRoughness(ctx, bctx, size, seedOffset) {
+            bctx.fillStyle = 'rgb(128, 128, 128)';
+            bctx.fillRect(0, 0, size, size);
+
+            const grainCount = 2400;
+            for (let g = 0; g < grainCount; g++) {
+                const s = seedOffset * 977 + g * 13;
+                const gx = seededRand(s + 1) * size;
+                const gy = seededRand(s + 2) * size;
+                const gw = 1.0 + seededRand(s + 3) * 1.9;
+                const gh = 1.0 + seededRand(s + 4) * 1.9;
+                const pick = seededRand(s + 5);
+
+                if (pick < 0.46) {
+                    ctx.fillStyle = 'rgba(236, 238, 244, 0.24)';
+                    bctx.fillStyle = 'rgb(162, 162, 162)';
+                } else if (pick < 0.90) {
+                    ctx.fillStyle = 'rgba(118, 122, 132, 0.20)';
+                    bctx.fillStyle = 'rgb(90, 90, 90)';
+                } else {
+                    ctx.fillStyle = 'rgba(72, 75, 84, 0.24)';
+                    bctx.fillStyle = 'rgb(58, 58, 58)';
+                }
+
+                ctx.fillRect(gx, gy, gw, gh);
+                bctx.fillRect(gx, gy, gw, gh);
+            }
+
+            // Fine rough micro-scratches along the surface
+            for (let k = 0; k < 120; k++) {
+                const s = seedOffset * 1811 + k * 29;
+                const sx = seededRand(s + 1) * size;
+                const sy = seededRand(s + 2) * size;
+                const len = 3 + seededRand(s + 3) * 8;
+                const ang = seededRand(s + 4) * Math.PI * 2;
+                const dx = Math.cos(ang) * len;
+                const dy = Math.sin(ang) * len;
+
+                ctx.strokeStyle = k % 2 === 0 ? 'rgba(240, 242, 248, 0.20)' : 'rgba(92, 96, 106, 0.18)';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(sx, sy);
+                ctx.lineTo(sx + dx, sy + dy);
+                ctx.stroke();
+
+                bctx.strokeStyle = k % 2 === 0 ? 'rgb(154, 154, 154)' : 'rgb(84, 84, 84)';
+                bctx.lineWidth = 1;
+                bctx.beginPath();
+                bctx.moveTo(sx, sy);
+                bctx.lineTo(sx + dx, sy + dy);
+                bctx.stroke();
+            }
+        }
+
+        function drawInkEdgeCracksAndChips(ctx, bctx, size, seedOffset) {
             const edgeNotchCount = 12;
             for (let i = 0; i < edgeNotchCount; i++) {
                 const s = seedOffset * 317 + i * 47;
                 const side = i % 4;
                 let x = seededRand(s + 1) * size;
                 let y = seededRand(s + 2) * size;
-                const depth = 10 + seededRand(s + 3) * 18;
-                const span = 22 + seededRand(s + 4) * 38;
+                const depth = 9 + seededRand(s + 3) * 15;
+                const span = 20 + seededRand(s + 4) * 34;
 
                 ctx.save();
                 bctx.save();
                 ctx.beginPath();
-                bctx.beginPath();
 
                 if (side === 0) {
                     y = 0;
@@ -1296,12 +1381,11 @@
                 ctx.stroke();
 
                 bctx.fillStyle = 'rgb(64, 64, 64)';
-                bctx.fill();
+                bctx.fillRect(Math.max(0, x - span * 0.5), Math.max(0, y - depth), span, depth);
                 ctx.restore();
                 bctx.restore();
             }
 
-            // Crisp outer ink border along the cube face seam (gives the hand-inked edge lines of Cube1_3.webp)
             ctx.save();
             ctx.strokeStyle = 'rgba(24, 24, 27, 0.68)';
             ctx.lineWidth = 3.2;
@@ -1309,59 +1393,100 @@
             ctx.restore();
         }
 
-        function drawFallbackCube1_3Base(ctx, bctx, size, seedOffset) {
-            ctx.fillStyle = '#c4c5cb';
-            ctx.fillRect(0, 0, size, size);
-            bctx.fillStyle = 'rgb(128, 128, 128)';
-            bctx.fillRect(0, 0, size, size);
+        // Clean, high-contrast text overlay drawn AFTER the stone & roughness layers
+        function drawReadableFaceText(ctx, size, lines, options = {}) {
+            // Soft central reading veil so text never clashes with dark spots or seams
+            const veil = ctx.createRadialGradient(size / 2, size / 2, size * 0.04, size / 2, size / 2, size * 0.36);
+            veil.addColorStop(0, 'rgba(232, 234, 240, 0.68)');
+            veil.addColorStop(0.65, 'rgba(225, 227, 233, 0.42)');
+            veil.addColorStop(1, 'rgba(225, 227, 233, 0)');
+            ctx.fillStyle = veil;
+            ctx.fillRect(size * 0.12, size * 0.18, size * 0.76, size * 0.64);
 
-            // Angular mineral planes like Cube1_3.webp
-            const tones = ['rgba(218, 220, 226, 0.6)', 'rgba(174, 177, 186, 0.55)', 'rgba(148, 152, 162, 0.45)'];
-            for (let i = 0; i < 12; i++) {
-                const s = seedOffset * 193 + i * 31;
-                const cx = seededRand(s + 1) * size;
-                const cy = seededRand(s + 2) * size;
-                const rx = 60 + seededRand(s + 3) * 110;
-                const ry = 30 + seededRand(s + 4) * 55;
-                const ang = (seededRand(s + 5) - 0.5) * 1.4;
+            ctx.save();
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.lineJoin = 'round';
+            ctx.lineCap = 'round';
 
-                ctx.save();
-                ctx.translate(cx, cy);
-                ctx.rotate(ang);
-                ctx.beginPath();
-                for (let v = 0; v < 6; v++) {
-                    const a = (v / 6) * Math.PI * 2;
-                    const m = 0.65 + seededRand(s + v * 11) * 0.6;
-                    const px = Math.cos(a) * rx * m;
-                    const py = Math.sin(a) * ry * m;
-                    if (v === 0) ctx.moveTo(px, py);
-                    else ctx.lineTo(px, py);
+            const drawCrispText = (txt, x, y, fontStr, fillStr = '#111215', haloWidth = 6) => {
+                ctx.font = fontStr;
+                if (haloWidth > 0) {
+                    ctx.strokeStyle = 'rgba(240, 242, 247, 0.92)';
+                    ctx.lineWidth = haloWidth;
+                    ctx.strokeText(txt, x, y);
                 }
-                ctx.closePath();
-                ctx.fillStyle = tones[i % tones.length];
-                ctx.fill();
-                ctx.restore();
+                ctx.fillStyle = fillStr;
+                ctx.fillText(txt, x, y);
+            };
+
+            if (options.isEmoji) {
+                drawCrispText(lines[0], size / 2, size / 2 + 4, '132px sans-serif', '#111215', 8);
+            } else if (options.isMiniWord) {
+                const word = lines[0];
+                const fontSize = word.length > 6 ? 50 : 62;
+                drawCrispText(
+                    word,
+                    size / 2,
+                    size / 2 + 2,
+                    `900 ${fontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`,
+                    '#111215',
+                    7
+                );
+            } else if (options.isTitle) {
+                drawCrispText(
+                    lines[0],
+                    size / 2,
+                    size / 2 - 20,
+                    '900 66px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+                    '#111215',
+                    7
+                );
+                if (lines[1]) {
+                    drawCrispText(
+                        lines[1],
+                        size / 2,
+                        size / 2 + 42,
+                        '700 30px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+                        '#1f2026',
+                        5
+                    );
+                }
+            } else {
+                const fontSize = options.fontSize || 34;
+                ctx.font = `700 ${fontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+                const text = lines.join(' ');
+                const words = text.split(' ');
+                const wrapped = [];
+                let currentLine = '';
+                const maxLineWidth = size - 118;
+
+                words.forEach((w) => {
+                    const testLine = currentLine ? currentLine + ' ' + w : w;
+                    if (ctx.measureText(testLine).width > maxLineWidth && currentLine) {
+                        wrapped.push(currentLine);
+                        currentLine = w;
+                    } else {
+                        currentLine = testLine;
+                    }
+                });
+                if (currentLine) wrapped.push(currentLine);
+
+                const lineHeight = fontSize * 1.32;
+                const startY = size / 2 - ((wrapped.length - 1) * lineHeight) / 2;
+                wrapped.forEach((line, idx) => {
+                    drawCrispText(
+                        line,
+                        size / 2,
+                        startY + idx * lineHeight,
+                        `700 ${fontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`,
+                        '#111215',
+                        6
+                    );
+                });
             }
 
-            // Ink-rimmed stone pits
-            for (let p = 0; p < 22; p++) {
-                const s = seedOffset * 613 + p * 23;
-                const px = 28 + seededRand(s + 1) * (size - 56);
-                const py = 28 + seededRand(s + 2) * (size - 56);
-                const rx = 2 + seededRand(s + 3) * 5;
-                const ry = rx * 0.65;
-
-                ctx.save();
-                ctx.translate(px, py);
-                ctx.fillStyle = 'rgba(110, 114, 124, 0.8)';
-                ctx.strokeStyle = 'rgba(24, 24, 27, 0.78)';
-                ctx.lineWidth = 1.3;
-                ctx.beginPath();
-                ctx.ellipse(0, 0, rx, ry, seededRand(s + 4) * Math.PI, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.stroke();
-                ctx.restore();
-            }
+            ctx.restore();
         }
 
         function createMultiStoneTextures(lines, options = {}, seedOffset = 1) {
@@ -1376,73 +1501,20 @@
             bumpCanvas.height = size;
             const bctx = bumpCanvas.getContext('2d');
 
-            bctx.fillStyle = 'rgb(128, 128, 128)';
-            bctx.fillRect(0, 0, size, size);
-
+            // 1. Stone color base (from Cube1_3.webp if available, else fallback)
             const sampled = sampleRealCubeFace(ctx, size, seedOffset);
             if (!sampled) {
-                drawFallbackCube1_3Base(ctx, bctx, size, seedOffset);
-            } else {
-                // Build grayscale bump map directly from the sampled real stone texture
-                const imgData = ctx.getImageData(0, 0, size, size);
-                const bumpData = bctx.createImageData(size, size);
-                for (let i = 0; i < imgData.data.length; i += 4) {
-                    const lum = imgData.data[i] * 0.3 + imgData.data[i + 1] * 0.59 + imgData.data[i + 2] * 0.11;
-                    bumpData.data[i] = lum;
-                    bumpData.data[i + 1] = lum;
-                    bumpData.data[i + 2] = lum;
-                    bumpData.data[i + 3] = 255;
-                }
-                bctx.putImageData(bumpData, 0, 0);
+                drawFallbackCube1_3Base(ctx, size, seedOffset);
             }
 
+            // 2. Surface roughness (tactile grit + bump map strictly from stone, never from text)
+            applySurfaceRoughness(ctx, bctx, size, seedOffset);
+
+            // 3. Edge chips & ink seams
             drawInkEdgeCracksAndChips(ctx, bctx, size, seedOffset);
 
-            ctx.fillStyle = '#18181b';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-
-            if (options.isEmoji) {
-                ctx.font = '136px sans-serif';
-                ctx.fillText(lines[0], size / 2, size / 2 + 4);
-            } else if (options.isMiniWord) {
-                const word = lines[0];
-                const fontSize = word.length > 6 ? 54 : 66;
-                ctx.font = `900 ${fontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
-                ctx.fillText(word, size / 2, size / 2 + 2);
-            } else if (options.isTitle) {
-                ctx.font = '900 70px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-                ctx.fillText(lines[0], size / 2, size / 2 - 20);
-                if (lines[1]) {
-                    ctx.font = '600 32px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-                    ctx.fillStyle = '#27272a';
-                    ctx.fillText(lines[1], size / 2, size / 2 + 42);
-                }
-            } else {
-                const fontSize = options.fontSize || 36;
-                ctx.font = `700 ${fontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
-                const text = lines.join(' ');
-                const words = text.split(' ');
-                const wrapped = [];
-                let currentLine = '';
-
-                words.forEach((w) => {
-                    const testLine = currentLine ? currentLine + ' ' + w : w;
-                    if (ctx.measureText(testLine).width > size - 88 && currentLine) {
-                        wrapped.push(currentLine);
-                        currentLine = w;
-                    } else {
-                        currentLine = testLine;
-                    }
-                });
-                if (currentLine) wrapped.push(currentLine);
-
-                const lineHeight = fontSize * 1.3;
-                const startY = size / 2 - ((wrapped.length - 1) * lineHeight) / 2;
-                wrapped.forEach((line, idx) => {
-                    ctx.fillText(line, size / 2, startY + idx * lineHeight);
-                });
-            }
+            // 4. Crisp, legible text on top
+            drawReadableFaceText(ctx, size, lines, options);
 
             const map = new THREE.CanvasTexture(colorCanvas);
             map.anisotropy = 4;
@@ -1459,7 +1531,6 @@
             const mainMesh = new THREE.Mesh(geom, materials);
             group.add(mainMesh);
 
-            // Hand-drawn ink silhouette outline matching Cube1_3.webp outer contour
             const outlineMat = new THREE.MeshBasicMaterial({
                 color: 0x222328,
                 side: THREE.BackSide
@@ -1528,8 +1599,8 @@
                         return new THREE.MeshStandardMaterial({
                             map: stoneSet.map,
                             bumpMap: stoneSet.bumpMap,
-                            bumpScale: 0.045,
-                            roughness: 0.90,
+                            bumpScale: 0.055,
+                            roughness: 0.94,
                             metalness: 0.02
                         });
                     });
@@ -1585,19 +1656,19 @@
             const base = cubeSeedBase * 100;
 
             const faceSets = [
-                createMultiStoneTextures([wordData.ex1], { fontSize: 36 }, base + 11),
-                createMultiStoneTextures([wordData.ex2], { fontSize: 36 }, base + 23),
-                createMultiStoneTextures([wordData.definition], { fontSize: 36 }, base + 37),
+                createMultiStoneTextures([wordData.ex1], { fontSize: 34 }, base + 11),
+                createMultiStoneTextures([wordData.ex2], { fontSize: 34 }, base + 23),
+                createMultiStoneTextures([wordData.definition], { fontSize: 34 }, base + 37),
                 createMultiStoneTextures([wordData.visual], { isEmoji: true }, base + 51),
                 createMultiStoneTextures([wordData.word, wordData.phonetic], { isTitle: true }, base + 67),
-                createMultiStoneTextures([wordData.ex3], { fontSize: 36 }, base + 83)
+                createMultiStoneTextures([wordData.ex3], { fontSize: 34 }, base + 83)
             ];
 
             const materials = faceSets.map((set) => new THREE.MeshStandardMaterial({
                 map: set.map,
                 bumpMap: set.bumpMap,
-                bumpScale: 0.045,
-                roughness: 0.90,
+                bumpScale: 0.055,
+                roughness: 0.94,
                 metalness: 0.02
             }));
 
