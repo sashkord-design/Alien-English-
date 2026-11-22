@@ -26,23 +26,27 @@
         }
 
         html, body {
+            position: fixed;
+            inset: 0;
             width: 100%;
             height: 100%;
-            background-color: var(--story-bg);
+            background-color: #1c192b;
             color: var(--ink-dark);
             overflow: hidden;
+            overscroll-behavior: none;
         }
 
         .retro-board {
-            width: 100vw;
-            height: 100dvh;
+            position: fixed;
+            inset: 0;
+            width: 100%;
+            height: 100%;
             background-color: var(--story-bg);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 10px 14px 12px;
-            position: relative;
+            padding: max(12px, env(safe-area-inset-top)) 14px max(14px, env(safe-area-inset-bottom));
             overflow: hidden;
         }
 
@@ -50,19 +54,19 @@
         .start-splash {
             position: fixed;
             inset: 0;
-            width: 100vw;
-            height: 100dvh;
+            width: 100%;
+            height: 100%;
             z-index: 60;
-            background-color: #2f6f9e;
+            background-color: #2c6b98;
             background-image: url('start%20page.webp');
-            background-size: cover;
+            background-size: 100% 100%;
             background-position: center;
             background-repeat: no-repeat;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: flex-end;
-            padding: 24px 20px max(34px, env(safe-area-inset-bottom));
+            padding: 24px 20px max(26px, env(safe-area-inset-bottom));
             transition: transform 0.65s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.45s ease;
             will-change: transform, opacity;
         }
@@ -78,9 +82,9 @@
             inset: 0;
             background: linear-gradient(
                 to top,
-                rgba(16, 24, 39, 0.35) 0%,
-                rgba(16, 24, 39, 0.05) 26%,
-                rgba(16, 24, 39, 0) 55%
+                rgba(16, 24, 39, 0.28) 0%,
+                rgba(16, 24, 39, 0.04) 22%,
+                rgba(16, 24, 39, 0) 50%
             );
             pointer-events: none;
             z-index: 0;
@@ -142,11 +146,10 @@
 
         /* Background layers */
         .bg-layer {
-            position: absolute;
-            width: 108vw;
-            height: 108dvh;
-            top: -4dvh;
-            left: -4vw;
+            position: fixed;
+            inset: -4px;
+            width: calc(100% + 8px);
+            height: calc(100% + 8px);
             z-index: 0;
             pointer-events: none;
             transition: opacity 0.45s ease, filter 0.45s ease;
@@ -251,7 +254,7 @@
 
         .intro-frame-box {
             width: 100%;
-            height: 30dvh;
+            height: 30%;
             min-height: 150px;
             max-height: 260px;
             background-image: url('frame.png');
@@ -276,7 +279,7 @@
 
         .narrative-box {
             width: 100%;
-            height: 36dvh;
+            height: 36%;
             min-height: 155px;
             max-height: 290px;
             background-image: url('frame.png');
@@ -408,13 +411,13 @@
             content: '';
             position: absolute;
             inset: 0;
-            background-color: rgba(252, 211, 77, 0.72);
+            background-color: rgba(252, 211, 77, 0.78);
             pointer-events: none;
             z-index: 0;
         }
 
-        .btn-action.saved-state::before {
-            background-color: rgba(134, 239, 172, 0.78);
+        .btn-action.back-variant::before {
+            background-color: rgba(236, 122, 162, 0.74);
         }
 
         .btn-action span {
@@ -593,7 +596,7 @@
             box-shadow: 1px 1px 0px var(--ink-dark);
         }
 
-        /* 3. MEMORY STORAGE CENTERED 2x2 WITH HORIZONTAL SCROLL */
+        /* 3. MEMORY STORAGE CENTERED 2x2 FULL-BLEED HORIZONTAL SCROLL */
         .memory-vault {
             display: none;
             flex-direction: column;
@@ -610,14 +613,17 @@
             pointer-events: none;
         }
 
+        /* Full viewport width so scrolling cubes never get clipped inside narrow margins */
         .vault-scroll {
             position: relative;
-            width: 100%;
+            width: 100vw;
+            margin-left: calc(50% - 50vw);
             overflow-x: auto;
             overflow-y: hidden;
             -webkit-overflow-scrolling: touch;
+            overscroll-behavior-x: contain;
             scrollbar-width: none;
-            padding: 8px 12px;
+            padding: 8px 24px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -637,7 +643,7 @@
             grid-auto-flow: column;
             grid-auto-columns: 122px;
             row-gap: 10px;
-            column-gap: 12px;
+            column-gap: 14px;
             width: max-content;
             align-items: center;
             justify-items: center;
@@ -719,8 +725,8 @@
             display: none;
             position: fixed;
             inset: 0;
-            width: 100vw;
-            height: 100dvh;
+            width: 100%;
+            height: 100%;
             flex-direction: column;
             align-items: center;
             justify-content: center;
@@ -885,7 +891,7 @@
                 </div>
 
                 <div class="action-row" id="actionRow">
-                    <button class="btn-action" id="saveCubeBtn" onclick="saveInCube()"><span>Save in Cube</span></button>
+                    <button class="btn-action back-variant" id="backToSplashBtn" onclick="returnToSplash()"><span>Back</span></button>
                     <button class="btn-action" id="goCubeBtn" onclick="openMemoryVault()"><span>Go to Cube</span></button>
                 </div>
             </div>
@@ -925,7 +931,6 @@
 
     <script>
         let isSolved = false;
-        let isAppleSaved = false;
         let vaultSpinRaf = null;
         let activePickedSlot = null;
         let vaultMiniCubes = [];
@@ -1016,11 +1021,37 @@
             if (btn) btn.classList.add('pressed');
 
             setTimeout(() => {
+                if (btn) btn.classList.remove('pressed');
                 splash.classList.add('slide-out');
                 setTimeout(() => {
                     splash.style.display = 'none';
                 }, 660);
             }, 120);
+        }
+
+        function returnToSplash() {
+            const splash = document.getElementById('startSplash');
+            const intro = document.getElementById('introScreen');
+            const workspace = document.getElementById('scanWorkspace');
+            const board = document.getElementById('retroBoard');
+
+            if (!splash) return;
+
+            splash.style.display = 'flex';
+            splash.offsetHeight;
+            requestAnimationFrame(() => {
+                splash.classList.remove('slide-out');
+            });
+
+            // Reset inner screens back to initial Intro state so next "to start" opens cleanly
+            setTimeout(() => {
+                board.classList.remove('clouds-bg', 'vault-bg', 'blurred-bg');
+                workspace.style.display = 'none';
+                workspace.classList.remove('active-center', 'exit-to-left', 'enter-from-right');
+                intro.style.display = 'flex';
+                intro.classList.remove('exit-to-left', 'enter-from-right');
+                intro.classList.add('active-center');
+            }, 520);
         }
 
         function updateNarrativeView() {
@@ -1134,21 +1165,6 @@
                 slotEl.classList.toggle('flipped', willFlip);
                 slotEl.classList.toggle('wrong', willFlip);
             }
-        }
-
-        function saveInCube() {
-            if (isAppleSaved) return;
-            isAppleSaved = true;
-
-            const words = getStoredWords();
-            if (!words.some(w => w.id === 'apple')) {
-                words.unshift(APPLE_WORD);
-                saveStoredWords(words);
-            }
-
-            const btn = document.getElementById('saveCubeBtn');
-            btn.classList.add('saved-state');
-            btn.querySelector('span').textContent = 'Saved ✓';
         }
 
         function openMemoryVault() {
@@ -1442,9 +1458,9 @@
 
                 bctx.strokeStyle = k % 2 === 0 ? 'rgb(154, 154, 154)' : 'rgb(84, 84, 84)';
                 bctx.lineWidth = scale;
-                ctx.beginPath();
-                bctx.moveTo(sx, sy);
-                bctx.lineTo(sx + dx, sy + dy);
+                bctx.beginPath();
+                ctx.moveTo(sx, sy);
+                ctx.lineTo(sx + dx, sy + dy);
                 bctx.stroke();
             }
         }
