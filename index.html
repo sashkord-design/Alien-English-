@@ -2,7 +2,10 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Alan">
     <title>Alan the Alien — English through stories</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
@@ -75,9 +78,9 @@
             inset: 0;
             background: linear-gradient(
                 to top,
-                rgba(16, 24, 39, 0.45) 0%,
-                rgba(16, 24, 39, 0.08) 28%,
-                rgba(16, 24, 39, 0) 60%
+                rgba(16, 24, 39, 0.35) 0%,
+                rgba(16, 24, 39, 0.05) 26%,
+                rgba(16, 24, 39, 0) 55%
             );
             pointer-events: none;
             z-index: 0;
@@ -93,16 +96,16 @@
             background-size: cover;
             background-position: center;
             border: 2px solid var(--ink-dark);
-            border-radius: 14px;
+            border-radius: 12px;
             overflow: hidden;
             color: var(--ink-dark);
-            padding: 13px 28px;
-            font-size: 14px;
-            font-weight: 900;
-            letter-spacing: 0.06em;
+            padding: 12px 24px;
+            font-size: 13px;
+            font-weight: 800;
+            letter-spacing: 0.05em;
             text-transform: uppercase;
             cursor: pointer;
-            box-shadow: 2px 4px 0px var(--ink-dark);
+            box-shadow: 2px 2px 0px var(--ink-dark);
             animation: splash-levitate 3.2s ease-in-out infinite;
             transition: transform 0.16s ease, box-shadow 0.16s ease;
         }
@@ -111,7 +114,7 @@
             content: '';
             position: absolute;
             inset: 0;
-            background-color: rgba(252, 211, 77, 0.84);
+            background-color: rgba(252, 211, 77, 0.78);
             pointer-events: none;
             z-index: 0;
         }
@@ -125,7 +128,7 @@
         .splash-start-btn.pressed {
             animation: none;
             transform: translate(2px, 2px);
-            box-shadow: 1px 2px 0px var(--ink-dark);
+            box-shadow: 1px 1px 0px var(--ink-dark);
         }
 
         @keyframes splash-levitate {
@@ -1439,7 +1442,7 @@
 
                 bctx.strokeStyle = k % 2 === 0 ? 'rgb(154, 154, 154)' : 'rgb(84, 84, 84)';
                 bctx.lineWidth = scale;
-                bctx.beginPath();
+                ctx.beginPath();
                 bctx.moveTo(sx, sy);
                 bctx.lineTo(sx + dx, sy + dy);
                 bctx.stroke();
