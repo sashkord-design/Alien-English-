@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Alien Memory Scanner</title>
+    <title>Alan the Alien — English through stories</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
         :root {
@@ -41,6 +41,100 @@
             padding: 10px 14px 12px;
             position: relative;
             overflow: hidden;
+        }
+
+        /* 0. FULLSCREEN START SPLASH PAGE */
+        .start-splash {
+            position: fixed;
+            inset: 0;
+            width: 100vw;
+            height: 100dvh;
+            z-index: 60;
+            background-color: #2f6f9e;
+            background-image: url('start%20page.webp');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            padding: 24px 20px max(34px, env(safe-area-inset-bottom));
+            transition: transform 0.65s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.45s ease;
+            will-change: transform, opacity;
+        }
+
+        .start-splash.slide-out {
+            transform: translateX(-110vw);
+            pointer-events: none;
+        }
+
+        .start-splash::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(
+                to top,
+                rgba(16, 24, 39, 0.45) 0%,
+                rgba(16, 24, 39, 0.08) 28%,
+                rgba(16, 24, 39, 0) 60%
+            );
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .splash-start-btn {
+            position: relative;
+            z-index: 2;
+            min-width: 184px;
+            max-width: 260px;
+            background-color: #fcd34d;
+            background-image: url('frame.png');
+            background-size: cover;
+            background-position: center;
+            border: 2px solid var(--ink-dark);
+            border-radius: 14px;
+            overflow: hidden;
+            color: var(--ink-dark);
+            padding: 13px 28px;
+            font-size: 14px;
+            font-weight: 900;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            cursor: pointer;
+            box-shadow: 2px 4px 0px var(--ink-dark);
+            animation: splash-levitate 3.2s ease-in-out infinite;
+            transition: transform 0.16s ease, box-shadow 0.16s ease;
+        }
+
+        .splash-start-btn::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-color: rgba(252, 211, 77, 0.84);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .splash-start-btn span {
+            position: relative;
+            z-index: 1;
+        }
+
+        .splash-start-btn:active,
+        .splash-start-btn.pressed {
+            animation: none;
+            transform: translate(2px, 2px);
+            box-shadow: 1px 2px 0px var(--ink-dark);
+        }
+
+        @keyframes splash-levitate {
+            0%, 100% {
+                transform: translateY(0px);
+            }
+            50% {
+                transform: translateY(-6px);
+            }
         }
 
         /* Background layers */
@@ -682,6 +776,11 @@
 </head>
 <body>
 
+    <!-- Screen 0: Fullscreen Splash Page -->
+    <div class="start-splash" id="startSplash">
+        <button class="splash-start-btn" id="splashStartBtn" onclick="enterFromSplash(this)"><span>to start</span></button>
+    </div>
+
     <div class="retro-board" id="retroBoard">
         <!-- Background Layers -->
         <div class="bg-layer bg-first-page"></div>
@@ -907,6 +1006,20 @@
             visual: '🍎'
         };
 
+        function enterFromSplash(btn) {
+            const splash = document.getElementById('startSplash');
+            if (!splash) return;
+
+            if (btn) btn.classList.add('pressed');
+
+            setTimeout(() => {
+                splash.classList.add('slide-out');
+                setTimeout(() => {
+                    splash.style.display = 'none';
+                }, 660);
+            }, 120);
+        }
+
         function updateNarrativeView() {
             const textEl = document.getElementById('narrativeText');
             const indicatorEl = document.getElementById('narrativePageIndicator');
@@ -1050,7 +1163,6 @@
             board.classList.add('vault-bg');
             vault.classList.remove('defocused');
 
-            // Start slide immediately, then build mini cubes right after transition kicks off
             slideBetweenPages(workspace, vault, () => {
                 renderVaultGrid(words);
                 startVaultSpinning();
@@ -1222,7 +1334,6 @@
             ctx.drawImage(temp, -size / 2, -size / 2, size, size);
             ctx.restore();
 
-            // Gentle cool-gray tone normalization so over-bright white patches become soft stone gray
             ctx.fillStyle = 'rgba(150, 154, 166, 0.22)';
             ctx.fillRect(0, 0, size, size);
 
@@ -1396,7 +1507,6 @@
             ctx.restore();
         }
 
-        // Crisp text without white wash over the whole face so the stone stays a uniform soft gray
         function drawReadableFaceText(ctx, size, lines, options = {}) {
             const scale = size / 512;
 
