@@ -81,7 +81,7 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
-            object-position: center 45%;
+            object-position: center 48%;
             display: block;
             z-index: 0;
             pointer-events: none;
@@ -630,6 +630,124 @@
             box-shadow: 1px 1px 0px var(--ink-dark);
         }
 
+        /* 2.5 RANK CATEGORY VAULT (3 VERTICAL CUBES, +50% SIZE, -30% SPEED) */
+        .rank-vault {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            height: 100%;
+            padding: 10px 14px 8px;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.65s cubic-bezier(0.16, 1, 0.3, 1), filter 0.45s ease;
+        }
+
+        .rank-vault.defocused {
+            filter: blur(5px) brightness(0.84);
+            pointer-events: none;
+        }
+
+        .rank-header-frame {
+            position: relative;
+            width: 100%;
+            max-width: 240px;
+            background-color: #d9779a;
+            background-image: url('frame.png');
+            background-size: cover;
+            background-position: center;
+            border: 2px solid var(--ink-dark);
+            border-radius: 12px;
+            overflow: hidden;
+            color: var(--ink-dark);
+            padding: 8px 18px;
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            text-align: center;
+            box-shadow: 2px 2px 0px var(--ink-dark);
+            flex-shrink: 0;
+        }
+
+        .rank-header-frame::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-color: rgba(236, 122, 162, 0.72);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .rank-header-frame span {
+            position: relative;
+            z-index: 1;
+        }
+
+        .rank-vertical-list {
+            flex: 1;
+            width: 100%;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 6px 0;
+        }
+
+        .rank-vertical-list::-webkit-scrollbar {
+            display: none;
+        }
+
+        .rank-cube-slot {
+            width: 171px;
+            height: 171px;
+            cursor: pointer;
+            animation: node-levitate 4.8s ease-in-out infinite;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .rank-cube-canvas {
+            width: 171px;
+            height: 171px;
+            display: block;
+        }
+
+        .empty-category-panel {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            height: 100%;
+            padding: 10px 14px 8px;
+            position: relative;
+        }
+
+        .empty-category-card {
+            width: 100%;
+            max-width: 300px;
+            background-image: url('frame.png');
+            background-size: cover;
+            background-position: center;
+            border: 2px solid var(--ink-dark);
+            border-radius: 14px;
+            overflow: hidden;
+            padding: 18px 16px;
+            text-align: center;
+            box-shadow: 2px 3px 0px var(--ink-dark);
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--ink-dark);
+        }
+
         /* 3. MEMORY STORAGE: 6 CUBES (2x3) WITHOUT SIDE GAPS */
         .memory-vault {
             display: none;
@@ -711,6 +829,26 @@
             width: 114px;
             height: 114px;
             display: block;
+        }
+
+        .dual-bottom-row {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            width: 100%;
+            max-width: 340px;
+            padding: 0 14px;
+            margin-top: 8px;
+            margin-bottom: 4px;
+            z-index: 30;
+            flex-shrink: 0;
+        }
+
+        .dual-bottom-row .bottom-nav-btn {
+            width: 100%;
+            margin: 0;
+            padding: 10px 10px;
+            font-size: 10.5px;
         }
 
         /* Shared pink action button lowered cleanly toward bottom */
@@ -831,7 +969,7 @@
         <img
             id="splashBgImg"
             class="splash-bg-img"
-            src="start%20page_2.webp"
+            src="start%20page_3.webp"
             alt="Alan the Alien"
             onerror="handleSplashImgError(this)"
         >
@@ -940,8 +1078,22 @@
 
                 <div class="action-row" id="actionRow">
                     <button class="btn-action back-variant" id="backToSplashBtn" onclick="returnToSplash()"><span>Back</span></button>
-                    <button class="btn-action" id="goCubeBtn" onclick="openMemoryVault()"><span>Go to Cube</span></button>
+                    <button class="btn-action" id="goCubeBtn" onclick="openRankVault()"><span>Go to Cube</span></button>
                 </div>
+            </div>
+
+            <!-- Screen 2.5: Rank Categories Vault (3 Vertical Cubes) -->
+            <div class="rank-vault page-slide" id="rankVault">
+                <div class="rank-header-frame"><span>rank</span></div>
+                <div class="rank-vertical-list" id="rankVerticalList"></div>
+                <button class="bottom-nav-btn" id="backFromRankBtn" onclick="returnFromRankToStudy()"><span>back</span></button>
+            </div>
+
+            <!-- Screen 2.6: Empty Category Placeholder (family / body) -->
+            <div class="empty-category-panel page-slide" id="emptyCategoryPanel">
+                <div class="rank-header-frame" id="emptyCategoryTitle"><span>category</span></div>
+                <div class="empty-category-card">This category is empty for now.</div>
+                <button class="bottom-nav-btn" onclick="returnToRankVault()"><span>back to rank</span></button>
             </div>
 
             <!-- Screen 3: Memory Storage 6 Cubes (2x3) -->
@@ -949,7 +1101,10 @@
                 <div class="vault-scroll" id="vaultScroll">
                     <div class="vault-grid" id="vaultGrid"></div>
                 </div>
-                <button class="bottom-nav-btn" id="backToAdventuresBtn" onclick="returnToAdventures()"><span>Back to Adventures</span></button>
+                <div class="dual-bottom-row">
+                    <button class="bottom-nav-btn" id="backToRankBtn" onclick="returnToRankVault()"><span>back to rank</span></button>
+                    <button class="bottom-nav-btn" id="backToStudyBtn" onclick="returnToStudyFromVault()"><span>back to study</span></button>
+                </div>
             </div>
 
         </div>
@@ -979,10 +1134,9 @@
 
     <script>
         const SPLASH_CANDIDATES = [
-            'start%20page_2.webp',
-            'start page_2.webp',
-            'start_page_2.webp',
-            'start%20page.webp'
+            'start%20page_3.webp',
+            'start page_3.webp',
+            'start_page_3.webp'
         ];
         let splashCandidateIdx = 0;
 
@@ -997,9 +1151,17 @@
 
         let isSolved = false;
         let vaultSpinRaf = null;
+        let rankSpinRaf = null;
         let activePickedSlot = null;
         let vaultMiniCubes = [];
+        let rankCubes = [];
         let narrativeIndex = 0;
+
+        const RANK_CATEGORIES = [
+            { id: 'nature', label: 'NATURE', hasVault: true },
+            { id: 'family', label: 'FAMILY', hasVault: false },
+            { id: 'body', label: 'BODY', hasVault: false }
+        ];
 
         const INTRO_NARRATIVE_PAGES = [
             "Alan wandered into an orchard and saw various fruits lying on the ground. While looking around, something suddenly fell on his head. It was red and firm. And it was...",
@@ -1150,7 +1312,7 @@
 
         function getStoredWords() {
             try {
-                const raw = localStorage.getItem('alien_memory_cubes_v24');
+                const raw = localStorage.getItem('alien_memory_cubes_v25');
                 if (raw) {
                     const parsed = JSON.parse(raw);
                     if (Array.isArray(parsed) && parsed.length >= 6) return parsed;
@@ -1161,7 +1323,7 @@
 
         function saveStoredWords(words) {
             try {
-                localStorage.setItem('alien_memory_cubes_v24', JSON.stringify(words));
+                localStorage.setItem('alien_memory_cubes_v25', JSON.stringify(words));
             } catch (e) {}
         }
 
@@ -1242,25 +1404,90 @@
             }
         }
 
-        function openMemoryVault() {
+        function openRankVault() {
             const workspace = document.getElementById('scanWorkspace');
-            const vault = document.getElementById('memoryVault');
+            const rankVault = document.getElementById('rankVault');
             const board = document.getElementById('retroBoard');
 
-            const words = getStoredWords();
-            saveStoredWords(words);
+            if (vaultSpinRaf) {
+                cancelAnimationFrame(vaultSpinRaf);
+                vaultSpinRaf = null;
+            }
 
             board.classList.remove('clouds-bg', 'blurred-bg');
             board.classList.add('vault-bg');
-            vault.classList.remove('defocused');
+            rankVault.classList.remove('defocused');
 
-            slideBetweenPages(workspace, vault, () => {
-                renderVaultGrid(words);
-                startVaultSpinning();
+            slideBetweenPages(workspace, rankVault, () => {
+                renderRankVerticalCubes();
+                startRankSpinning();
             });
         }
 
-        function returnToAdventures() {
+        function returnFromRankToStudy() {
+            const rankVault = document.getElementById('rankVault');
+            const workspace = document.getElementById('scanWorkspace');
+            const board = document.getElementById('retroBoard');
+
+            if (rankSpinRaf) {
+                cancelAnimationFrame(rankSpinRaf);
+                rankSpinRaf = null;
+            }
+
+            board.classList.remove('vault-bg', 'blurred-bg');
+            board.classList.add('clouds-bg');
+
+            slideBetweenPages(rankVault, workspace);
+        }
+
+        function handleRankCategoryClick(category) {
+            if (rankSpinRaf) {
+                cancelAnimationFrame(rankSpinRaf);
+                rankSpinRaf = null;
+            }
+
+            if (category.hasVault) {
+                openMemoryVaultFromRank();
+            } else {
+                openEmptyCategory(category.label);
+            }
+        }
+
+        function openEmptyCategory(categoryLabel) {
+            const rankVault = document.getElementById('rankVault');
+            const emptyPanel = document.getElementById('emptyCategoryPanel');
+            const titleEl = document.getElementById('emptyCategoryTitle');
+
+            if (titleEl) {
+                titleEl.innerHTML = `<span>${categoryLabel.toLowerCase()}</span>`;
+            }
+
+            slideBetweenPages(rankVault, emptyPanel);
+        }
+
+        function returnToRankVault() {
+            const currentVault = document.getElementById('memoryVault');
+            const emptyPanel = document.getElementById('emptyCategoryPanel');
+            const rankVault = document.getElementById('rankVault');
+            const board = document.getElementById('retroBoard');
+
+            if (vaultSpinRaf) {
+                cancelAnimationFrame(vaultSpinRaf);
+                vaultSpinRaf = null;
+            }
+
+            board.classList.remove('clouds-bg', 'blurred-bg');
+            board.classList.add('vault-bg');
+            rankVault.classList.remove('defocused');
+
+            const fromEl = currentVault.style.display === 'flex' ? currentVault : emptyPanel;
+            slideBetweenPages(fromEl, rankVault, () => {
+                renderRankVerticalCubes();
+                startRankSpinning();
+            });
+        }
+
+        function returnToStudyFromVault() {
             const vault = document.getElementById('memoryVault');
             const workspace = document.getElementById('scanWorkspace');
             const board = document.getElementById('retroBoard');
@@ -1273,23 +1500,25 @@
             board.classList.remove('vault-bg', 'blurred-bg');
             board.classList.add('clouds-bg');
 
-            vault.classList.remove('active-center');
-            vault.classList.add('exit-to-left');
+            slideBetweenPages(vault, workspace);
+        }
 
-            workspace.style.display = 'flex';
-            workspace.classList.remove('exit-to-left', 'active-center');
-            workspace.classList.add('enter-from-right');
-            workspace.offsetHeight;
+        function openMemoryVaultFromRank() {
+            const rankVault = document.getElementById('rankVault');
+            const vault = document.getElementById('memoryVault');
+            const board = document.getElementById('retroBoard');
 
-            requestAnimationFrame(() => {
-                workspace.classList.remove('enter-from-right');
-                workspace.classList.add('active-center');
+            const words = getStoredWords();
+            saveStoredWords(words);
+
+            board.classList.remove('clouds-bg', 'blurred-bg');
+            board.classList.add('vault-bg');
+            vault.classList.remove('defocused');
+
+            slideBetweenPages(rankVault, vault, () => {
+                renderVaultGrid(words);
+                startVaultSpinning();
             });
-
-            setTimeout(() => {
-                vault.style.display = 'none';
-                vault.classList.remove('exit-to-left');
-            }, 650);
         }
 
         function seededRand(seed) {
@@ -1356,7 +1585,7 @@
             return geom;
         }
 
-        function sampleRealCubeFace(ctx, size, seedOffset) {
+        function sampleRealCubeFace(ctx, size, seedOffset, isPurplishPinkTint = false) {
             if (!refCubeImageReady || !refCubeImage.naturalWidth) return false;
 
             const w = refCubeImage.naturalWidth;
@@ -1425,18 +1654,22 @@
             ctx.drawImage(temp, -size / 2, -size / 2, size, size);
             ctx.restore();
 
-            ctx.fillStyle = 'rgba(150, 154, 166, 0.22)';
+            ctx.fillStyle = isPurplishPinkTint
+                ? 'rgba(216, 132, 184, 0.20)'
+                : 'rgba(150, 154, 166, 0.22)';
             ctx.fillRect(0, 0, size, size);
 
             return true;
         }
 
-        function drawFallbackCube1_3Base(ctx, size, seedOffset) {
-            ctx.fillStyle = '#aeb1ba';
+        function drawFallbackCube1_3Base(ctx, size, seedOffset, isPurplishPinkTint = false) {
+            ctx.fillStyle = isPurplishPinkTint ? '#b6a8bc' : '#aeb1ba';
             ctx.fillRect(0, 0, size, size);
 
             const scale = size / 512;
-            const tones = ['rgba(186, 189, 198, 0.55)', 'rgba(154, 158, 168, 0.55)', 'rgba(134, 138, 148, 0.45)'];
+            const tones = isPurplishPinkTint
+                ? ['rgba(204, 178, 206, 0.52)', 'rgba(176, 145, 184, 0.52)', 'rgba(154, 126, 166, 0.45)']
+                : ['rgba(186, 189, 198, 0.55)', 'rgba(154, 158, 168, 0.55)', 'rgba(134, 138, 148, 0.45)'];
             for (let i = 0; i < 12; i++) {
                 const s = seedOffset * 193 + i * 31;
                 const cx = seededRand(s + 1) * size;
@@ -1701,9 +1934,10 @@
             bumpCanvas.height = size;
             const bctx = bumpCanvas.getContext('2d');
 
-            const sampled = sampleRealCubeFace(ctx, size, seedOffset);
+            const isPurplishPinkTint = Boolean(options.purplishPinkTint);
+            const sampled = sampleRealCubeFace(ctx, size, seedOffset, isPurplishPinkTint);
             if (!sampled) {
-                drawFallbackCube1_3Base(ctx, size, seedOffset);
+                drawFallbackCube1_3Base(ctx, size, seedOffset, isPurplishPinkTint);
             }
 
             applySurfaceRoughness(ctx, bctx, size, seedOffset);
@@ -1734,6 +1968,108 @@
             group.add(outlineMesh);
 
             return group;
+        }
+
+        function disposeRankCubes() {
+            rankCubes.forEach((entry) => {
+                if (entry.renderer) {
+                    entry.renderer.dispose();
+                }
+            });
+            rankCubes = [];
+        }
+
+        function renderRankVerticalCubes() {
+            const listEl = document.getElementById('rankVerticalList');
+            disposeRankCubes();
+            listEl.innerHTML = '';
+
+            RANK_CATEGORIES.forEach((cat, index) => {
+                const slot = document.createElement('div');
+                slot.className = 'rank-cube-slot';
+                slot.style.animationDelay = ((index * 0.5) % 3.2) + 's';
+
+                const canvas = document.createElement('canvas');
+                canvas.className = 'rank-cube-canvas';
+                canvas.width = 342;
+                canvas.height = 342;
+                slot.appendChild(canvas);
+
+                slot.onclick = () => handleRankCategoryClick(cat);
+                listEl.appendChild(slot);
+
+                if (typeof THREE !== 'undefined') {
+                    const rScene = new THREE.Scene();
+                    const rCam = new THREE.PerspectiveCamera(36, 1, 0.1, 50);
+                    rCam.position.set(0, 0, 5.25);
+                    rCam.lookAt(0, 0, 0);
+
+                    const rRenderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+                    rRenderer.setSize(171, 171);
+                    rRenderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+
+                    rScene.add(new THREE.AmbientLight(0xd8c8dc, 0.88));
+                    const dLight = new THREE.DirectionalLight(0xf2e2f0, 0.54);
+                    dLight.position.set(2, 2.5, 4);
+                    rScene.add(dLight);
+
+                    const geom = createChippedStoneCubeGeometry(1.96 * 1.5, index + 11);
+
+                    const mats = Array.from({ length: 6 }, (_, faceIdx) => {
+                        const faceSeed = (index + 11) * 100 + faceIdx * 17;
+                        const stoneSet = createMultiStoneTextures(
+                            [cat.label],
+                            { isMiniWord: true, purplishPinkTint: true },
+                            faceSeed
+                        );
+                        return new THREE.MeshStandardMaterial({
+                            map: stoneSet.map,
+                            bumpMap: stoneSet.bumpMap,
+                            bumpScale: 0.055,
+                            color: 0xf6e6f2,
+                            roughness: 0.94,
+                            metalness: 0.02
+                        });
+                    });
+
+                    const cubeGroup = createOutlinedStoneCubeGroup(geom, mats, 1.038);
+                    cubeGroup.rotation.x = 0;
+                    cubeGroup.rotation.y = THREE.MathUtils.degToRad(index * 30);
+                    rScene.add(cubeGroup);
+
+                    rRenderer.render(rScene, rCam);
+
+                    rankCubes.push({
+                        scene: rScene,
+                        camera: rCam,
+                        renderer: rRenderer,
+                        mesh: cubeGroup,
+                        angle: index * 30
+                    });
+                }
+            });
+        }
+
+        function startRankSpinning() {
+            if (rankSpinRaf) cancelAnimationFrame(rankSpinRaf);
+            let lastTime = performance.now();
+            const slowerSpeed = 0.0105 * 0.7;
+
+            function step(now) {
+                const delta = now - lastTime;
+                lastTime = now;
+
+                rankCubes.forEach((entry) => {
+                    entry.angle = (entry.angle + delta * slowerSpeed) % 360;
+                    entry.mesh.rotation.x = 0;
+                    entry.mesh.rotation.y = THREE.MathUtils.degToRad(entry.angle);
+                    entry.renderer.render(entry.scene, entry.camera);
+                });
+
+                rankSpinRaf = requestAnimationFrame(step);
+            }
+
+            rankSpinRaf = requestAnimationFrame(step);
         }
 
         function disposeVaultMiniCubes() {
