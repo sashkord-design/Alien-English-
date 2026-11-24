@@ -640,7 +640,7 @@
             box-shadow: 1px 1px 0px var(--ink-dark);
         }
 
-        /* 2.5 RANK CATEGORY VAULT (ENLARGED WORD-CUBES IN PINK-PURPLE TINT, NO TILT) */
+        /* 2.5 RANK CATEGORY VAULT (STATIC LEVITATING WORD-CUBES, CLOSER GAP, ~25% LESS PINK) */
         .rank-vault {
             display: none;
             flex-direction: column;
@@ -648,7 +648,7 @@
             justify-content: space-between;
             width: 100%;
             height: 100%;
-            padding: 12px 18px 12px;
+            padding: 12px 24px 12px;
             position: relative;
             overflow: hidden;
             transition: transform 0.42s cubic-bezier(0.22, 1, 0.36, 1), filter 0.35s ease;
@@ -709,16 +709,16 @@
 
         .rank-grid-inner {
             display: grid;
-            grid-template-columns: repeat(2, 134px);
-            grid-template-rows: repeat(2, 134px);
-            gap: 16px;
+            grid-template-columns: repeat(2, 124px);
+            grid-template-rows: repeat(2, 124px);
+            gap: 12px;
             align-items: center;
             justify-items: center;
         }
 
         .rank-cube-slot {
-            width: 134px;
-            height: 134px;
+            width: 124px;
+            height: 124px;
             cursor: pointer;
             animation: node-levitate 4.6s ease-in-out infinite;
             display: flex;
@@ -727,8 +727,8 @@
         }
 
         .rank-cube-canvas {
-            width: 134px;
-            height: 134px;
+            width: 124px;
+            height: 124px;
             display: block;
         }
 
@@ -1164,10 +1164,8 @@
 
         let isSolved = false;
         let vaultSpinRaf = null;
-        let rankSpinRaf = null;
         let activePickedSlot = null;
         let vaultMiniCubes = [];
-        let rankMiniCubes = [];
         let narrativeIndex = 0;
         let transitionTimer = null;
         let isTransitioning = false;
@@ -1316,8 +1314,6 @@
             }
             isTransitioning = false;
 
-            stopRankSpinning();
-            disposeRankMiniCubes();
             stopVaultSpinning();
             disposeVaultMiniCubes();
 
@@ -1353,7 +1349,7 @@
 
         function getStoredWords() {
             try {
-                const raw = localStorage.getItem('alien_memory_cubes_v32');
+                const raw = localStorage.getItem('alien_memory_cubes_v33');
                 if (raw) {
                     const parsed = JSON.parse(raw);
                     if (Array.isArray(parsed) && parsed.length >= 6) return parsed;
@@ -1364,7 +1360,7 @@
 
         function saveStoredWords(words) {
             try {
-                localStorage.setItem('alien_memory_cubes_v32', JSON.stringify(words));
+                localStorage.setItem('alien_memory_cubes_v33', JSON.stringify(words));
             } catch (e) {}
         }
 
@@ -1477,22 +1473,6 @@
             }
         }
 
-        function stopRankSpinning() {
-            if (rankSpinRaf) {
-                cancelAnimationFrame(rankSpinRaf);
-                rankSpinRaf = null;
-            }
-        }
-
-        function disposeRankMiniCubes() {
-            rankMiniCubes.forEach((entry) => {
-                if (entry.renderer) {
-                    entry.renderer.dispose();
-                }
-            });
-            rankMiniCubes = [];
-        }
-
         function stopVaultSpinning() {
             if (vaultSpinRaf) {
                 cancelAnimationFrame(vaultSpinRaf);
@@ -1515,7 +1495,6 @@
 
             slideBetweenPages(workspace, rankVault, () => {
                 renderRankWordCubes();
-                startRankSpinning();
             });
         }
 
@@ -1524,9 +1503,6 @@
             const rankVault = document.getElementById('rankVault');
             const workspace = document.getElementById('scanWorkspace');
             const board = document.getElementById('retroBoard');
-
-            stopRankSpinning();
-            disposeRankMiniCubes();
 
             board.classList.remove('vault-bg', 'blurred-bg');
             board.classList.add('clouds-bg');
@@ -1548,9 +1524,6 @@
             const rankVault = document.getElementById('rankVault');
             const emptyPanel = document.getElementById('emptyCategoryPanel');
             const titleEl = document.getElementById('emptyCategoryTitle');
-
-            stopRankSpinning();
-            disposeRankMiniCubes();
 
             if (titleEl) {
                 titleEl.innerHTML = `<span>${categoryLabel.toLowerCase()}</span>`;
@@ -1576,7 +1549,6 @@
             const fromEl = currentVault.style.display === 'flex' ? currentVault : emptyPanel;
             slideBetweenPages(fromEl, rankVault, () => {
                 renderRankWordCubes();
-                startRankSpinning();
             });
         }
 
@@ -1600,9 +1572,6 @@
             const rankVault = document.getElementById('rankVault');
             const vault = document.getElementById('memoryVault');
             const board = document.getElementById('retroBoard');
-
-            stopRankSpinning();
-            disposeRankMiniCubes();
 
             const words = getStoredWords();
             saveStoredWords(words);
@@ -1751,7 +1720,7 @@
             ctx.restore();
 
             ctx.fillStyle = isPurplishPinkTint
-                ? 'rgba(222, 126, 186, 0.28)'
+                ? 'rgba(208, 134, 178, 0.20)'
                 : 'rgba(150, 154, 166, 0.22)';
             ctx.fillRect(0, 0, size, size);
 
@@ -1759,12 +1728,12 @@
         }
 
         function drawFallbackCube1_3Base(ctx, size, seedOffset, isPurplishPinkTint = false) {
-            ctx.fillStyle = isPurplishPinkTint ? '#bfa4c8' : '#aeb1ba';
+            ctx.fillStyle = isPurplishPinkTint ? '#b6a6bc' : '#aeb1ba';
             ctx.fillRect(0, 0, size, size);
 
             const scale = size / 512;
             const tones = isPurplishPinkTint
-                ? ['rgba(218, 164, 212, 0.56)', 'rgba(186, 132, 192, 0.56)', 'rgba(162, 114, 174, 0.48)']
+                ? ['rgba(204, 168, 200, 0.50)', 'rgba(176, 138, 180, 0.50)', 'rgba(154, 122, 164, 0.44)']
                 : ['rgba(186, 189, 198, 0.55)', 'rgba(154, 158, 168, 0.55)', 'rgba(134, 138, 148, 0.45)'];
             for (let i = 0; i < 12; i++) {
                 const s = seedOffset * 193 + i * 31;
@@ -2068,7 +2037,6 @@
 
         function renderRankWordCubes() {
             const gridEl = document.getElementById('rankGridInner');
-            disposeRankMiniCubes();
             gridEl.innerHTML = '';
 
             RANK_CATEGORIES.forEach((cat, index) => {
@@ -2078,8 +2046,8 @@
 
                 const canvas = document.createElement('canvas');
                 canvas.className = 'rank-cube-canvas';
-                canvas.width = 268;
-                canvas.height = 268;
+                canvas.width = 248;
+                canvas.height = 248;
                 slot.appendChild(canvas);
 
                 slot.onclick = () => handleRankCategoryClick(cat);
@@ -2092,11 +2060,11 @@
                     miniCam.lookAt(0, 0, 0);
 
                     const miniRenderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
-                    miniRenderer.setSize(134, 134);
+                    miniRenderer.setSize(124, 124);
                     miniRenderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
 
-                    miniScene.add(new THREE.AmbientLight(0xd9cce4, 0.88));
-                    const dLight = new THREE.DirectionalLight(0xf3d8eb, 0.56);
+                    miniScene.add(new THREE.AmbientLight(0xd4cee0, 0.88));
+                    const dLight = new THREE.DirectionalLight(0xeadbe6, 0.54);
                     dLight.position.set(2, 2.5, 4);
                     miniScene.add(dLight);
 
@@ -2119,42 +2087,13 @@
                     });
 
                     const cubeGroup = createOutlinedStoneCubeGroup(geom, mats, 1.038);
-                    cubeGroup.rotation.x = 0;
-                    cubeGroup.rotation.y = THREE.MathUtils.degToRad(index * 22);
+                    cubeGroup.rotation.set(0, 0, 0);
                     miniScene.add(cubeGroup);
 
                     miniRenderer.render(miniScene, miniCam);
-
-                    rankMiniCubes.push({
-                        scene: miniScene,
-                        camera: miniCam,
-                        renderer: miniRenderer,
-                        mesh: cubeGroup,
-                        angle: index * 22
-                    });
+                    miniRenderer.dispose();
                 }
             });
-        }
-
-        function startRankSpinning() {
-            stopRankSpinning();
-            let lastTime = performance.now();
-
-            function step(now) {
-                const delta = now - lastTime;
-                lastTime = now;
-
-                rankMiniCubes.forEach((entry) => {
-                    entry.angle = (entry.angle + delta * 0.0105) % 360;
-                    entry.mesh.rotation.x = 0;
-                    entry.mesh.rotation.y = THREE.MathUtils.degToRad(entry.angle);
-                    entry.renderer.render(entry.scene, entry.camera);
-                });
-
-                rankSpinRaf = requestAnimationFrame(step);
-            }
-
-            rankSpinRaf = requestAnimationFrame(step);
         }
 
         function disposeVaultMiniCubes() {
