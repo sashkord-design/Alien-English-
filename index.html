@@ -75,21 +75,17 @@
             will-change: transform, opacity;
         }
 
-        .splash-bg-img {
+        .splash-bg-box {
             position: absolute;
-            left: 50%;
-            top: 50%;
+            inset: 0;
             width: 100%;
-            height: auto;
-            min-height: 100%;
-            max-width: none;
-            transform: translate(-50%, -50%);
-            object-fit: contain;
-            display: block;
+            height: 100%;
+            background-color: #3d759d;
+            background-repeat: no-repeat;
+            background-position: center center;
+            background-size: contain;
             z-index: 0;
             pointer-events: none;
-            user-select: none;
-            -webkit-user-drag: none;
         }
 
         .start-splash.slide-out {
@@ -103,8 +99,8 @@
             inset: 0;
             background: linear-gradient(
                 to top,
-                rgba(16, 24, 39, 0.25) 0%,
-                rgba(16, 24, 39, 0.04) 22%,
+                rgba(16, 24, 39, 0.22) 0%,
+                rgba(16, 24, 39, 0.03) 22%,
                 rgba(16, 24, 39, 0) 50%
             );
             pointer-events: none;
@@ -274,7 +270,7 @@
             transform: translateX(0);
         }
 
-        /* 1. INTRO SCREEN (Larger image & even larger text box) */
+        /* 1. INTRO SCREEN */
         .intro-screen {
             width: 100%;
             max-width: 368px;
@@ -456,7 +452,7 @@
             z-index: 1;
         }
 
-        /* 2. SCAN WORKSPACE (Bigger riddle box, squarer cards shifted lower) */
+        /* 2. SCAN WORKSPACE */
         .scan-workspace {
             width: 100%;
             max-width: 368px;
@@ -640,7 +636,7 @@
             box-shadow: 1px 1px 0px var(--ink-dark);
         }
 
-        /* 2.5 RANK CATEGORY VAULT (3 VERTICAL CUBES, +50% VISUAL SIZE, -30% SPEED, UNCLIPPED) */
+        /* 2.5 RANK CATEGORY VAULT (4 FLAT 2D STONE CUBES IN 2x2 GRID, NO 3D SPIN) */
         .rank-vault {
             display: none;
             flex-direction: column;
@@ -659,10 +655,10 @@
             pointer-events: none;
         }
 
-        .rank-header-frame {
+        /* Shared pink pill badge / button — exact same size for RANK header and BACK button */
+        .pink-pill-box {
             position: relative;
-            width: 100%;
-            max-width: 240px;
+            min-width: 112px;
             background-color: #d9779a;
             background-image: url('frame.png');
             background-size: cover;
@@ -671,17 +667,21 @@
             border-radius: 12px;
             overflow: hidden;
             color: var(--ink-dark);
-            padding: 8px 18px;
-            font-size: 12px;
+            padding: 10px 22px;
+            font-size: 11.5px;
             font-weight: 800;
-            letter-spacing: 0.06em;
+            letter-spacing: 0.05em;
             text-transform: uppercase;
             text-align: center;
             box-shadow: 2px 2px 0px var(--ink-dark);
+            white-space: nowrap;
             flex-shrink: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        .rank-header-frame::before {
+        .pink-pill-box::before {
             content: '';
             position: absolute;
             inset: 0;
@@ -690,43 +690,55 @@
             z-index: 0;
         }
 
-        .rank-header-frame span {
+        .pink-pill-box span {
             position: relative;
             z-index: 1;
         }
 
-        .rank-vertical-list {
+        .rank-grid-2x2 {
             flex: 1;
             width: 100%;
-            overflow-y: auto;
-            -webkit-overflow-scrolling: touch;
-            scrollbar-width: none;
             display: flex;
-            flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 2px;
-            padding: 2px 0;
+            padding: 6px 0;
         }
 
-        .rank-vertical-list::-webkit-scrollbar {
-            display: none;
+        .rank-grid-inner {
+            display: grid;
+            grid-template-columns: repeat(2, 152px);
+            grid-template-rows: repeat(2, 152px);
+            gap: 16px;
+            align-items: center;
+            justify-items: center;
         }
 
-        .rank-cube-slot {
+        .rank-flat-cube {
             width: 152px;
             height: 152px;
+            border: 2.5px solid #222328;
+            border-radius: 16px;
+            overflow: hidden;
             cursor: pointer;
+            box-shadow: 3px 4px 0px #222328;
             animation: node-levitate 4.8s ease-in-out infinite;
-            flex-shrink: 0;
             display: flex;
             align-items: center;
             justify-content: center;
+            position: relative;
+            background-color: #c5b4ca;
+            transition: transform 0.16s ease, box-shadow 0.16s ease;
         }
 
-        .rank-cube-canvas {
-            width: 152px;
-            height: 152px;
+        .rank-flat-cube:active {
+            animation: none;
+            transform: translate(2px, 2px);
+            box-shadow: 1px 2px 0px #222328;
+        }
+
+        .rank-flat-cube canvas {
+            width: 100%;
+            height: 100%;
             display: block;
         }
 
@@ -905,7 +917,7 @@
             box-shadow: 1px 1px 0px var(--ink-dark);
         }
 
-        /* 4. THREE.JS WEBGL 3D CUBE STAGE (Tap blurred backdrop to return) */
+        /* 4. THREE.JS WEBGL 3D CUBE STAGE (Tight touch zone on cube only, tap outside to return) */
         .cube-stage {
             display: none;
             position: fixed;
@@ -934,7 +946,7 @@
             justify-content: center;
             transform: scale(0.88);
             transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
-            cursor: default;
+            pointer-events: none;
         }
 
         .webgl-cube-holder.approached {
@@ -949,21 +961,26 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            pointer-events: none;
         }
 
         #threeCanvasHost canvas {
             display: block;
             width: 264px !important;
             height: 264px !important;
+            pointer-events: none;
         }
 
+        /* Tight hitbox matching the rendered 3D cube face area (~200x200 inside 264x264) */
         .touch-overlay {
             position: absolute;
-            inset: 8px;
+            inset: 32px;
             z-index: 20;
             display: grid;
             grid-template-columns: 1fr 1fr 1fr;
             grid-template-rows: 1fr 1fr 1fr;
+            pointer-events: auto;
+            border-radius: 16px;
         }
 
         .zone {
@@ -977,13 +994,7 @@
 
     <!-- Screen 0: Fullscreen Splash Page -->
     <div class="start-splash" id="startSplash">
-        <img
-            id="splashBgImg"
-            class="splash-bg-img"
-            src="start%20page_3.webp"
-            alt="Alan the Alien"
-            onerror="handleSplashImgError(this)"
-        >
+        <div class="splash-bg-box" id="splashBgBox"></div>
         <button class="splash-start-btn" id="splashStartBtn" onclick="enterFromSplash(this)"><span>to start</span></button>
     </div>
 
@@ -1093,16 +1104,18 @@
                 </div>
             </div>
 
-            <!-- Screen 2.5: Rank Categories Vault (3 Vertical Cubes) -->
+            <!-- Screen 2.5: Rank Categories Vault (4 Flat 2D Cubes in 2x2 Grid) -->
             <div class="rank-vault page-slide" id="rankVault">
-                <div class="rank-header-frame"><span>rank</span></div>
-                <div class="rank-vertical-list" id="rankVerticalList"></div>
-                <button class="bottom-nav-btn" id="backFromRankBtn" onclick="returnFromRankToStudy()"><span>back</span></button>
+                <div class="pink-pill-box"><span>rank</span></div>
+                <div class="rank-grid-2x2">
+                    <div class="rank-grid-inner" id="rankGridInner"></div>
+                </div>
+                <button class="bottom-nav-btn pink-pill-box" id="backFromRankBtn" onclick="returnFromRankToStudy()"><span>back</span></button>
             </div>
 
-            <!-- Screen 2.6: Empty Category Placeholder (family / body) -->
+            <!-- Screen 2.6: Empty Category Placeholder (family / body / food) -->
             <div class="empty-category-panel page-slide" id="emptyCategoryPanel">
-                <div class="rank-header-frame" id="emptyCategoryTitle"><span>category</span></div>
+                <div class="pink-pill-box" id="emptyCategoryTitle"><span>category</span></div>
                 <div class="empty-category-card">This category is empty for now.</div>
                 <button class="bottom-nav-btn" onclick="returnToRankVault()"><span>back to rank</span></button>
             </div>
@@ -1120,11 +1133,11 @@
 
         </div>
 
-        <!-- Screen 4: Three.js WebGL 3D Cube Inspection (Tap blurred area to return) -->
-        <div class="cube-stage" id="cubeStage" onclick="handleCubeStageBackdropClick(event)">
-            <div class="webgl-cube-holder" id="cubeDepthHolder" onclick="event.stopPropagation()">
+        <!-- Screen 4: Three.js WebGL 3D Cube Inspection (Tap outside the cube hitbox to return) -->
+        <div class="cube-stage" id="cubeStage" onclick="returnToVault()">
+            <div class="webgl-cube-holder" id="cubeDepthHolder">
                 <div id="threeCanvasHost"></div>
-                <div class="touch-overlay">
+                <div class="touch-overlay" onclick="event.stopPropagation()">
                     <div class="zone" onclick="tiltUp()"></div>
                     <div class="zone" onclick="tiltUp()"></div>
                     <div class="zone" onclick="tiltUp()"></div>
@@ -1143,33 +1156,43 @@
 
     <script>
         const SPLASH_CANDIDATES = [
-            'start%20page_3.webp',
             'start page_3.webp',
-            'start_page_3.webp'
+            'start%20page_3.webp',
+            'start_page_3.webp',
+            'start page_2.webp',
+            'start%20page_2.webp',
+            'start_page_2.webp'
         ];
-        let splashCandidateIdx = 0;
 
-        function handleSplashImgError(imgEl) {
-            splashCandidateIdx += 1;
-            if (splashCandidateIdx < SPLASH_CANDIDATES.length) {
-                imgEl.src = SPLASH_CANDIDATES[splashCandidateIdx];
-            } else {
-                imgEl.style.display = 'none';
+        function resolveSplashBackground() {
+            const box = document.getElementById('splashBgBox');
+            if (!box) return;
+
+            let idx = 0;
+            function tryNext() {
+                if (idx >= SPLASH_CANDIDATES.length) return;
+                const url = SPLASH_CANDIDATES[idx++];
+                const probe = new Image();
+                probe.onload = () => {
+                    box.style.backgroundImage = `url("${encodeURI(url).replace(/%2520/g, '%20')}")`;
+                };
+                probe.onerror = tryNext;
+                probe.src = url;
             }
+            tryNext();
         }
 
         let isSolved = false;
         let vaultSpinRaf = null;
-        let rankSpinRaf = null;
         let activePickedSlot = null;
         let vaultMiniCubes = [];
-        let rankCubes = [];
         let narrativeIndex = 0;
 
         const RANK_CATEGORIES = [
             { id: 'nature', label: 'NATURE', hasVault: true },
             { id: 'family', label: 'FAMILY', hasVault: false },
-            { id: 'body', label: 'BODY', hasVault: false }
+            { id: 'body', label: 'BODY', hasVault: false },
+            { id: 'food', label: 'FOOD', hasVault: false }
         ];
 
         const INTRO_NARRATIVE_PAGES = [
@@ -1321,7 +1344,7 @@
 
         function getStoredWords() {
             try {
-                const raw = localStorage.getItem('alien_memory_cubes_v26');
+                const raw = localStorage.getItem('alien_memory_cubes_v27');
                 if (raw) {
                     const parsed = JSON.parse(raw);
                     if (Array.isArray(parsed) && parsed.length >= 6) return parsed;
@@ -1332,7 +1355,7 @@
 
         function saveStoredWords(words) {
             try {
-                localStorage.setItem('alien_memory_cubes_v26', JSON.stringify(words));
+                localStorage.setItem('alien_memory_cubes_v27', JSON.stringify(words));
             } catch (e) {}
         }
 
@@ -1428,8 +1451,7 @@
             rankVault.classList.remove('defocused');
 
             slideBetweenPages(workspace, rankVault, () => {
-                renderRankVerticalCubes();
-                startRankSpinning();
+                renderRankFlatCubes();
             });
         }
 
@@ -1438,11 +1460,6 @@
             const workspace = document.getElementById('scanWorkspace');
             const board = document.getElementById('retroBoard');
 
-            if (rankSpinRaf) {
-                cancelAnimationFrame(rankSpinRaf);
-                rankSpinRaf = null;
-            }
-
             board.classList.remove('vault-bg', 'blurred-bg');
             board.classList.add('clouds-bg');
 
@@ -1450,11 +1467,6 @@
         }
 
         function handleRankCategoryClick(category) {
-            if (rankSpinRaf) {
-                cancelAnimationFrame(rankSpinRaf);
-                rankSpinRaf = null;
-            }
-
             if (category.hasVault) {
                 openMemoryVaultFromRank();
             } else {
@@ -1491,8 +1503,7 @@
 
             const fromEl = currentVault.style.display === 'flex' ? currentVault : emptyPanel;
             slideBetweenPages(fromEl, rankVault, () => {
-                renderRankVerticalCubes();
-                startRankSpinning();
+                renderRankFlatCubes();
             });
         }
 
@@ -1979,107 +1990,41 @@
             return group;
         }
 
-        function disposeRankCubes() {
-            rankCubes.forEach((entry) => {
-                if (entry.renderer) {
-                    entry.renderer.dispose();
-                }
-            });
-            rankCubes = [];
-        }
+        /* Lightweight 2D stone cube tiles for RANK (4 cubes in 2x2 grid, no 3D spin) */
+        function renderRankFlatCubes() {
+            const gridEl = document.getElementById('rankGridInner');
+            gridEl.innerHTML = '';
 
-        function renderRankVerticalCubes() {
-            const listEl = document.getElementById('rankVerticalList');
-            disposeRankCubes();
-            listEl.innerHTML = '';
-
-            const pxSize = 152;
             RANK_CATEGORIES.forEach((cat, index) => {
-                const slot = document.createElement('div');
-                slot.className = 'rank-cube-slot';
-                slot.style.animationDelay = ((index * 0.5) % 3.2) + 's';
+                const tile = document.createElement('div');
+                tile.className = 'rank-flat-cube';
+                tile.style.animationDelay = ((index * 0.55) % 3.2) + 's';
 
                 const canvas = document.createElement('canvas');
-                canvas.className = 'rank-cube-canvas';
-                canvas.width = pxSize * 2;
-                canvas.height = pxSize * 2;
-                slot.appendChild(canvas);
+                const size = 304;
+                canvas.width = size;
+                canvas.height = size;
+                const ctx = canvas.getContext('2d');
 
-                slot.onclick = () => handleRankCategoryClick(cat);
-                listEl.appendChild(slot);
+                const dummyBump = document.createElement('canvas');
+                dummyBump.width = size;
+                dummyBump.height = size;
+                const bctx = dummyBump.getContext('2d');
 
-                if (typeof THREE !== 'undefined') {
-                    const rScene = new THREE.Scene();
-                    const rCam = new THREE.PerspectiveCamera(36, 1, 0.1, 50);
-                    rCam.position.set(0, 0, 5.25);
-                    rCam.lookAt(0, 0, 0);
-
-                    const rRenderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
-                    rRenderer.setSize(pxSize, pxSize);
-                    rRenderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-
-                    rScene.add(new THREE.AmbientLight(0xd8c8dc, 0.88));
-                    const dLight = new THREE.DirectionalLight(0xf2e2f0, 0.54);
-                    dLight.position.set(2, 2.5, 4);
-                    rScene.add(dLight);
-
-                    const geom = createChippedStoneCubeGeometry(1.96, index + 11);
-
-                    const mats = Array.from({ length: 6 }, (_, faceIdx) => {
-                        const faceSeed = (index + 11) * 100 + faceIdx * 17;
-                        const stoneSet = createMultiStoneTextures(
-                            [cat.label],
-                            { isMiniWord: true, purplishPinkTint: true },
-                            faceSeed
-                        );
-                        return new THREE.MeshStandardMaterial({
-                            map: stoneSet.map,
-                            bumpMap: stoneSet.bumpMap,
-                            bumpScale: 0.055,
-                            color: 0xf6e6f2,
-                            roughness: 0.94,
-                            metalness: 0.02
-                        });
-                    });
-
-                    const cubeGroup = createOutlinedStoneCubeGroup(geom, mats, 1.038);
-                    cubeGroup.rotation.x = 0;
-                    cubeGroup.rotation.y = THREE.MathUtils.degToRad(index * 30);
-                    rScene.add(cubeGroup);
-
-                    rRenderer.render(rScene, rCam);
-
-                    rankCubes.push({
-                        scene: rScene,
-                        camera: rCam,
-                        renderer: rRenderer,
-                        mesh: cubeGroup,
-                        angle: index * 30
-                    });
+                const seedOffset = 31 + index * 19;
+                const sampled = sampleRealCubeFace(ctx, size, seedOffset, true);
+                if (!sampled) {
+                    drawFallbackCube1_3Base(ctx, size, seedOffset, true);
                 }
+
+                applySurfaceRoughness(ctx, bctx, size, seedOffset);
+                drawInkEdgeCracksAndChips(ctx, bctx, size, seedOffset);
+                drawReadableFaceText(ctx, size, [cat.label], { isMiniWord: true });
+
+                tile.appendChild(canvas);
+                tile.onclick = () => handleRankCategoryClick(cat);
+                gridEl.appendChild(tile);
             });
-        }
-
-        function startRankSpinning() {
-            if (rankSpinRaf) cancelAnimationFrame(rankSpinRaf);
-            let lastTime = performance.now();
-            const slowerSpeed = 0.0105 * 0.7;
-
-            function step(now) {
-                const delta = now - lastTime;
-                lastTime = now;
-
-                rankCubes.forEach((entry) => {
-                    entry.angle = (entry.angle + delta * slowerSpeed) % 360;
-                    entry.mesh.rotation.x = 0;
-                    entry.mesh.rotation.y = THREE.MathUtils.degToRad(entry.angle);
-                    entry.renderer.render(entry.scene, entry.camera);
-                });
-
-                rankSpinRaf = requestAnimationFrame(step);
-            }
-
-            rankSpinRaf = requestAnimationFrame(step);
         }
 
         function disposeVaultMiniCubes() {
@@ -2301,11 +2246,6 @@
             });
         }
 
-        function handleCubeStageBackdropClick(event) {
-            if (event.target.closest('#cubeDepthHolder')) return;
-            returnToVault();
-        }
-
         function returnToVault() {
             const vault = document.getElementById('memoryVault');
             const cubeStage = document.getElementById('cubeStage');
@@ -2352,6 +2292,7 @@
             targetRotY += 180;
         }
 
+        resolveSplashBackground();
         updateNarrativeView();
     </script>
 </body>
