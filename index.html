@@ -54,7 +54,7 @@
             overflow: hidden;
         }
 
-        /* 0. FULLSCREEN START SPLASH PAGE (Untouched per user request) */
+        /* 0. FULLSCREEN START SPLASH PAGE */
         .start-splash {
             position: fixed;
             left: 0;
@@ -244,7 +244,7 @@
             overflow: hidden;
         }
 
-        /* Horizontal page slide transitions with strict isolation */
+        /* Horizontal page slide transitions */
         .page-slide {
             position: absolute;
             left: 0;
@@ -255,16 +255,16 @@
             width: 100%;
             height: 100%;
             opacity: 1;
-            transition: transform 0.55s cubic-bezier(0.16, 1, 0.3, 1), filter 0.4s ease;
+            transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1), filter 0.35s ease;
             will-change: transform, filter;
         }
 
         .page-slide.enter-from-right {
-            transform: translateX(105%);
+            transform: translateX(100%);
         }
 
         .page-slide.exit-to-left {
-            transform: translateX(-105%);
+            transform: translateX(-100%);
             pointer-events: none;
         }
 
@@ -638,7 +638,7 @@
             box-shadow: 1px 1px 0px var(--ink-dark);
         }
 
-        /* 2.5 RANK CATEGORY VAULT (4 FLAT 2D STONE CUBES IN 2x2 GRID, 124px > 114px WORD CUBES, CLEAR MARGINS) */
+        /* 2.5 RANK CATEGORY VAULT (4 RANK CUBES WITH TOP-EDGE TILT ONLY ON RANK CUBES) */
         .rank-vault {
             display: none;
             flex-direction: column;
@@ -649,7 +649,7 @@
             padding: 12px 18px 12px;
             position: relative;
             overflow: hidden;
-            transition: transform 0.55s cubic-bezier(0.16, 1, 0.3, 1), filter 0.4s ease;
+            transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1), filter 0.35s ease;
         }
 
         .rank-vault.defocused {
@@ -782,7 +782,7 @@
             padding: 10px 0 8px;
             position: relative;
             overflow: hidden;
-            transition: transform 0.55s cubic-bezier(0.16, 1, 0.3, 1), filter 0.4s ease;
+            transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1), filter 0.35s ease;
         }
 
         .memory-vault.defocused {
@@ -1111,7 +1111,7 @@
                 </div>
             </div>
 
-            <!-- Screen 2.5: Rank Categories Vault (4 Flat 2D Cubes in 2x2 Grid) -->
+            <!-- Screen 2.5: Rank Categories Vault (4 Rank Cubes with Top-Edge Tilt Only) -->
             <div class="rank-vault page-slide" id="rankVault" style="display: none;">
                 <div class="pink-pill-box"><span>rank</span></div>
                 <div class="rank-grid-2x2">
@@ -1318,7 +1318,7 @@
                         el.classList.remove('active-center', 'exit-to-left', 'enter-from-right');
                     }
                 });
-            }, 520);
+            }, 460);
         }
 
         function updateNarrativeView() {
@@ -1342,7 +1342,7 @@
 
         function getStoredWords() {
             try {
-                const raw = localStorage.getItem('alien_memory_cubes_v30');
+                const raw = localStorage.getItem('alien_memory_cubes_v32');
                 if (raw) {
                     const parsed = JSON.parse(raw);
                     if (Array.isArray(parsed) && parsed.length >= 6) return parsed;
@@ -1353,7 +1353,7 @@
 
         function saveStoredWords(words) {
             try {
-                localStorage.setItem('alien_memory_cubes_v30', JSON.stringify(words));
+                localStorage.setItem('alien_memory_cubes_v32', JSON.stringify(words));
             } catch (e) {}
         }
 
@@ -1361,6 +1361,14 @@
             if (transitionTimer) {
                 clearTimeout(transitionTimer);
                 transitionTimer = null;
+            }
+
+            if (fromEl === toEl) {
+                toEl.style.display = 'flex';
+                toEl.classList.remove('exit-to-left', 'enter-from-right');
+                toEl.classList.add('active-center');
+                if (typeof onAfterShow === 'function') onAfterShow();
+                return;
             }
 
             PAGE_IDS.forEach((id) => {
@@ -1372,12 +1380,11 @@
                 }
             });
 
-            fromEl.classList.remove('active-center', 'enter-from-right');
-            fromEl.classList.add('exit-to-left');
-
             toEl.style.display = 'flex';
             toEl.classList.remove('exit-to-left', 'active-center');
             toEl.classList.add('enter-from-right');
+            fromEl.classList.remove('active-center', 'enter-from-right');
+            fromEl.classList.add('exit-to-left');
             toEl.offsetHeight;
 
             requestAnimationFrame(() => {
@@ -1393,7 +1400,7 @@
                 fromEl.style.display = 'none';
                 fromEl.classList.remove('exit-to-left', 'active-center', 'enter-from-right');
                 transitionTimer = null;
-            }, 560);
+            }, 460);
         }
 
         function startScan(btn) {
@@ -1458,6 +1465,7 @@
                 cancelAnimationFrame(vaultSpinRaf);
                 vaultSpinRaf = null;
             }
+            disposeVaultMiniCubes();
 
             board.classList.remove('clouds-bg', 'blurred-bg');
             board.classList.add('vault-bg');
@@ -1509,6 +1517,7 @@
                 cancelAnimationFrame(vaultSpinRaf);
                 vaultSpinRaf = null;
             }
+            disposeVaultMiniCubes();
 
             board.classList.remove('clouds-bg', 'blurred-bg');
             board.classList.add('vault-bg');
@@ -1529,6 +1538,7 @@
                 cancelAnimationFrame(vaultSpinRaf);
                 vaultSpinRaf = null;
             }
+            disposeVaultMiniCubes();
 
             board.classList.remove('vault-bg', 'blurred-bg');
             board.classList.add('clouds-bg');
@@ -2031,6 +2041,20 @@
 
                 applySurfaceRoughness(ctx, bctx, size, seedOffset);
                 drawInkEdgeCracksAndChips(ctx, bctx, size, seedOffset);
+
+                // Top edge strip on rank cubes only
+                const topStripH = Math.round(size * 0.14);
+                ctx.save();
+                ctx.fillStyle = 'rgba(232, 224, 236, 0.72)';
+                ctx.fillRect(0, 0, size, topStripH);
+                ctx.strokeStyle = 'rgba(34, 35, 40, 0.85)';
+                ctx.lineWidth = Math.max(2, Math.round(size * 0.012));
+                ctx.beginPath();
+                ctx.moveTo(0, topStripH);
+                ctx.lineTo(size, topStripH);
+                ctx.stroke();
+                ctx.restore();
+
                 drawReadableFaceText(ctx, size, [cat.label], { isMiniWord: true });
 
                 tile.appendChild(canvas);
