@@ -75,17 +75,18 @@
             will-change: transform, opacity;
         }
 
-        .splash-bg-box {
+        .splash-img-direct {
             position: absolute;
             inset: 0;
             width: 100%;
             height: 100%;
-            background-color: #3d759d;
-            background-repeat: no-repeat;
-            background-position: center center;
-            background-size: contain;
+            object-fit: contain;
+            object-position: center center;
+            display: block;
             z-index: 0;
             pointer-events: none;
+            user-select: none;
+            -webkit-user-drag: none;
         }
 
         .start-splash.slide-out {
@@ -270,7 +271,7 @@
             transform: translateX(0);
         }
 
-        /* 1. INTRO SCREEN */
+        /* 1. INTRO SCREEN (Orchard story + larger text box) */
         .intro-screen {
             width: 100%;
             max-width: 368px;
@@ -452,7 +453,7 @@
             z-index: 1;
         }
 
-        /* 2. SCAN WORKSPACE */
+        /* 2. SCAN WORKSPACE (Bigger riddle box, squarer cards shifted lower, yellow Back button) */
         .scan-workspace {
             width: 100%;
             max-width: 368px;
@@ -636,7 +637,7 @@
             box-shadow: 1px 1px 0px var(--ink-dark);
         }
 
-        /* 2.5 RANK CATEGORY VAULT (4 FLAT 2D STONE CUBES IN 2x2 GRID, NO 3D SPIN) */
+        /* 2.5 RANK CATEGORY VAULT (4 FLAT 2D STONE CUBES IN 2x2 GRID, 134px > 114px WORD CUBES) */
         .rank-vault {
             display: none;
             flex-direction: column;
@@ -644,7 +645,7 @@
             justify-content: space-between;
             width: 100%;
             height: 100%;
-            padding: 8px 14px 8px;
+            padding: 10px 14px 10px;
             position: relative;
             overflow: hidden;
             transition: transform 0.65s cubic-bezier(0.16, 1, 0.3, 1), filter 0.45s ease;
@@ -655,7 +656,6 @@
             pointer-events: none;
         }
 
-        /* Shared pink pill badge / button — exact same size for RANK header and BACK button */
         .pink-pill-box {
             position: relative;
             min-width: 112px;
@@ -701,21 +701,21 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 6px 0;
+            padding: 8px 0;
         }
 
         .rank-grid-inner {
             display: grid;
-            grid-template-columns: repeat(2, 152px);
-            grid-template-rows: repeat(2, 152px);
-            gap: 16px;
+            grid-template-columns: repeat(2, 134px);
+            grid-template-rows: repeat(2, 134px);
+            gap: 18px;
             align-items: center;
             justify-items: center;
         }
 
         .rank-flat-cube {
-            width: 152px;
-            height: 152px;
+            width: 134px;
+            height: 134px;
             border: 2.5px solid #222328;
             border-radius: 16px;
             overflow: hidden;
@@ -770,7 +770,7 @@
             color: var(--ink-dark);
         }
 
-        /* 3. MEMORY STORAGE: 6 CUBES (2x3) WITHOUT SIDE GAPS */
+        /* 3. MEMORY STORAGE: 6 CUBES (2x3) */
         .memory-vault {
             display: none;
             flex-direction: column;
@@ -917,7 +917,7 @@
             box-shadow: 1px 1px 0px var(--ink-dark);
         }
 
-        /* 4. THREE.JS WEBGL 3D CUBE STAGE (Tight touch zone on cube only, tap outside to return) */
+        /* 4. THREE.JS WEBGL 3D CUBE STAGE (Tight hitbox on cube only, tap blurred backdrop to return) */
         .cube-stage {
             display: none;
             position: fixed;
@@ -971,7 +971,6 @@
             pointer-events: none;
         }
 
-        /* Tight hitbox matching the rendered 3D cube face area (~200x200 inside 264x264) */
         .touch-overlay {
             position: absolute;
             inset: 32px;
@@ -994,7 +993,14 @@
 
     <!-- Screen 0: Fullscreen Splash Page -->
     <div class="start-splash" id="startSplash">
-        <div class="splash-bg-box" id="splashBgBox"></div>
+        <img
+            id="splashImgDirect"
+            class="splash-img-direct"
+            src="start page.webp"
+            alt="Alan the Alien"
+            data-fallbacks='["start%20page.webp","start page.png","start%20page.png","start page.jpg","start%20page.jpg"]'
+            onerror="cycleSplashSrc(this)"
+        >
         <button class="splash-start-btn" id="splashStartBtn" onclick="enterFromSplash(this)"><span>to start</span></button>
     </div>
 
@@ -1113,7 +1119,7 @@
                 <button class="bottom-nav-btn pink-pill-box" id="backFromRankBtn" onclick="returnFromRankToStudy()"><span>back</span></button>
             </div>
 
-            <!-- Screen 2.6: Empty Category Placeholder (family / body / food) -->
+            <!-- Screen 2.6: Empty Category Placeholder -->
             <div class="empty-category-panel page-slide" id="emptyCategoryPanel">
                 <div class="pink-pill-box" id="emptyCategoryTitle"><span>category</span></div>
                 <div class="empty-category-card">This category is empty for now.</div>
@@ -1133,7 +1139,7 @@
 
         </div>
 
-        <!-- Screen 4: Three.js WebGL 3D Cube Inspection (Tap outside the cube hitbox to return) -->
+        <!-- Screen 4: Three.js WebGL 3D Cube Inspection -->
         <div class="cube-stage" id="cubeStage" onclick="returnToVault()">
             <div class="webgl-cube-holder" id="cubeDepthHolder">
                 <div id="threeCanvasHost"></div>
@@ -1155,31 +1161,15 @@
     </div>
 
     <script>
-        const SPLASH_CANDIDATES = [
-            'start page_3.webp',
-            'start%20page_3.webp',
-            'start_page_3.webp',
-            'start page_2.webp',
-            'start%20page_2.webp',
-            'start_page_2.webp'
-        ];
-
-        function resolveSplashBackground() {
-            const box = document.getElementById('splashBgBox');
-            if (!box) return;
-
-            let idx = 0;
-            function tryNext() {
-                if (idx >= SPLASH_CANDIDATES.length) return;
-                const url = SPLASH_CANDIDATES[idx++];
-                const probe = new Image();
-                probe.onload = () => {
-                    box.style.backgroundImage = `url("${encodeURI(url).replace(/%2520/g, '%20')}")`;
-                };
-                probe.onerror = tryNext;
-                probe.src = url;
-            }
-            tryNext();
+        function cycleSplashSrc(imgEl) {
+            try {
+                const list = JSON.parse(imgEl.dataset.fallbacks || '[]');
+                const idx = Number(imgEl.dataset.fbIdx || '0');
+                if (idx < list.length) {
+                    imgEl.dataset.fbIdx = String(idx + 1);
+                    imgEl.src = list[idx];
+                }
+            } catch (e) {}
         }
 
         let isSolved = false;
@@ -1344,7 +1334,7 @@
 
         function getStoredWords() {
             try {
-                const raw = localStorage.getItem('alien_memory_cubes_v27');
+                const raw = localStorage.getItem('alien_memory_cubes_v29');
                 if (raw) {
                     const parsed = JSON.parse(raw);
                     if (Array.isArray(parsed) && parsed.length >= 6) return parsed;
@@ -1355,7 +1345,7 @@
 
         function saveStoredWords(words) {
             try {
-                localStorage.setItem('alien_memory_cubes_v27', JSON.stringify(words));
+                localStorage.setItem('alien_memory_cubes_v29', JSON.stringify(words));
             } catch (e) {}
         }
 
@@ -1990,7 +1980,6 @@
             return group;
         }
 
-        /* Lightweight 2D stone cube tiles for RANK (4 cubes in 2x2 grid, no 3D spin) */
         function renderRankFlatCubes() {
             const gridEl = document.getElementById('rankGridInner');
             gridEl.innerHTML = '';
@@ -2001,7 +1990,7 @@
                 tile.style.animationDelay = ((index * 0.55) % 3.2) + 's';
 
                 const canvas = document.createElement('canvas');
-                const size = 304;
+                const size = 268;
                 canvas.width = size;
                 canvas.height = size;
                 const ctx = canvas.getContext('2d');
@@ -2292,7 +2281,6 @@
             targetRotY += 180;
         }
 
-        resolveSplashBackground();
         updateNarrativeView();
     </script>
 </body>
