@@ -1347,7 +1347,7 @@
 
         function getStoredWords() {
             try {
-                const raw = localStorage.getItem('alien_memory_cubes_v36');
+                const raw = localStorage.getItem('alien_memory_cubes_v37');
                 if (raw) {
                     const parsed = JSON.parse(raw);
                     if (Array.isArray(parsed) && parsed.length >= 6) return parsed;
@@ -1358,7 +1358,7 @@
 
         function saveStoredWords(words) {
             try {
-                localStorage.setItem('alien_memory_cubes_v36', JSON.stringify(words));
+                localStorage.setItem('alien_memory_cubes_v37', JSON.stringify(words));
             } catch (e) {}
         }
 
@@ -1837,17 +1837,33 @@
 
         function drawPurplePebblesOnSurface(ctx, bctx, size, seedOffset) {
             const scale = size / 512;
-            const pebbleCount = 26;
+            const pebbleCount = 8;
             const purpleShades = ['#8b5cf6', '#4c1d95', '#7c3aed', '#3b0764'];
+            const centerX = size * 0.5;
+            const centerY = size * 0.5;
+            const safeHalfW = size * 0.34;
+            const safeHalfH = size * 0.17;
 
-            for (let i = 0; i < pebbleCount; i++) {
-                const s = seedOffset * 2411 + i * 37;
-                const px = (34 + seededRand(s + 1) * (size - 68 * scale));
-                const py = (34 + seededRand(s + 2) * (size - 68 * scale));
+            let placed = 0;
+            let attempt = 0;
+
+            while (placed < pebbleCount && attempt < 60) {
+                attempt++;
+                const s = seedOffset * 2411 + attempt * 37;
+                const px = 40 * scale + seededRand(s + 1) * (size - 80 * scale);
+                const py = 40 * scale + seededRand(s + 2) * (size - 80 * scale);
                 const rx = (5.5 + seededRand(s + 3) * 7.5) * scale;
                 const ry = rx * (0.62 + seededRand(s + 4) * 0.26);
+
+                if (
+                    Math.abs(px - centerX) < safeHalfW + rx * 1.4 &&
+                    Math.abs(py - centerY) < safeHalfH + ry * 1.4
+                ) {
+                    continue;
+                }
+
                 const rot = seededRand(s + 5) * Math.PI * 2;
-                const color = purpleShades[i % purpleShades.length];
+                const color = purpleShades[placed % purpleShades.length];
 
                 ctx.save();
                 ctx.translate(px, py);
@@ -1891,6 +1907,8 @@
                 bctx.ellipse(0, 0, rx * 0.95, ry * 0.95, 0, 0, Math.PI * 2);
                 bctx.fill();
                 bctx.restore();
+
+                placed++;
             }
         }
 
