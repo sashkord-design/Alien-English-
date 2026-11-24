@@ -71,8 +71,8 @@
             justify-content: flex-end;
             padding: 24px 20px max(24px, env(safe-area-inset-bottom));
             overflow: hidden;
-            transition: transform 0.65s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.45s ease;
-            will-change: transform, opacity;
+            transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+            will-change: transform;
         }
 
         .splash-img-direct {
@@ -90,7 +90,7 @@
         }
 
         .start-splash.slide-out {
-            transform: translateX(-110%);
+            transform: translateX(-100%);
             pointer-events: none;
         }
 
@@ -244,7 +244,7 @@
             overflow: hidden;
         }
 
-        /* Horizontal page slide transitions */
+        /* Strict single-page slide transitions without overlap */
         .page-slide {
             position: absolute;
             left: 0;
@@ -254,13 +254,14 @@
             margin: auto;
             width: 100%;
             height: 100%;
-            opacity: 1;
-            transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1), filter 0.35s ease;
-            will-change: transform, filter;
+            background-color: transparent;
+            transition: transform 0.42s cubic-bezier(0.22, 1, 0.36, 1);
+            will-change: transform;
         }
 
         .page-slide.enter-from-right {
             transform: translateX(100%);
+            visibility: visible;
         }
 
         .page-slide.exit-to-left {
@@ -270,6 +271,7 @@
 
         .page-slide.active-center {
             transform: translateX(0);
+            visibility: visible;
         }
 
         /* 1. INTRO SCREEN */
@@ -638,7 +640,7 @@
             box-shadow: 1px 1px 0px var(--ink-dark);
         }
 
-        /* 2.5 RANK CATEGORY VAULT (4 RANK CUBES WITH TOP-EDGE TILT ONLY ON RANK CUBES) */
+        /* 2.5 RANK CATEGORY VAULT (ENLARGED WORD-CUBES IN PINK-PURPLE TINT, NO TILT) */
         .rank-vault {
             display: none;
             flex-direction: column;
@@ -649,7 +651,7 @@
             padding: 12px 18px 12px;
             position: relative;
             overflow: hidden;
-            transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1), filter 0.35s ease;
+            transition: transform 0.42s cubic-bezier(0.22, 1, 0.36, 1), filter 0.35s ease;
         }
 
         .rank-vault.defocused {
@@ -702,44 +704,31 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 10px 0;
+            padding: 8px 0;
         }
 
         .rank-grid-inner {
             display: grid;
-            grid-template-columns: repeat(2, 124px);
-            grid-template-rows: repeat(2, 124px);
-            gap: 18px;
+            grid-template-columns: repeat(2, 134px);
+            grid-template-rows: repeat(2, 134px);
+            gap: 16px;
             align-items: center;
             justify-items: center;
         }
 
-        .rank-flat-cube {
-            width: 124px;
-            height: 124px;
-            border: 2.5px solid #222328;
-            border-radius: 16px;
-            overflow: hidden;
+        .rank-cube-slot {
+            width: 134px;
+            height: 134px;
             cursor: pointer;
-            box-shadow: 3px 4px 0px #222328;
-            animation: node-levitate 4.8s ease-in-out infinite;
+            animation: node-levitate 4.6s ease-in-out infinite;
             display: flex;
             align-items: center;
             justify-content: center;
-            position: relative;
-            background-color: #c5b4ca;
-            transition: transform 0.16s ease, box-shadow 0.16s ease;
         }
 
-        .rank-flat-cube:active {
-            animation: none;
-            transform: translate(2px, 2px);
-            box-shadow: 1px 2px 0px #222328;
-        }
-
-        .rank-flat-cube canvas {
-            width: 100%;
-            height: 100%;
+        .rank-cube-canvas {
+            width: 134px;
+            height: 134px;
             display: block;
         }
 
@@ -782,7 +771,7 @@
             padding: 10px 0 8px;
             position: relative;
             overflow: hidden;
-            transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1), filter 0.35s ease;
+            transition: transform 0.42s cubic-bezier(0.22, 1, 0.36, 1), filter 0.35s ease;
         }
 
         .memory-vault.defocused {
@@ -946,7 +935,7 @@
             align-items: center;
             justify-content: center;
             transform: scale(0.88);
-            transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+            transition: transform 0.42s cubic-bezier(0.22, 1, 0.36, 1);
             pointer-events: none;
         }
 
@@ -1111,7 +1100,7 @@
                 </div>
             </div>
 
-            <!-- Screen 2.5: Rank Categories Vault (4 Rank Cubes with Top-Edge Tilt Only) -->
+            <!-- Screen 2.5: Rank Categories Vault -->
             <div class="rank-vault page-slide" id="rankVault" style="display: none;">
                 <div class="pink-pill-box"><span>rank</span></div>
                 <div class="rank-grid-2x2">
@@ -1175,10 +1164,13 @@
 
         let isSolved = false;
         let vaultSpinRaf = null;
+        let rankSpinRaf = null;
         let activePickedSlot = null;
         let vaultMiniCubes = [];
+        let rankMiniCubes = [];
         let narrativeIndex = 0;
         let transitionTimer = null;
+        let isTransitioning = false;
 
         const PAGE_IDS = ['introScreen', 'scanWorkspace', 'rankVault', 'emptyCategoryPanel', 'memoryVault'];
 
@@ -1278,6 +1270,25 @@
             visual: '🍎'
         };
 
+        function hideAllPagesExcept(keepId) {
+            PAGE_IDS.forEach((id) => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                if (id === keepId) {
+                    el.style.display = 'flex';
+                    el.style.visibility = 'visible';
+                    el.classList.remove('exit-to-left', 'enter-from-right');
+                    el.classList.add('active-center');
+                    el.style.transform = 'translateX(0)';
+                } else {
+                    el.style.display = 'none';
+                    el.style.visibility = 'hidden';
+                    el.classList.remove('active-center', 'exit-to-left', 'enter-from-right');
+                    el.style.transform = '';
+                }
+            });
+        }
+
         function enterFromSplash(btn) {
             const splash = document.getElementById('startSplash');
             if (!splash) return;
@@ -1286,11 +1297,12 @@
 
             setTimeout(() => {
                 if (btn) btn.classList.remove('pressed');
+                splash.style.display = 'flex';
                 splash.classList.add('slide-out');
                 setTimeout(() => {
                     splash.style.display = 'none';
-                }, 660);
-            }, 120);
+                }, 560);
+            }, 100);
         }
 
         function returnToSplash() {
@@ -1298,27 +1310,26 @@
             const board = document.getElementById('retroBoard');
             if (!splash) return;
 
+            if (transitionTimer) {
+                clearTimeout(transitionTimer);
+                transitionTimer = null;
+            }
+            isTransitioning = false;
+
+            stopRankSpinning();
+            disposeRankMiniCubes();
+            stopVaultSpinning();
+            disposeVaultMiniCubes();
+
+            board.classList.remove('clouds-bg', 'vault-bg', 'blurred-bg');
+            hideAllPagesExcept('introScreen');
+
             splash.style.display = 'flex';
+            splash.classList.add('slide-out');
             splash.offsetHeight;
             requestAnimationFrame(() => {
                 splash.classList.remove('slide-out');
             });
-
-            setTimeout(() => {
-                board.classList.remove('clouds-bg', 'vault-bg', 'blurred-bg');
-                PAGE_IDS.forEach((id) => {
-                    const el = document.getElementById(id);
-                    if (!el) return;
-                    if (id === 'introScreen') {
-                        el.style.display = 'flex';
-                        el.classList.remove('exit-to-left', 'enter-from-right');
-                        el.classList.add('active-center');
-                    } else {
-                        el.style.display = 'none';
-                        el.classList.remove('active-center', 'exit-to-left', 'enter-from-right');
-                    }
-                });
-            }, 460);
         }
 
         function updateNarrativeView() {
@@ -1358,33 +1369,42 @@
         }
 
         function slideBetweenPages(fromEl, toEl, onAfterShow) {
+            if (!fromEl || !toEl) return;
+
             if (transitionTimer) {
                 clearTimeout(transitionTimer);
                 transitionTimer = null;
             }
 
             if (fromEl === toEl) {
-                toEl.style.display = 'flex';
-                toEl.classList.remove('exit-to-left', 'enter-from-right');
-                toEl.classList.add('active-center');
+                hideAllPagesExcept(toEl.id);
+                isTransitioning = false;
                 if (typeof onAfterShow === 'function') onAfterShow();
                 return;
             }
+
+            isTransitioning = true;
 
             PAGE_IDS.forEach((id) => {
                 const el = document.getElementById(id);
                 if (!el) return;
                 if (el !== fromEl && el !== toEl) {
                     el.style.display = 'none';
+                    el.style.visibility = 'hidden';
                     el.classList.remove('active-center', 'exit-to-left', 'enter-from-right');
+                    el.style.transform = '';
                 }
             });
 
+            fromEl.style.display = 'flex';
+            fromEl.style.visibility = 'visible';
+            fromEl.classList.remove('enter-from-right', 'active-center');
+            fromEl.classList.add('exit-to-left');
+
             toEl.style.display = 'flex';
+            toEl.style.visibility = 'visible';
             toEl.classList.remove('exit-to-left', 'active-center');
             toEl.classList.add('enter-from-right');
-            fromEl.classList.remove('active-center', 'enter-from-right');
-            fromEl.classList.add('exit-to-left');
             toEl.offsetHeight;
 
             requestAnimationFrame(() => {
@@ -1397,13 +1417,14 @@
             }
 
             transitionTimer = setTimeout(() => {
-                fromEl.style.display = 'none';
-                fromEl.classList.remove('exit-to-left', 'active-center', 'enter-from-right');
+                hideAllPagesExcept(toEl.id);
+                isTransitioning = false;
                 transitionTimer = null;
-            }, 460);
+            }, 430);
         }
 
         function startScan(btn) {
+            if (isTransitioning) return;
             const intro = document.getElementById('introScreen');
             const workspace = document.getElementById('scanWorkspace');
             const board = document.getElementById('retroBoard');
@@ -1415,7 +1436,7 @@
                 board.classList.remove('vault-bg');
                 board.classList.add('clouds-bg');
                 slideBetweenPages(intro, workspace);
-            }, 140);
+            }, 120);
         }
 
         function handleCardTap(slot) {
@@ -1456,15 +1477,36 @@
             }
         }
 
-        function openRankVault() {
-            const workspace = document.getElementById('scanWorkspace');
-            const rankVault = document.getElementById('rankVault');
-            const board = document.getElementById('retroBoard');
+        function stopRankSpinning() {
+            if (rankSpinRaf) {
+                cancelAnimationFrame(rankSpinRaf);
+                rankSpinRaf = null;
+            }
+        }
 
+        function disposeRankMiniCubes() {
+            rankMiniCubes.forEach((entry) => {
+                if (entry.renderer) {
+                    entry.renderer.dispose();
+                }
+            });
+            rankMiniCubes = [];
+        }
+
+        function stopVaultSpinning() {
             if (vaultSpinRaf) {
                 cancelAnimationFrame(vaultSpinRaf);
                 vaultSpinRaf = null;
             }
+        }
+
+        function openRankVault() {
+            if (isTransitioning) return;
+            const workspace = document.getElementById('scanWorkspace');
+            const rankVault = document.getElementById('rankVault');
+            const board = document.getElementById('retroBoard');
+
+            stopVaultSpinning();
             disposeVaultMiniCubes();
 
             board.classList.remove('clouds-bg', 'blurred-bg');
@@ -1472,14 +1514,19 @@
             rankVault.classList.remove('defocused');
 
             slideBetweenPages(workspace, rankVault, () => {
-                renderRankFlatCubes();
+                renderRankWordCubes();
+                startRankSpinning();
             });
         }
 
         function returnFromRankToStudy() {
+            if (isTransitioning) return;
             const rankVault = document.getElementById('rankVault');
             const workspace = document.getElementById('scanWorkspace');
             const board = document.getElementById('retroBoard');
+
+            stopRankSpinning();
+            disposeRankMiniCubes();
 
             board.classList.remove('vault-bg', 'blurred-bg');
             board.classList.add('clouds-bg');
@@ -1488,6 +1535,7 @@
         }
 
         function handleRankCategoryClick(category) {
+            if (isTransitioning) return;
             if (category.hasVault) {
                 openMemoryVaultFromRank();
             } else {
@@ -1496,9 +1544,13 @@
         }
 
         function openEmptyCategory(categoryLabel) {
+            if (isTransitioning) return;
             const rankVault = document.getElementById('rankVault');
             const emptyPanel = document.getElementById('emptyCategoryPanel');
             const titleEl = document.getElementById('emptyCategoryTitle');
+
+            stopRankSpinning();
+            disposeRankMiniCubes();
 
             if (titleEl) {
                 titleEl.innerHTML = `<span>${categoryLabel.toLowerCase()}</span>`;
@@ -1508,15 +1560,13 @@
         }
 
         function returnToRankVault() {
+            if (isTransitioning) return;
             const currentVault = document.getElementById('memoryVault');
             const emptyPanel = document.getElementById('emptyCategoryPanel');
             const rankVault = document.getElementById('rankVault');
             const board = document.getElementById('retroBoard');
 
-            if (vaultSpinRaf) {
-                cancelAnimationFrame(vaultSpinRaf);
-                vaultSpinRaf = null;
-            }
+            stopVaultSpinning();
             disposeVaultMiniCubes();
 
             board.classList.remove('clouds-bg', 'blurred-bg');
@@ -1525,19 +1575,18 @@
 
             const fromEl = currentVault.style.display === 'flex' ? currentVault : emptyPanel;
             slideBetweenPages(fromEl, rankVault, () => {
-                renderRankFlatCubes();
+                renderRankWordCubes();
+                startRankSpinning();
             });
         }
 
         function returnToStudyFromVault() {
+            if (isTransitioning) return;
             const vault = document.getElementById('memoryVault');
             const workspace = document.getElementById('scanWorkspace');
             const board = document.getElementById('retroBoard');
 
-            if (vaultSpinRaf) {
-                cancelAnimationFrame(vaultSpinRaf);
-                vaultSpinRaf = null;
-            }
+            stopVaultSpinning();
             disposeVaultMiniCubes();
 
             board.classList.remove('vault-bg', 'blurred-bg');
@@ -1547,9 +1596,13 @@
         }
 
         function openMemoryVaultFromRank() {
+            if (isTransitioning) return;
             const rankVault = document.getElementById('rankVault');
             const vault = document.getElementById('memoryVault');
             const board = document.getElementById('retroBoard');
+
+            stopRankSpinning();
+            disposeRankMiniCubes();
 
             const words = getStoredWords();
             saveStoredWords(words);
@@ -1698,7 +1751,7 @@
             ctx.restore();
 
             ctx.fillStyle = isPurplishPinkTint
-                ? 'rgba(216, 132, 184, 0.20)'
+                ? 'rgba(222, 126, 186, 0.28)'
                 : 'rgba(150, 154, 166, 0.22)';
             ctx.fillRect(0, 0, size, size);
 
@@ -1706,12 +1759,12 @@
         }
 
         function drawFallbackCube1_3Base(ctx, size, seedOffset, isPurplishPinkTint = false) {
-            ctx.fillStyle = isPurplishPinkTint ? '#b6a8bc' : '#aeb1ba';
+            ctx.fillStyle = isPurplishPinkTint ? '#bfa4c8' : '#aeb1ba';
             ctx.fillRect(0, 0, size, size);
 
             const scale = size / 512;
             const tones = isPurplishPinkTint
-                ? ['rgba(204, 178, 206, 0.52)', 'rgba(176, 145, 184, 0.52)', 'rgba(154, 126, 166, 0.45)']
+                ? ['rgba(218, 164, 212, 0.56)', 'rgba(186, 132, 192, 0.56)', 'rgba(162, 114, 174, 0.48)']
                 : ['rgba(186, 189, 198, 0.55)', 'rgba(154, 158, 168, 0.55)', 'rgba(134, 138, 148, 0.45)'];
             for (let i = 0; i < 12; i++) {
                 const s = seedOffset * 193 + i * 31;
@@ -2013,54 +2066,95 @@
             return group;
         }
 
-        function renderRankFlatCubes() {
+        function renderRankWordCubes() {
             const gridEl = document.getElementById('rankGridInner');
+            disposeRankMiniCubes();
             gridEl.innerHTML = '';
 
             RANK_CATEGORIES.forEach((cat, index) => {
-                const tile = document.createElement('div');
-                tile.className = 'rank-flat-cube';
-                tile.style.animationDelay = ((index * 0.55) % 3.2) + 's';
+                const slot = document.createElement('div');
+                slot.className = 'rank-cube-slot';
+                slot.style.animationDelay = ((index * 0.5) % 3.2) + 's';
 
                 const canvas = document.createElement('canvas');
-                const size = 248;
-                canvas.width = size;
-                canvas.height = size;
-                const ctx = canvas.getContext('2d');
+                canvas.className = 'rank-cube-canvas';
+                canvas.width = 268;
+                canvas.height = 268;
+                slot.appendChild(canvas);
 
-                const dummyBump = document.createElement('canvas');
-                dummyBump.width = size;
-                dummyBump.height = size;
-                const bctx = dummyBump.getContext('2d');
+                slot.onclick = () => handleRankCategoryClick(cat);
+                gridEl.appendChild(slot);
 
-                const seedOffset = 31 + index * 19;
-                const sampled = sampleRealCubeFace(ctx, size, seedOffset, true);
-                if (!sampled) {
-                    drawFallbackCube1_3Base(ctx, size, seedOffset, true);
+                if (typeof THREE !== 'undefined') {
+                    const miniScene = new THREE.Scene();
+                    const miniCam = new THREE.PerspectiveCamera(36, 1, 0.1, 50);
+                    miniCam.position.set(0, 0, 5.15);
+                    miniCam.lookAt(0, 0, 0);
+
+                    const miniRenderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+                    miniRenderer.setSize(134, 134);
+                    miniRenderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+
+                    miniScene.add(new THREE.AmbientLight(0xd9cce4, 0.88));
+                    const dLight = new THREE.DirectionalLight(0xf3d8eb, 0.56);
+                    dLight.position.set(2, 2.5, 4);
+                    miniScene.add(dLight);
+
+                    const geom = createChippedStoneCubeGeometry(2.04, 30 + index * 7);
+
+                    const mats = Array.from({ length: 6 }, (_, faceIdx) => {
+                        const faceSeed = (index + 2) * 100 + faceIdx * 17;
+                        const stoneSet = createMultiStoneTextures(
+                            [cat.label],
+                            { isMiniWord: true, purplishPinkTint: true },
+                            faceSeed
+                        );
+                        return new THREE.MeshStandardMaterial({
+                            map: stoneSet.map,
+                            bumpMap: stoneSet.bumpMap,
+                            bumpScale: 0.055,
+                            roughness: 0.94,
+                            metalness: 0.02
+                        });
+                    });
+
+                    const cubeGroup = createOutlinedStoneCubeGroup(geom, mats, 1.038);
+                    cubeGroup.rotation.x = 0;
+                    cubeGroup.rotation.y = THREE.MathUtils.degToRad(index * 22);
+                    miniScene.add(cubeGroup);
+
+                    miniRenderer.render(miniScene, miniCam);
+
+                    rankMiniCubes.push({
+                        scene: miniScene,
+                        camera: miniCam,
+                        renderer: miniRenderer,
+                        mesh: cubeGroup,
+                        angle: index * 22
+                    });
                 }
-
-                applySurfaceRoughness(ctx, bctx, size, seedOffset);
-                drawInkEdgeCracksAndChips(ctx, bctx, size, seedOffset);
-
-                // Top edge strip on rank cubes only
-                const topStripH = Math.round(size * 0.14);
-                ctx.save();
-                ctx.fillStyle = 'rgba(232, 224, 236, 0.72)';
-                ctx.fillRect(0, 0, size, topStripH);
-                ctx.strokeStyle = 'rgba(34, 35, 40, 0.85)';
-                ctx.lineWidth = Math.max(2, Math.round(size * 0.012));
-                ctx.beginPath();
-                ctx.moveTo(0, topStripH);
-                ctx.lineTo(size, topStripH);
-                ctx.stroke();
-                ctx.restore();
-
-                drawReadableFaceText(ctx, size, [cat.label], { isMiniWord: true });
-
-                tile.appendChild(canvas);
-                tile.onclick = () => handleRankCategoryClick(cat);
-                gridEl.appendChild(tile);
             });
+        }
+
+        function startRankSpinning() {
+            stopRankSpinning();
+            let lastTime = performance.now();
+
+            function step(now) {
+                const delta = now - lastTime;
+                lastTime = now;
+
+                rankMiniCubes.forEach((entry) => {
+                    entry.angle = (entry.angle + delta * 0.0105) % 360;
+                    entry.mesh.rotation.x = 0;
+                    entry.mesh.rotation.y = THREE.MathUtils.degToRad(entry.angle);
+                    entry.renderer.render(entry.scene, entry.camera);
+                });
+
+                rankSpinRaf = requestAnimationFrame(step);
+            }
+
+            rankSpinRaf = requestAnimationFrame(step);
         }
 
         function disposeVaultMiniCubes() {
@@ -2148,7 +2242,7 @@
         }
 
         function startVaultSpinning() {
-            if (vaultSpinRaf) cancelAnimationFrame(vaultSpinRaf);
+            stopVaultSpinning();
             let lastTime = performance.now();
 
             function step(now) {
