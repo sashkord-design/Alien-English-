@@ -641,7 +641,7 @@
             box-shadow: 1px 1px 0px var(--ink-dark);
         }
 
-        /* 2.5 RANK CATEGORY VAULT (SAME BASE COLOR AS WORD CUBES + SMALL PURPLE/DARK-PURPLE PEBBLES) */
+        /* 2.5 RANK CATEGORY VAULT */
         .rank-vault {
             display: none;
             flex-direction: column;
@@ -652,7 +652,7 @@
             padding: 12px 24px 12px;
             position: relative;
             overflow: hidden;
-            transition: transform 0.36s cubic-bezier(0.22, 1, 0.36, 1), filter 0.35s ease;
+            transition: transform 0.36s cubic-bezier(0.22, 1, 0.36, 1), filter 0.35s ease, opacity 0.28s ease;
         }
 
         .rank-vault.defocused {
@@ -706,6 +706,7 @@
             align-items: center;
             justify-content: center;
             padding: 8px 0;
+            perspective: 900px;
         }
 
         .rank-grid-inner {
@@ -725,6 +726,37 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            transform-style: preserve-3d;
+            transition: transform 0.34s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.28s ease, filter 0.28s ease;
+            will-change: transform, opacity;
+        }
+
+        /* Variant 2: Rank cube crack-open pulse & neighbor scatter */
+        .rank-cube-slot.burst-selected {
+            animation: rank-cube-unleash 0.36s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+            z-index: 10;
+        }
+
+        .rank-cube-slot.burst-recede {
+            animation: none !important;
+            transform: scale(0.74);
+            opacity: 0;
+            filter: blur(2px);
+        }
+
+        @keyframes rank-cube-unleash {
+            0% {
+                transform: scale(1) rotateY(0deg) rotateX(0deg);
+                opacity: 1;
+            }
+            42% {
+                transform: scale(1.22) rotateY(28deg) rotateX(-12deg);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(1.42) rotateY(72deg) rotateX(8deg);
+                opacity: 0;
+            }
         }
 
         .rank-cube-canvas {
@@ -826,6 +858,27 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            will-change: transform, opacity;
+        }
+
+        /* Variant 2: Word cubes fly out from the center of the opened rank cube with spring inertia */
+        .vault-node-slot.burst-emerge {
+            animation: word-cube-emerge 0.56s cubic-bezier(0.22, 1.32, 0.36, 1) var(--emerge-delay, 0ms) both;
+        }
+
+        @keyframes word-cube-emerge {
+            0% {
+                opacity: 0;
+                transform: translate(var(--burst-x, 0px), var(--burst-y, 0px)) scale(0.26) rotate(-14deg);
+            }
+            68% {
+                opacity: 1;
+                transform: translate(calc(var(--burst-x, 0px) * -0.07), calc(var(--burst-y, 0px) * -0.07)) scale(1.06) rotate(2deg);
+            }
+            100% {
+                opacity: 1;
+                transform: translate(0px, 0px) scale(1) rotate(0deg);
+            }
         }
 
         .vault-node-slot.picked-out {
@@ -855,6 +908,22 @@
             margin-bottom: 4px;
             z-index: 30;
             flex-shrink: 0;
+            transition: opacity 0.35s ease, transform 0.35s ease;
+        }
+
+        .memory-vault.burst-entering .dual-bottom-row {
+            animation: vault-footer-rise 0.42s ease 0.14s both;
+        }
+
+        @keyframes vault-footer-rise {
+            0% {
+                opacity: 0;
+                transform: translateY(14px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .dual-bottom-row .bottom-nav-btn {
@@ -1514,10 +1583,10 @@
             transitionPage(rankVault, workspace, 'backward');
         }
 
-        function handleRankCategoryClick(category) {
+        function handleRankCategoryClick(category, clickedSlotEl) {
             if (isTransitioning) return;
             if (category.hasVault) {
-                openMemoryVaultFromRank();
+                openMemoryVaultFromRank(clickedSlotEl);
             } else {
                 openEmptyCategory(category.label);
             }
@@ -1571,11 +1640,26 @@
             transitionPage(vault, workspace, 'backward');
         }
 
-        function openMemoryVaultFromRank() {
+        function openMemoryVaultFromRank(clickedSlotEl) {
             if (isTransitioning) return;
+            isTransitioning = true;
+
             const rankVault = document.getElementById('rankVault');
             const vault = document.getElementById('memoryVault');
             const board = document.getElementById('retroBoard');
+            const rankSlots = rankVault.querySelectorAll('.rank-cube-slot');
+
+            let originRect = null;
+            if (clickedSlotEl) {
+                originRect = clickedSlotEl.getBoundingClientRect();
+                rankSlots.forEach((slot) => {
+                    if (slot === clickedSlotEl) {
+                        slot.classList.add('burst-selected');
+                    } else {
+                        slot.classList.add('burst-recede');
+                    }
+                });
+            }
 
             const words = getStoredWords();
             saveStoredWords(words);
@@ -1584,10 +1668,21 @@
             board.classList.add('vault-bg');
             vault.classList.remove('defocused');
 
-            transitionPage(rankVault, vault, 'forward', () => {
-                renderVaultGrid(words);
+            setTimeout(() => {
+                setSoloPage('memoryVault');
+                vault.classList.add('burst-entering');
+
+                renderVaultGrid(words, {
+                    burstFromCenter: true,
+                    originRect: originRect
+                });
                 startVaultSpinning();
-            });
+
+                setTimeout(() => {
+                    vault.classList.remove('burst-entering');
+                    isTransitioning = false;
+                }, 780);
+            }, 310);
         }
 
         function seededRand(seed) {
@@ -2129,7 +2224,7 @@
                 canvas.height = 266;
                 slot.appendChild(canvas);
 
-                slot.onclick = () => handleRankCategoryClick(cat);
+                slot.onclick = () => handleRankCategoryClick(cat, slot);
                 gridEl.appendChild(slot);
 
                 if (typeof THREE !== 'undefined') {
@@ -2184,13 +2279,14 @@
             vaultMiniCubes = [];
         }
 
-        function renderVaultGrid(words) {
+        function renderVaultGrid(words, animOptions = {}) {
             const grid = document.getElementById('vaultGrid');
             const scrollEl = document.getElementById('vaultScroll');
             disposeVaultMiniCubes();
             grid.innerHTML = '';
 
             const visibleWords = words.slice(0, 6);
+            const createdSlots = [];
 
             visibleWords.forEach((item, index) => {
                 const offset = CUBE_OFFSETS[index % CUBE_OFFSETS.length];
@@ -2208,6 +2304,7 @@
 
                 slot.onclick = () => inspectMemoryCube(item, slot, index + 1);
                 grid.appendChild(slot);
+                createdSlots.push(slot);
 
                 if (typeof THREE !== 'undefined') {
                     const miniScene = new THREE.Scene();
@@ -2257,6 +2354,37 @@
             });
 
             scrollEl.classList.toggle('has-overflow', grid.scrollWidth > scrollEl.clientWidth);
+
+            if (animOptions.burstFromCenter && createdSlots.length > 0) {
+                const originX = animOptions.originRect
+                    ? animOptions.originRect.left + animOptions.originRect.width / 2
+                    : window.innerWidth / 2;
+                const originY = animOptions.originRect
+                    ? animOptions.originRect.top + animOptions.originRect.height / 2
+                    : window.innerHeight * 0.48;
+
+                createdSlots.forEach((slot, idx) => {
+                    const rect = slot.getBoundingClientRect();
+                    const slotCenterX = rect.left + rect.width / 2;
+                    const slotCenterY = rect.top + rect.height / 2;
+
+                    const dx = Math.round(originX - slotCenterX);
+                    const dy = Math.round(originY - slotCenterY);
+
+                    slot.style.setProperty('--burst-x', `${dx}px`);
+                    slot.style.setProperty('--burst-y', `${dy}px`);
+                    slot.style.setProperty('--emerge-delay', `${idx * 42}ms`);
+                    slot.classList.add('burst-emerge');
+
+                    setTimeout(() => {
+                        slot.classList.remove('burst-emerge');
+                        slot.style.removeProperty('--burst-x');
+                        slot.style.removeProperty('--burst-y');
+                        slot.style.removeProperty('--emerge-delay');
+                        slot.style.animationDelay = ((idx * 0.45) % 3.2) + 's';
+                    }, 620 + idx * 45);
+                });
+            }
         }
 
         function startVaultSpinning() {
