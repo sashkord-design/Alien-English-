@@ -175,7 +175,7 @@
             z-index: 0;
             pointer-events: none;
             transform: scale(1);
-            transition: opacity 0.25s ease, filter 0.25s ease, transform 0.25s ease;
+            transition: opacity 0.35s ease, filter 0.35s ease, transform 0.35s ease;
         }
 
         .bg-first-page {
@@ -254,7 +254,7 @@
             margin: auto;
             width: 100%;
             height: 100%;
-            transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+            transition: transform 0.36s cubic-bezier(0.22, 1, 0.36, 1);
             will-change: transform;
             backface-visibility: hidden;
             -webkit-backface-visibility: hidden;
@@ -641,7 +641,7 @@
             box-shadow: 1px 1px 0px var(--ink-dark);
         }
 
-        /* 2.5 RANK CATEGORY VAULT */
+        /* 2.5 RANK CATEGORY VAULT (SAME BASE COLOR AS WORD CUBES + SMALL PURPLE/DARK-PURPLE PEBBLES) */
         .rank-vault {
             display: none;
             flex-direction: column;
@@ -652,7 +652,7 @@
             padding: 12px 24px 12px;
             position: relative;
             overflow: hidden;
-            transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), filter 0.25s ease, opacity 0.25s ease;
+            transition: transform 0.36s cubic-bezier(0.22, 1, 0.36, 1), filter 0.35s ease;
         }
 
         .rank-vault.defocused {
@@ -706,7 +706,6 @@
             align-items: center;
             justify-content: center;
             padding: 8px 0;
-            perspective: 700px;
         }
 
         .rank-grid-inner {
@@ -718,7 +717,6 @@
             justify-items: center;
         }
 
-        /* Variant 3: Noticeable tilt accent on selected rank cube + clean fade on others */
         .rank-cube-slot {
             width: 133px;
             height: 133px;
@@ -727,23 +725,6 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            transform-style: preserve-3d;
-            transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.18s ease, filter 0.18s ease;
-            will-change: transform, opacity;
-        }
-
-        .rank-cube-slot.accent-tilt {
-            animation: none !important;
-            transform: perspective(600px) rotateY(22deg) rotateX(-10deg) scale(1.08);
-            opacity: 1;
-            z-index: 5;
-        }
-
-        .rank-cube-slot.accent-fade {
-            animation: none !important;
-            transform: scale(0.94);
-            opacity: 0.14;
-            filter: brightness(0.78);
         }
 
         .rank-cube-canvas {
@@ -791,7 +772,7 @@
             padding: 10px 0 8px;
             position: relative;
             overflow: hidden;
-            transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), filter 0.25s ease;
+            transition: transform 0.36s cubic-bezier(0.22, 1, 0.36, 1), filter 0.35s ease;
         }
 
         .memory-vault.defocused {
@@ -845,23 +826,6 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            will-change: transform, opacity;
-        }
-
-        /* Variant 3: Crisp column-by-column wave entrance for word cubes */
-        .vault-node-slot.wave-in {
-            animation: word-cube-wave 0.4s cubic-bezier(0.22, 1, 0.36, 1) var(--wave-delay, 0ms) both;
-        }
-
-        @keyframes word-cube-wave {
-            0% {
-                opacity: 0;
-                transform: translateX(18px) scale(0.9);
-            }
-            100% {
-                opacity: 1;
-                transform: translateX(0) scale(1);
-            }
         }
 
         .vault-node-slot.picked-out {
@@ -972,7 +936,7 @@
             align-items: center;
             justify-content: center;
             transform: scale(0.88);
-            transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+            transition: transform 0.36s cubic-bezier(0.22, 1, 0.36, 1);
             pointer-events: none;
         }
 
@@ -1207,8 +1171,6 @@
         let transitionTimer = null;
         let isTransitioning = false;
 
-        const stoneTextureCache = new Map();
-
         const PAGE_IDS = ['introScreen', 'scanWorkspace', 'rankVault', 'emptyCategoryPanel', 'memoryVault'];
 
         const RANK_CATEGORIES = [
@@ -1227,7 +1189,6 @@
         let refCubeImageReady = false;
         refCubeImage.onload = () => {
             refCubeImageReady = true;
-            stoneTextureCache.clear();
         };
         refCubeImage.src = 'Cube1_3.webp';
 
@@ -1441,8 +1402,8 @@
             toEl.offsetHeight;
 
             requestAnimationFrame(() => {
-                fromEl.style.transition = 'transform 0.3s cubic-bezier(0.22, 1, 0.36, 1)';
-                toEl.style.transition = 'transform 0.3s cubic-bezier(0.22, 1, 0.36, 1)';
+                fromEl.style.transition = 'transform 0.36s cubic-bezier(0.22, 1, 0.36, 1)';
+                toEl.style.transition = 'transform 0.36s cubic-bezier(0.22, 1, 0.36, 1)';
 
                 fromEl.classList.remove('pos-center');
                 fromEl.classList.add(direction === 'forward' ? 'pos-left' : 'pos-right');
@@ -1459,7 +1420,7 @@
                 setSoloPage(toEl.id);
                 isTransitioning = false;
                 transitionTimer = null;
-            }, 315);
+            }, 375);
         }
 
         function startScan(btn) {
@@ -1475,7 +1436,7 @@
                 board.classList.remove('vault-bg');
                 board.classList.add('clouds-bg');
                 transitionPage(intro, workspace, 'forward');
-            }, 80);
+            }, 100);
         }
 
         function handleCardTap(slot) {
@@ -1553,10 +1514,10 @@
             transitionPage(rankVault, workspace, 'backward');
         }
 
-        function handleRankCategoryClick(category, clickedSlotEl) {
+        function handleRankCategoryClick(category) {
             if (isTransitioning) return;
             if (category.hasVault) {
-                openMemoryVaultFromRank(clickedSlotEl);
+                openMemoryVaultFromRank();
             } else {
                 openEmptyCategory(category.label);
             }
@@ -1610,25 +1571,11 @@
             transitionPage(vault, workspace, 'backward');
         }
 
-        /* Variant 3: Crisp tilt accent + fast transition + column wave into memory vault */
-        function openMemoryVaultFromRank(clickedSlotEl) {
+        function openMemoryVaultFromRank() {
             if (isTransitioning) return;
-            isTransitioning = true;
-
             const rankVault = document.getElementById('rankVault');
             const vault = document.getElementById('memoryVault');
             const board = document.getElementById('retroBoard');
-            const rankSlots = rankVault.querySelectorAll('.rank-cube-slot');
-
-            if (clickedSlotEl) {
-                rankSlots.forEach((slot) => {
-                    if (slot === clickedSlotEl) {
-                        slot.classList.add('accent-tilt');
-                    } else {
-                        slot.classList.add('accent-fade');
-                    }
-                });
-            }
 
             const words = getStoredWords();
             saveStoredWords(words);
@@ -1637,15 +1584,10 @@
             board.classList.add('vault-bg');
             vault.classList.remove('defocused');
 
-            setTimeout(() => {
-                setSoloPage('memoryVault');
-                renderVaultGrid(words, { wave: true });
+            transitionPage(rankVault, vault, 'forward', () => {
+                renderVaultGrid(words);
                 startVaultSpinning();
-
-                setTimeout(() => {
-                    isTransitioning = false;
-                }, 480);
-            }, 140);
+            });
         }
 
         function seededRand(seed) {
@@ -1654,7 +1596,7 @@
         }
 
         function createChippedStoneCubeGeometry(size, seedOffset = 1) {
-            const segs = 16;
+            const segs = 20;
             const geom = new THREE.BoxGeometry(size, size, size, segs, segs, segs);
             const pos = geom.attributes.position;
             const half = size * 0.5;
@@ -1742,7 +1684,7 @@
             temp.height = size;
             const tctx = temp.getContext('2d');
 
-            const strips = 36;
+            const strips = 64;
             for (let i = 0; i < strips; i++) {
                 const u0 = i / strips;
                 const u1 = (i + 1) / strips;
@@ -1793,7 +1735,7 @@
 
             const scale = size / 512;
             const tones = ['rgba(186, 189, 198, 0.55)', 'rgba(154, 158, 168, 0.55)', 'rgba(134, 138, 148, 0.45)'];
-            for (let i = 0; i < 10; i++) {
+            for (let i = 0; i < 12; i++) {
                 const s = seedOffset * 193 + i * 31;
                 const cx = seededRand(s + 1) * size;
                 const cy = seededRand(s + 2) * size;
@@ -1819,7 +1761,7 @@
                 ctx.restore();
             }
 
-            for (let p = 0; p < 16; p++) {
+            for (let p = 0; p < 22; p++) {
                 const s = seedOffset * 613 + p * 23;
                 const px = (28 + seededRand(s + 1) * 456) * scale;
                 const py = (28 + seededRand(s + 2) * 456) * scale;
@@ -1844,23 +1786,23 @@
             bctx.fillStyle = 'rgb(128, 128, 128)';
             bctx.fillRect(0, 0, size, size);
 
-            const grainCount = 360;
+            const grainCount = 1200;
             for (let g = 0; g < grainCount; g++) {
                 const s = seedOffset * 977 + g * 13;
                 const gx = seededRand(s + 1) * size;
                 const gy = seededRand(s + 2) * size;
-                const gw = (1.8 + seededRand(s + 3) * 2.6) * scale;
-                const gh = (1.8 + seededRand(s + 4) * 2.6) * scale;
+                const gw = (1.1 + seededRand(s + 3) * 1.9) * scale;
+                const gh = (1.1 + seededRand(s + 4) * 1.9) * scale;
                 const pick = seededRand(s + 5);
 
                 if (pick < 0.42) {
-                    ctx.fillStyle = 'rgba(204, 207, 214, 0.22)';
+                    ctx.fillStyle = 'rgba(204, 207, 214, 0.20)';
                     bctx.fillStyle = 'rgb(162, 162, 162)';
                 } else if (pick < 0.88) {
-                    ctx.fillStyle = 'rgba(112, 116, 126, 0.24)';
+                    ctx.fillStyle = 'rgba(112, 116, 126, 0.22)';
                     bctx.fillStyle = 'rgb(90, 90, 90)';
                 } else {
-                    ctx.fillStyle = 'rgba(72, 75, 84, 0.26)';
+                    ctx.fillStyle = 'rgba(72, 75, 84, 0.25)';
                     bctx.fillStyle = 'rgb(58, 58, 58)';
                 }
 
@@ -1868,16 +1810,16 @@
                 bctx.fillRect(gx, gy, gw, gh);
             }
 
-            for (let k = 0; k < 36; k++) {
+            for (let k = 0; k < 80; k++) {
                 const s = seedOffset * 1811 + k * 29;
                 const sx = seededRand(s + 1) * size;
                 const sy = seededRand(s + 2) * size;
-                const len = (3.5 + seededRand(s + 3) * 8) * scale;
+                const len = (3 + seededRand(s + 3) * 8) * scale;
                 const ang = seededRand(s + 4) * Math.PI * 2;
                 const dx = Math.cos(ang) * len;
                 const dy = Math.sin(ang) * len;
 
-                ctx.strokeStyle = k % 2 === 0 ? 'rgba(208, 211, 218, 0.17)' : 'rgba(92, 96, 106, 0.21)';
+                ctx.strokeStyle = k % 2 === 0 ? 'rgba(208, 211, 218, 0.16)' : 'rgba(92, 96, 106, 0.20)';
                 ctx.lineWidth = scale;
                 ctx.beginPath();
                 ctx.moveTo(sx, sy);
@@ -1905,7 +1847,7 @@
             let placed = 0;
             let attempt = 0;
 
-            while (placed < pebbleCount && attempt < 48) {
+            while (placed < pebbleCount && attempt < 60) {
                 attempt++;
                 const s = seedOffset * 2411 + attempt * 37;
                 const px = 40 * scale + seededRand(s + 1) * (size - 80 * scale);
@@ -1972,7 +1914,7 @@
 
         function drawInkEdgeCracksAndChips(ctx, bctx, size, seedOffset) {
             const scale = size / 512;
-            const edgeNotchCount = 10;
+            const edgeNotchCount = 12;
             for (let i = 0; i < edgeNotchCount; i++) {
                 const s = seedOffset * 317 + i * 47;
                 const side = i % 4;
@@ -2123,18 +2065,7 @@
         }
 
         function createMultiStoneTextures(lines, options = {}, seedOffset = 1) {
-            const cacheKey = JSON.stringify({
-                lines,
-                options,
-                seedOffset,
-                ready: refCubeImageReady
-            });
-
-            if (stoneTextureCache.has(cacheKey)) {
-                return stoneTextureCache.get(cacheKey);
-            }
-
-            const size = options.isMiniWord ? 256 : 512;
+            const size = options.isMiniWord ? 384 : 768;
             const colorCanvas = document.createElement('canvas');
             colorCanvas.width = size;
             colorCanvas.height = size;
@@ -2158,14 +2089,12 @@
             drawReadableFaceText(ctx, size, lines, options);
 
             const map = new THREE.CanvasTexture(colorCanvas);
-            map.anisotropy = 2;
+            map.anisotropy = 4;
 
             const bumpMap = new THREE.CanvasTexture(bumpCanvas);
-            bumpMap.anisotropy = 2;
+            bumpMap.anisotropy = 4;
 
-            const result = { map, bumpMap };
-            stoneTextureCache.set(cacheKey, result);
-            return result;
+            return { map, bumpMap };
         }
 
         function createOutlinedStoneCubeGroup(geom, materials, outlineScale = 1.035) {
@@ -2200,7 +2129,7 @@
                 canvas.height = 266;
                 slot.appendChild(canvas);
 
-                slot.onclick = () => handleRankCategoryClick(cat, slot);
+                slot.onclick = () => handleRankCategoryClick(cat);
                 gridEl.appendChild(slot);
 
                 if (typeof THREE !== 'undefined') {
@@ -2255,14 +2184,13 @@
             vaultMiniCubes = [];
         }
 
-        function renderVaultGrid(words, animOptions = {}) {
+        function renderVaultGrid(words) {
             const grid = document.getElementById('vaultGrid');
             const scrollEl = document.getElementById('vaultScroll');
             disposeVaultMiniCubes();
             grid.innerHTML = '';
 
             const visibleWords = words.slice(0, 6);
-            const createdSlots = [];
 
             visibleWords.forEach((item, index) => {
                 const offset = CUBE_OFFSETS[index % CUBE_OFFSETS.length];
@@ -2280,7 +2208,6 @@
 
                 slot.onclick = () => inspectMemoryCube(item, slot, index + 1);
                 grid.appendChild(slot);
-                createdSlots.push(slot);
 
                 if (typeof THREE !== 'undefined') {
                     const miniScene = new THREE.Scene();
@@ -2330,24 +2257,6 @@
             });
 
             scrollEl.classList.toggle('has-overflow', grid.scrollWidth > scrollEl.clientWidth);
-
-            if (animOptions.wave && createdSlots.length > 0) {
-                const rowsCount = 3;
-                createdSlots.forEach((slot, idx) => {
-                    const colIdx = Math.floor(idx / rowsCount);
-                    const rowIdx = idx % rowsCount;
-                    const waveDelay = colIdx * 165 + rowIdx * 55;
-
-                    slot.style.setProperty('--wave-delay', `${waveDelay}ms`);
-                    slot.classList.add('wave-in');
-
-                    setTimeout(() => {
-                        slot.classList.remove('wave-in');
-                        slot.style.removeProperty('--wave-delay');
-                        slot.style.animationDelay = ((idx * 0.45) % 3.2) + 's';
-                    }, 480 + waveDelay);
-                });
-            }
         }
 
         function startVaultSpinning() {
