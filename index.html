@@ -175,7 +175,7 @@
             z-index: 0;
             pointer-events: none;
             transform: scale(1);
-            transition: opacity 0.35s ease, filter 0.35s ease, transform 0.35s ease;
+            transition: opacity 0.25s ease, filter 0.25s ease, transform 0.25s ease;
         }
 
         .bg-first-page {
@@ -254,7 +254,7 @@
             margin: auto;
             width: 100%;
             height: 100%;
-            transition: transform 0.36s cubic-bezier(0.22, 1, 0.36, 1);
+            transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
             will-change: transform;
             backface-visibility: hidden;
             -webkit-backface-visibility: hidden;
@@ -652,7 +652,7 @@
             padding: 12px 24px 12px;
             position: relative;
             overflow: hidden;
-            transition: transform 0.36s cubic-bezier(0.22, 1, 0.36, 1), filter 0.35s ease, opacity 0.28s ease;
+            transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), filter 0.25s ease, opacity 0.25s ease;
         }
 
         .rank-vault.defocused {
@@ -706,7 +706,7 @@
             align-items: center;
             justify-content: center;
             padding: 8px 0;
-            perspective: 750px;
+            perspective: 700px;
         }
 
         .rank-grid-inner {
@@ -718,7 +718,7 @@
             justify-items: center;
         }
 
-        /* Variant 3: Gentle stone tilt accent on selected rank cube + subtle fade on others */
+        /* Variant 3: Noticeable tilt accent on selected rank cube + clean fade on others */
         .rank-cube-slot {
             width: 133px;
             height: 133px;
@@ -728,22 +728,22 @@
             align-items: center;
             justify-content: center;
             transform-style: preserve-3d;
-            transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.26s ease, filter 0.26s ease;
+            transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.18s ease, filter 0.18s ease;
             will-change: transform, opacity;
         }
 
         .rank-cube-slot.accent-tilt {
             animation: none !important;
-            transform: perspective(650px) rotateY(15deg) rotateX(-7deg) scale(1.06);
+            transform: perspective(600px) rotateY(22deg) rotateX(-10deg) scale(1.08);
             opacity: 1;
             z-index: 5;
         }
 
         .rank-cube-slot.accent-fade {
             animation: none !important;
-            transform: scale(0.95);
-            opacity: 0.16;
-            filter: brightness(0.8);
+            transform: scale(0.94);
+            opacity: 0.14;
+            filter: brightness(0.78);
         }
 
         .rank-cube-canvas {
@@ -791,7 +791,7 @@
             padding: 10px 0 8px;
             position: relative;
             overflow: hidden;
-            transition: transform 0.36s cubic-bezier(0.22, 1, 0.36, 1), filter 0.35s ease;
+            transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), filter 0.25s ease;
         }
 
         .memory-vault.defocused {
@@ -848,15 +848,15 @@
             will-change: transform, opacity;
         }
 
-        /* Variant 3: Column-by-column wave entrance for word cubes */
+        /* Variant 3: Crisp column-by-column wave entrance for word cubes */
         .vault-node-slot.wave-in {
-            animation: word-cube-wave 0.44s cubic-bezier(0.22, 1, 0.36, 1) var(--wave-delay, 0ms) both;
+            animation: word-cube-wave 0.4s cubic-bezier(0.22, 1, 0.36, 1) var(--wave-delay, 0ms) both;
         }
 
         @keyframes word-cube-wave {
             0% {
                 opacity: 0;
-                transform: translateX(12px) scale(0.93);
+                transform: translateX(18px) scale(0.9);
             }
             100% {
                 opacity: 1;
@@ -972,7 +972,7 @@
             align-items: center;
             justify-content: center;
             transform: scale(0.88);
-            transition: transform 0.36s cubic-bezier(0.22, 1, 0.36, 1);
+            transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
             pointer-events: none;
         }
 
@@ -1207,6 +1207,8 @@
         let transitionTimer = null;
         let isTransitioning = false;
 
+        const stoneTextureCache = new Map();
+
         const PAGE_IDS = ['introScreen', 'scanWorkspace', 'rankVault', 'emptyCategoryPanel', 'memoryVault'];
 
         const RANK_CATEGORIES = [
@@ -1225,6 +1227,7 @@
         let refCubeImageReady = false;
         refCubeImage.onload = () => {
             refCubeImageReady = true;
+            stoneTextureCache.clear();
         };
         refCubeImage.src = 'Cube1_3.webp';
 
@@ -1438,8 +1441,8 @@
             toEl.offsetHeight;
 
             requestAnimationFrame(() => {
-                fromEl.style.transition = 'transform 0.36s cubic-bezier(0.22, 1, 0.36, 1)';
-                toEl.style.transition = 'transform 0.36s cubic-bezier(0.22, 1, 0.36, 1)';
+                fromEl.style.transition = 'transform 0.3s cubic-bezier(0.22, 1, 0.36, 1)';
+                toEl.style.transition = 'transform 0.3s cubic-bezier(0.22, 1, 0.36, 1)';
 
                 fromEl.classList.remove('pos-center');
                 fromEl.classList.add(direction === 'forward' ? 'pos-left' : 'pos-right');
@@ -1456,7 +1459,7 @@
                 setSoloPage(toEl.id);
                 isTransitioning = false;
                 transitionTimer = null;
-            }, 375);
+            }, 315);
         }
 
         function startScan(btn) {
@@ -1472,7 +1475,7 @@
                 board.classList.remove('vault-bg');
                 board.classList.add('clouds-bg');
                 transitionPage(intro, workspace, 'forward');
-            }, 100);
+            }, 80);
         }
 
         function handleCardTap(slot) {
@@ -1607,7 +1610,7 @@
             transitionPage(vault, workspace, 'backward');
         }
 
-        /* Variant 3: Gentle stone tilt accent + column-by-column wave into memory vault */
+        /* Variant 3: Crisp tilt accent + fast transition + column wave into memory vault */
         function openMemoryVaultFromRank(clickedSlotEl) {
             if (isTransitioning) return;
             isTransitioning = true;
@@ -1641,8 +1644,8 @@
 
                 setTimeout(() => {
                     isTransitioning = false;
-                }, 560);
-            }, 260);
+                }, 480);
+            }, 140);
         }
 
         function seededRand(seed) {
@@ -1651,7 +1654,7 @@
         }
 
         function createChippedStoneCubeGeometry(size, seedOffset = 1) {
-            const segs = 20;
+            const segs = 16;
             const geom = new THREE.BoxGeometry(size, size, size, segs, segs, segs);
             const pos = geom.attributes.position;
             const half = size * 0.5;
@@ -1739,7 +1742,7 @@
             temp.height = size;
             const tctx = temp.getContext('2d');
 
-            const strips = 64;
+            const strips = 36;
             for (let i = 0; i < strips; i++) {
                 const u0 = i / strips;
                 const u1 = (i + 1) / strips;
@@ -1790,7 +1793,7 @@
 
             const scale = size / 512;
             const tones = ['rgba(186, 189, 198, 0.55)', 'rgba(154, 158, 168, 0.55)', 'rgba(134, 138, 148, 0.45)'];
-            for (let i = 0; i < 12; i++) {
+            for (let i = 0; i < 10; i++) {
                 const s = seedOffset * 193 + i * 31;
                 const cx = seededRand(s + 1) * size;
                 const cy = seededRand(s + 2) * size;
@@ -1816,7 +1819,7 @@
                 ctx.restore();
             }
 
-            for (let p = 0; p < 22; p++) {
+            for (let p = 0; p < 16; p++) {
                 const s = seedOffset * 613 + p * 23;
                 const px = (28 + seededRand(s + 1) * 456) * scale;
                 const py = (28 + seededRand(s + 2) * 456) * scale;
@@ -1841,23 +1844,23 @@
             bctx.fillStyle = 'rgb(128, 128, 128)';
             bctx.fillRect(0, 0, size, size);
 
-            const grainCount = 1200;
+            const grainCount = 360;
             for (let g = 0; g < grainCount; g++) {
                 const s = seedOffset * 977 + g * 13;
                 const gx = seededRand(s + 1) * size;
                 const gy = seededRand(s + 2) * size;
-                const gw = (1.1 + seededRand(s + 3) * 1.9) * scale;
-                const gh = (1.1 + seededRand(s + 4) * 1.9) * scale;
+                const gw = (1.8 + seededRand(s + 3) * 2.6) * scale;
+                const gh = (1.8 + seededRand(s + 4) * 2.6) * scale;
                 const pick = seededRand(s + 5);
 
                 if (pick < 0.42) {
-                    ctx.fillStyle = 'rgba(204, 207, 214, 0.20)';
+                    ctx.fillStyle = 'rgba(204, 207, 214, 0.22)';
                     bctx.fillStyle = 'rgb(162, 162, 162)';
                 } else if (pick < 0.88) {
-                    ctx.fillStyle = 'rgba(112, 116, 126, 0.22)';
+                    ctx.fillStyle = 'rgba(112, 116, 126, 0.24)';
                     bctx.fillStyle = 'rgb(90, 90, 90)';
                 } else {
-                    ctx.fillStyle = 'rgba(72, 75, 84, 0.25)';
+                    ctx.fillStyle = 'rgba(72, 75, 84, 0.26)';
                     bctx.fillStyle = 'rgb(58, 58, 58)';
                 }
 
@@ -1865,16 +1868,16 @@
                 bctx.fillRect(gx, gy, gw, gh);
             }
 
-            for (let k = 0; k < 80; k++) {
+            for (let k = 0; k < 36; k++) {
                 const s = seedOffset * 1811 + k * 29;
                 const sx = seededRand(s + 1) * size;
                 const sy = seededRand(s + 2) * size;
-                const len = (3 + seededRand(s + 3) * 8) * scale;
+                const len = (3.5 + seededRand(s + 3) * 8) * scale;
                 const ang = seededRand(s + 4) * Math.PI * 2;
                 const dx = Math.cos(ang) * len;
                 const dy = Math.sin(ang) * len;
 
-                ctx.strokeStyle = k % 2 === 0 ? 'rgba(208, 211, 218, 0.16)' : 'rgba(92, 96, 106, 0.20)';
+                ctx.strokeStyle = k % 2 === 0 ? 'rgba(208, 211, 218, 0.17)' : 'rgba(92, 96, 106, 0.21)';
                 ctx.lineWidth = scale;
                 ctx.beginPath();
                 ctx.moveTo(sx, sy);
@@ -1902,7 +1905,7 @@
             let placed = 0;
             let attempt = 0;
 
-            while (placed < pebbleCount && attempt < 60) {
+            while (placed < pebbleCount && attempt < 48) {
                 attempt++;
                 const s = seedOffset * 2411 + attempt * 37;
                 const px = 40 * scale + seededRand(s + 1) * (size - 80 * scale);
@@ -1969,7 +1972,7 @@
 
         function drawInkEdgeCracksAndChips(ctx, bctx, size, seedOffset) {
             const scale = size / 512;
-            const edgeNotchCount = 12;
+            const edgeNotchCount = 10;
             for (let i = 0; i < edgeNotchCount; i++) {
                 const s = seedOffset * 317 + i * 47;
                 const side = i % 4;
@@ -2120,7 +2123,18 @@
         }
 
         function createMultiStoneTextures(lines, options = {}, seedOffset = 1) {
-            const size = options.isMiniWord ? 384 : 768;
+            const cacheKey = JSON.stringify({
+                lines,
+                options,
+                seedOffset,
+                ready: refCubeImageReady
+            });
+
+            if (stoneTextureCache.has(cacheKey)) {
+                return stoneTextureCache.get(cacheKey);
+            }
+
+            const size = options.isMiniWord ? 256 : 512;
             const colorCanvas = document.createElement('canvas');
             colorCanvas.width = size;
             colorCanvas.height = size;
@@ -2144,12 +2158,14 @@
             drawReadableFaceText(ctx, size, lines, options);
 
             const map = new THREE.CanvasTexture(colorCanvas);
-            map.anisotropy = 4;
+            map.anisotropy = 2;
 
             const bumpMap = new THREE.CanvasTexture(bumpCanvas);
-            bumpMap.anisotropy = 4;
+            bumpMap.anisotropy = 2;
 
-            return { map, bumpMap };
+            const result = { map, bumpMap };
+            stoneTextureCache.set(cacheKey, result);
+            return result;
         }
 
         function createOutlinedStoneCubeGroup(geom, materials, outlineScale = 1.035) {
@@ -2320,7 +2336,7 @@
                 createdSlots.forEach((slot, idx) => {
                     const colIdx = Math.floor(idx / rowsCount);
                     const rowIdx = idx % rowsCount;
-                    const waveDelay = colIdx * 140 + rowIdx * 45;
+                    const waveDelay = colIdx * 165 + rowIdx * 55;
 
                     slot.style.setProperty('--wave-delay', `${waveDelay}ms`);
                     slot.classList.add('wave-in');
@@ -2329,7 +2345,7 @@
                         slot.classList.remove('wave-in');
                         slot.style.removeProperty('--wave-delay');
                         slot.style.animationDelay = ((idx * 0.45) % 3.2) + 's';
-                    }, 520 + waveDelay);
+                    }, 480 + waveDelay);
                 });
             }
         }
