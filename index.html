@@ -176,14 +176,20 @@
             pointer-events: none;
             transform: scale(1);
             filter: blur(0px);
-            transition: opacity 0.25s ease, filter 0.42s cubic-bezier(0.22, 1, 0.36, 1), transform 0.42s cubic-bezier(0.22, 1, 0.36, 1);
+            transition: opacity 0.22s ease, filter 0.24s cubic-bezier(0.22, 1, 0.36, 1), transform 0.24s cubic-bezier(0.22, 1, 0.36, 1);
             will-change: filter, transform;
         }
 
-        .bg-layer.instant-blur {
-            transition: opacity 0.25s ease !important;
+        .bg-layer.blur-active {
+            transition: opacity 0.2s ease, filter 0.18s ease-out, transform 0.18s ease-out !important;
             filter: blur(8px) !important;
-            transform: scale(1.08) !important;
+            transform: scale(1.07) !important;
+        }
+
+        .bg-layer.blur-clear {
+            transition: opacity 0.2s ease, filter 0.32s cubic-bezier(0.16, 1, 0.3, 1), transform 0.32s cubic-bezier(0.16, 1, 0.3, 1) !important;
+            filter: blur(0px) !important;
+            transform: scale(1) !important;
         }
 
         .bg-first-page {
@@ -660,7 +666,19 @@
             padding: 12px 18px 12px;
             position: relative;
             overflow: hidden;
-            transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), filter 0.25s ease, opacity 0.25s ease;
+            transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), filter 0.38s ease, opacity 0.38s ease;
+        }
+
+        .rank-vault.blur-enter {
+            filter: blur(8px);
+            opacity: 0.45;
+            transition: none !important;
+        }
+
+        .rank-vault.blur-settle {
+            filter: blur(0px);
+            opacity: 1;
+            transition: filter 0.36s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease !important;
         }
 
         .rank-vault.defocused {
@@ -739,10 +757,23 @@
             animation: category-levitate 4.4s ease-in-out infinite;
         }
 
-        /* Single uninterrupted fly-through past screen with late blur & fade */
+        /* Fast chatter right on tap */
+        .category-cube-holder.chatter {
+            animation: category-chatter 0.12s linear infinite !important;
+        }
+
+        @keyframes category-chatter {
+            0% { transform: translate(-3px, 1px) rotate(-1.4deg) scale(1.01); }
+            25% { transform: translate(3px, -1px) rotate(1.4deg) scale(1.02); }
+            50% { transform: translate(-2.5px, -1.5px) rotate(-1deg) scale(1.01); }
+            75% { transform: translate(2.5px, 1.5px) rotate(1deg) scale(1.02); }
+            100% { transform: translate(-3px, 1px) rotate(-1.4deg) scale(1.01); }
+        }
+
+        /* 2x faster fly-through past screen (0.22s) */
         .category-cube-holder.fly-past {
             animation: none !important;
-            transition: transform 0.44s cubic-bezier(0.28, 0.04, 0.72, 0.96), opacity 0.22s ease-in 0.22s, filter 0.24s ease-in 0.2s !important;
+            transition: transform 0.22s cubic-bezier(0.28, 0.04, 0.72, 0.96), opacity 0.12s ease-in 0.1s, filter 0.12s ease-in 0.09s !important;
             transform: scale(2.45) !important;
             filter: blur(9px) !important;
             opacity: 0 !important;
@@ -786,7 +817,6 @@
             border-radius: 10px;
             cursor: pointer;
             transform: translate(-50%, -50%);
-            transition: background-color 0.14s ease, box-shadow 0.14s ease, transform 0.14s ease;
         }
 
         .cat-hit-btn.cat-center {
@@ -824,12 +854,6 @@
             height: 36px;
         }
 
-        .cat-hit-btn.violet-flash {
-            background-color: rgba(124, 58, 237, 0.34);
-            box-shadow: 0 0 16px rgba(99, 102, 241, 0.85), inset 0 0 10px rgba(167, 139, 250, 0.8);
-            transform: translate(-50%, -50%) scale(1.08);
-        }
-
         /* 3. MEMORY STORAGE: 6 CUBES (2x3) */
         .memory-vault {
             display: none;
@@ -841,7 +865,7 @@
             padding: 10px 0 8px;
             position: relative;
             overflow: hidden;
-            transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), filter 0.45s ease, opacity 0.45s ease;
+            transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), filter 0.36s ease, opacity 0.36s ease;
         }
 
         /* Continuous defocus handoff from category cube into word cubes */
@@ -856,7 +880,7 @@
             filter: blur(0px);
             opacity: 1;
             transform: scale(1);
-            transition: filter 0.44s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.38s ease, transform 0.44s cubic-bezier(0.16, 1, 0.3, 1) !important;
+            transition: filter 0.34s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease, transform 0.34s cubic-bezier(0.16, 1, 0.3, 1) !important;
         }
 
         .memory-vault.defocused {
@@ -1629,18 +1653,26 @@
             }
         }
 
-        function triggerCategoryEntrySequence() {
+        function triggerCategoryEntrySequence(withBlurArrival = false) {
             clearCategoryTimers();
             const holder = document.getElementById('categoryCubeHolder');
-            const board = document.getElementById('retroBoard');
+            const rankVault = document.getElementById('rankVault');
+            const vaultBg = document.querySelector('.bg-vault-page');
             if (!holder) return;
 
             isCategoryTransitioning = false;
-            if (board) board.classList.remove('blurred-bg');
-            holder.classList.remove('fly-past', 'settled');
+            holder.classList.remove('fly-past', 'chatter', 'settled');
             holder.style.transform = 'scale(0.33)';
             holder.style.opacity = '0.9';
             holder.style.filter = 'blur(0px)';
+
+            if (withBlurArrival && rankVault && vaultBg) {
+                rankVault.classList.remove('blur-settle');
+                rankVault.classList.add('blur-enter');
+                vaultBg.classList.remove('blur-clear');
+                vaultBg.classList.add('blur-active');
+            }
+
             holder.offsetHeight;
 
             catCurrentRotX = -12;
@@ -1654,6 +1686,13 @@
                 holder.style.transform = '';
                 holder.style.opacity = '';
                 holder.style.filter = '';
+
+                if (withBlurArrival && rankVault && vaultBg) {
+                    rankVault.classList.remove('blur-enter');
+                    rankVault.classList.add('blur-settle');
+                    vaultBg.classList.remove('blur-active');
+                    vaultBg.classList.add('blur-clear');
+                }
             });
 
             entrySpinTimer = setTimeout(() => {
@@ -1714,7 +1753,7 @@
 
             transitionPage(workspace, rankVault, 'forward', () => {
                 initCategoryCube();
-                triggerCategoryEntrySequence();
+                triggerCategoryEntrySequence(false);
             });
         }
 
@@ -1736,7 +1775,9 @@
             const currentVault = document.getElementById('memoryVault');
             const rankVault = document.getElementById('rankVault');
             const board = document.getElementById('retroBoard');
+            const vaultBg = document.querySelector('.bg-vault-page');
 
+            clearCategoryTimers();
             stopVaultSpinning();
             disposeVaultMiniCubes();
             currentVault.classList.remove('defocus-reveal', 'defocus-settle');
@@ -1745,9 +1786,14 @@
             board.classList.add('vault-bg');
             rankVault.classList.remove('defocused');
 
+            if (vaultBg) {
+                vaultBg.classList.remove('blur-clear');
+                vaultBg.classList.add('blur-active');
+            }
+
             transitionPage(currentVault, rankVault, 'backward', () => {
                 initCategoryCube();
-                triggerCategoryEntrySequence();
+                triggerCategoryEntrySequence(true);
             });
         }
 
@@ -1767,7 +1813,7 @@
             transitionPage(vault, workspace, 'backward');
         }
 
-        /* Seamless fly-through of large cube + continuous blur across background and word cubes */
+        /* Fast chatter -> 2x faster fly-through + simultaneous background blur -> word cubes & background clear */
         function openMemoryVaultFromCategory(categoryName) {
             if (isTransitioning || isCategoryTransitioning) return;
             clearCategoryTimers();
@@ -1784,47 +1830,52 @@
 
             if (holder) {
                 holder.classList.remove('settled', 'fly-past');
-                holder.offsetHeight;
-                requestAnimationFrame(() => {
-                    holder.classList.add('fly-past');
-                });
+                holder.classList.add('chatter');
             }
 
             rushStepTimer = setTimeout(() => {
+                if (holder) {
+                    holder.classList.remove('chatter');
+                    holder.classList.add('fly-past');
+                }
                 if (vaultBg) {
-                    vaultBg.classList.add('instant-blur');
+                    vaultBg.classList.remove('blur-clear');
+                    vaultBg.classList.add('blur-active');
                 }
 
-                stopVaultSpinning();
-                disposeVaultMiniCubes();
-
-                board.classList.remove('clouds-bg', 'blurred-bg');
-                board.classList.add('vault-bg');
-                vault.classList.remove('defocused', 'defocus-settle');
-                vault.classList.add('defocus-reveal');
-
-                setSoloPage('memoryVault');
-                renderVaultGrid(words);
-                startVaultSpinning();
-
-                vault.offsetHeight;
-                if (vaultBg) vaultBg.offsetHeight;
-
-                requestAnimationFrame(() => {
-                    if (vaultBg) {
-                        vaultBg.classList.remove('instant-blur');
-                    }
-                    vault.classList.remove('defocus-reveal');
-                    vault.classList.add('defocus-settle');
-                });
-
                 rushStepTimer = setTimeout(() => {
-                    vault.classList.remove('defocus-settle');
-                    if (holder) holder.classList.remove('fly-past');
-                    isCategoryTransitioning = false;
-                    isTransitioning = false;
-                }, 460);
-            }, 340);
+                    stopVaultSpinning();
+                    disposeVaultMiniCubes();
+
+                    board.classList.remove('clouds-bg', 'blurred-bg');
+                    board.classList.add('vault-bg');
+                    vault.classList.remove('defocused', 'defocus-settle');
+                    vault.classList.add('defocus-reveal');
+
+                    setSoloPage('memoryVault');
+                    renderVaultGrid(words);
+                    startVaultSpinning();
+
+                    vault.offsetHeight;
+                    if (vaultBg) vaultBg.offsetHeight;
+
+                    requestAnimationFrame(() => {
+                        if (vaultBg) {
+                            vaultBg.classList.remove('blur-active');
+                            vaultBg.classList.add('blur-clear');
+                        }
+                        vault.classList.remove('defocus-reveal');
+                        vault.classList.add('defocus-settle');
+                    });
+
+                    rushStepTimer = setTimeout(() => {
+                        vault.classList.remove('defocus-settle');
+                        if (holder) holder.classList.remove('fly-past');
+                        isCategoryTransitioning = false;
+                        isTransitioning = false;
+                    }, 340);
+                }, 170);
+            }, 120);
         }
 
         function seededRand(seed) {
@@ -2518,14 +2569,7 @@
             const categoryLabel = faceMap ? faceMap[spotKey] : '';
             if (!categoryLabel || !unlockedCategories.has(categoryLabel)) return;
 
-            if (btnEl) {
-                btnEl.classList.add('violet-flash');
-            }
-
-            setTimeout(() => {
-                if (btnEl) btnEl.classList.remove('violet-flash');
-                openMemoryVaultFromCategory(categoryLabel);
-            }, 100);
+            openMemoryVaultFromCategory(categoryLabel);
         }
 
         function disposeVaultMiniCubes() {
