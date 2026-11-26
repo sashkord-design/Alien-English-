@@ -181,7 +181,7 @@
         }
 
         .bg-layer.blur-active {
-            transition: opacity 0.16s ease, filter 0.16s ease-out, transform 0.16s ease-out !important;
+            transition: opacity 0.18s ease, filter 0.2s ease-out, transform 0.2s ease-out !important;
             filter: blur(8px) !important;
             transform: scale(1.07) !important;
         }
@@ -765,11 +765,11 @@
             opacity: 1 !important;
         }
 
-        /* Fly past camera off-screen cleanly without hanging */
+        /* Visible full spin + smooth fly-out past camera, then immediate hide without hanging */
         .category-cube-holder.fly-past {
             animation: none !important;
-            transition: transform 0.22s cubic-bezier(0.22, 0, 0.85, 0.4), opacity 0.12s ease-in 0.1s !important;
-            transform: scale(3.2) !important;
+            transition: transform 0.36s cubic-bezier(0.2, 0.04, 0.78, 0.45), opacity 0.1s ease-in 0.26s !important;
+            transform: scale(3.05) !important;
             opacity: 0 !important;
         }
 
@@ -1913,7 +1913,7 @@
             transitionPage(vault, workspace, 'backward');
         }
 
-        /* 1) Only category word chatters -> 2) Cube spins & flies right past camera off-screen -> 3) Word cubes appear cleanly */
+        /* 1) Only category word chatters -> 2) Cube rotates noticeably & flies off-screen -> 3) Word cubes appear cleanly */
         function openMemoryVaultFromCategory(categoryName, faceIdx = 4, slotKey = 'center', btnEl = null) {
             if (isTransitioning || isCategoryTransitioning) return;
             clearCategoryTimers();
@@ -1941,9 +1941,9 @@
             rushStepTimer = setTimeout(() => {
                 resetChatterOverlays();
 
-                /* Spin & fly straight past camera lens */
+                /* Visible full 360-degree turn + gentle z approach + CSS fly-past off screen */
                 catTargetRotY += 360;
-                catTargetZ = 4.6;
+                catTargetZ = 1.35;
 
                 if (holder) {
                     holder.classList.remove('settled', 'inverse-from-words', 'inverse-settle', 'fly-past', 'fly-hidden');
@@ -1957,7 +1957,7 @@
                     vaultBg.classList.add('blur-active');
                 }
 
-                /* Once cube has passed off-screen, hide holder completely and reveal word cubes */
+                /* Once cube completes visible spin & flies off-screen, hide immediately and show word cubes */
                 rushStepTimer = setTimeout(() => {
                     if (holder) {
                         holder.classList.add('fly-hidden');
@@ -2000,8 +2000,8 @@
                         isCategoryTransitioning = false;
                         isTransitioning = false;
                     }, 220);
-                }, 200);
-            }, 190);
+                }, 360);
+            }, 200);
         }
 
         function seededRand(seed) {
@@ -2656,9 +2656,9 @@
             catAnimId = requestAnimationFrame(renderCategoryLoop);
             if (!catRenderer || !catScene || !catCamera) return;
 
-            catCurrentRotX += (catTargetRotX - catCurrentRotX) * 0.24;
-            catCurrentRotY += (catTargetRotY - catCurrentRotY) * 0.24;
-            catCurrentZ += (catTargetZ - catCurrentZ) * 0.28;
+            catCurrentRotX += (catTargetRotX - catCurrentRotX) * 0.21;
+            catCurrentRotY += (catTargetRotY - catCurrentRotY) * 0.21;
+            catCurrentZ += (catTargetZ - catCurrentZ) * 0.18;
 
             if (catCubeGroup) {
                 catCubeGroup.rotation.x = THREE.MathUtils.degToRad(catCurrentRotX);
