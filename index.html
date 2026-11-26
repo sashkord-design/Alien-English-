@@ -1452,8 +1452,8 @@
             visual: '🍎'
         };
 
-        function easeOutQuart(t) {
-            return 1 - Math.pow(1 - t, 4);
+        function easeOutCubic(t) {
+            return 1 - Math.pow(1 - t, 3);
         }
 
         function easeInOutCubic(t) {
@@ -1846,40 +1846,54 @@
             transitionPage(rankVault, workspace, 'backward');
         }
 
-        /* Exact 3D world coordinates & scale for each slot in the 2x3 vault grid under SPLIT_CAM_Z */
+        /* Exact centered 2-column x 3-row world targets so cubes never drift right or jump */
         function getVaultSlotWorldTargets(wordsCount = 6) {
-            const gridEl = document.getElementById('vaultGrid');
+            const scrollEl = document.getElementById('vaultScroll');
             const stageEl = document.getElementById('splitWebglStage');
             const stageW = (stageEl && stageEl.clientWidth) || window.innerWidth || 390;
             const stageH = (stageEl && stageEl.clientHeight) || window.innerHeight || 844;
+
+            if (scrollEl) {
+                scrollEl.scrollLeft = 0;
+                scrollEl.offsetHeight;
+            }
 
             const fovRad = THREE.MathUtils.degToRad(SPLIT_FOV_DEG);
             const viewH = 2 * Math.tan(fovRad * 0.5) * SPLIT_CAM_Z;
             const viewW = viewH * (stageW / stageH);
 
-            const slots = gridEl ? Array.from(gridEl.querySelectorAll('.vault-node-slot')) : [];
+            const cellSize = 114;
+            const rowGap = 16;
+            const colGap = 12;
+            const rows = 3;
+            const cols = 2;
+
+            const totalGridW = cols * cellSize + (cols - 1) * colGap;
+            const totalGridH = rows * cellSize + (rows - 1) * rowGap;
+
+            const scrollRect = scrollEl ? scrollEl.getBoundingClientRect() : { left: 0, top: 0, width: stageW, height: stageH };
+            const scrollCenterX = scrollRect.left + scrollRect.width * 0.5;
+            const scrollCenterY = scrollRect.top + scrollRect.height * 0.5;
+
+            const startX = scrollCenterX - totalGridW * 0.5 + cellSize * 0.5;
+            const startY = scrollCenterY - totalGridH * 0.5 + cellSize * 0.5;
+
             const count = Math.min(wordsCount, 6);
             const targets = [];
 
             for (let i = 0; i < count; i++) {
-                let cx = stageW * 0.5;
-                let cy = stageH * 0.5;
-                let sizePx = 114;
+                const col = Math.floor(i / rows);
+                const row = i % rows;
+                const offset = CUBE_OFFSETS[i % CUBE_OFFSETS.length];
 
-                if (slots[i]) {
-                    const rect = slots[i].getBoundingClientRect();
-                    if (rect.width > 10) {
-                        cx = rect.left + rect.width * 0.5;
-                        cy = rect.top + rect.height * 0.5;
-                        sizePx = rect.width;
-                    }
-                }
+                const cx = startX + col * (cellSize + colGap) + offset.x;
+                const cy = startY + row * (cellSize + rowGap) + offset.y;
 
                 const ndcX = (cx / stageW) * 2 - 1;
                 const ndcY = -((cy / stageH) * 2 - 1);
                 const worldX = ndcX * (viewW * 0.5);
                 const worldY = ndcY * (viewH * 0.5);
-                const worldScale = (sizePx / 280) * 1.02;
+                const worldScale = (cellSize / 280) * 1.02;
 
                 targets.push({ x: worldX, y: worldY, z: 0, scale: worldScale });
             }
@@ -1916,7 +1930,6 @@
 
             splitCamera.aspect = w / h;
             splitCamera.updateProjectionMatrix();
-            /* updateStyle = false keeps CSS width/height 100% intact */
             splitRenderer.setSize(w, h, false);
             stage.style.display = 'block';
 
@@ -1939,7 +1952,7 @@
             return createOutlinedStoneCubeGroup(geom, mats, 1.036);
         }
 
-        /* 6-part fracture: big cube cracks into 6 distinct pieces that burst outward & settle into the 2x3 grid */
+        /* 6-part fracture: big cube splits into 6 pieces around center & settles smoothly into grid */
         function openMemoryVaultFromCategory(categoryName, faceIdx = 4, slotKey = 'center', btnEl = null) {
             if (isTransitioning || isCategoryTransitioning) return;
             clearCategoryTimers();
@@ -1965,7 +1978,6 @@
                 btnEl.classList.add('chattering');
             }
 
-            /* Chatter shortened 2.5x from 190ms to 76ms */
             rushStepTimer = setTimeout(() => {
                 resetChatterOverlays();
 
@@ -1981,43 +1993,39 @@
                     s.classList.add('morph-hidden');
                 });
 
-                rankVault.style.transition = 'none';
-                rankVault.style.display = 'flex';
-                rankVault.classList.remove('pos-left', 'pos-right');
-                rankVault.classList.add('pos-center');
-                rankVault.style.zIndex = '4';
-                vault.style.zIndex = '2';
+                rankVault.style.display = 'none';
+                rankVault.classList.remove('pos-center');
+                rankVault.classList.add('pos-right');
 
                 initSplitWebglStage();
                 const targets = getVaultSlotWorldTargets(words.length);
 
-                /* 6 fracture shards start packed together inside the center of the large cube */
+                /* Balanced 6-way crack vectors inside the large cube with gentle outward spread */
                 const fractureOrigin = [
-                    { x: -0.26, y:  0.26, z:  0.22, burstX: -0.75, burstY:  0.65, burstZ:  0.85, tiltX: -0.35, tiltY: -0.45, tiltZ:  0.25 },
-                    { x:  0.26, y:  0.26, z:  0.18, burstX:  0.75, burstY:  0.65, burstZ:  0.75, tiltX: -0.30, tiltY:  0.45, tiltZ: -0.25 },
-                    { x: -0.26, y:  0.00, z:  0.26, burstX: -0.85, burstY:  0.05, burstZ:  0.95, tiltX:  0.10, tiltY: -0.55, tiltZ:  0.18 },
-                    { x:  0.26, y:  0.00, z:  0.14, burstX:  0.85, burstY: -0.05, burstZ:  0.70, tiltX: -0.10, tiltY:  0.55, tiltZ: -0.18 },
-                    { x: -0.26, y: -0.26, z:  0.20, burstX: -0.75, burstY: -0.65, burstZ:  0.80, tiltX:  0.35, tiltY: -0.40, tiltZ: -0.22 },
-                    { x:  0.26, y: -0.26, z:  0.24, burstX:  0.75, burstY: -0.65, burstZ:  0.90, tiltX:  0.30, tiltY:  0.40, tiltZ:  0.22 }
+                    { x: -0.18, y:  0.22, z:  0.18, spreadX: -0.24, spreadY:  0.22, spreadZ:  0.35, tiltX: -0.22, tiltY: -0.28, tiltZ:  0.14 },
+                    { x:  0.18, y:  0.22, z:  0.16, spreadX:  0.24, spreadY:  0.22, spreadZ:  0.30, tiltX: -0.20, tiltY:  0.28, tiltZ: -0.14 },
+                    { x: -0.20, y:  0.00, z:  0.20, spreadX: -0.26, spreadY:  0.04, spreadZ:  0.38, tiltX:  0.06, tiltY: -0.32, tiltZ:  0.10 },
+                    { x:  0.20, y:  0.00, z:  0.14, spreadX:  0.26, spreadY: -0.04, spreadZ:  0.28, tiltX: -0.06, tiltY:  0.32, tiltZ: -0.10 },
+                    { x: -0.18, y: -0.22, z:  0.18, spreadX: -0.24, spreadY: -0.22, spreadZ:  0.34, tiltX:  0.22, tiltY: -0.26, tiltZ: -0.14 },
+                    { x:  0.18, y: -0.22, z:  0.20, spreadX:  0.24, spreadY: -0.22, spreadZ:  0.38, tiltX:  0.20, tiltY:  0.26, tiltZ:  0.14 }
                 ];
 
                 splitCubeEntries = words.map((item, idx) => {
                     const group = createWordSplitCubeGroup(item.word, idx);
                     const f = fractureOrigin[idx % fractureOrigin.length];
                     group.position.set(f.x, f.y, f.z);
-                    group.scale.setScalar(0.46);
+                    group.scale.setScalar(0.45);
                     group.rotation.set(0, 0, 0);
                     splitScene.add(group);
                     return {
                         group,
                         fracture: f,
-                        startScale: 0.46,
+                        startScale: 0.45,
                         finalAngle: idx * 25,
                         target: targets[idx] || { x: 0, y: 0, z: 0, scale: 0.41 }
                     };
                 });
 
-                /* Render initial positions immediately before hiding the big cube */
                 if (splitRenderer && splitScene && splitCamera) {
                     splitRenderer.render(splitScene, splitCamera);
                 }
@@ -2026,18 +2034,15 @@
                     holder.classList.remove('settled', 'assemble-fade-in');
                     holder.classList.add('hidden-during-split');
                 }
-                rankVault.style.display = 'none';
-                rankVault.classList.remove('pos-center');
-                rankVault.classList.add('pos-right');
 
-                const duration = 640;
+                const duration = 620;
                 const startTime = performance.now();
 
                 function animateSplit(now) {
                     const rawT = Math.min(1, (now - startTime) / duration);
-                    /* Phase 1 (0..0.38): shards crack & burst apart; Phase 2 (0.38..1.0): settle into 2x3 grid */
-                    const ease = easeOutQuart(rawT);
-                    const crackPulse = Math.sin(Math.min(1, rawT / 0.55) * Math.PI);
+                    const ease = easeOutCubic(rawT);
+                    /* Smooth bell curve that returns smoothly to 0 at rawT = 1 (zero end jump) */
+                    const crackCurve = Math.sin(rawT * Math.PI) * (1 - rawT * 0.45);
 
                     if (rawT > 0.72 && dualRow && dualRow.classList.contains('dock-hidden')) {
                         dualRow.classList.remove('dock-hidden');
@@ -2049,16 +2054,16 @@
                         const baseY = f.y + (entry.target.y - f.y) * ease;
                         const baseZ = f.z + (entry.target.z - f.z) * ease;
 
-                        entry.group.position.x = baseX + f.burstX * crackPulse * 0.45;
-                        entry.group.position.y = baseY + f.burstY * crackPulse * 0.45;
-                        entry.group.position.z = baseZ + f.burstZ * crackPulse * 0.55;
+                        entry.group.position.x = baseX + f.spreadX * crackCurve;
+                        entry.group.position.y = baseY + f.spreadY * crackCurve;
+                        entry.group.position.z = baseZ + f.spreadZ * crackCurve;
 
                         const s = entry.startScale + (entry.target.scale - entry.startScale) * ease;
                         entry.group.scale.setScalar(s);
 
-                        entry.group.rotation.x = f.tiltX * crackPulse;
-                        entry.group.rotation.y = THREE.MathUtils.degToRad(entry.finalAngle * ease) + f.tiltY * crackPulse;
-                        entry.group.rotation.z = f.tiltZ * crackPulse;
+                        entry.group.rotation.x = f.tiltX * crackCurve;
+                        entry.group.rotation.y = THREE.MathUtils.degToRad(entry.finalAngle * ease) + f.tiltY * crackCurve;
+                        entry.group.rotation.z = f.tiltZ * crackCurve;
                     });
 
                     if (splitRenderer && splitScene && splitCamera) {
@@ -2068,6 +2073,16 @@
                     if (rawT < 1) {
                         splitAnimRaf = requestAnimationFrame(animateSplit);
                     } else {
+                        /* Sync each mini-cube's exact angle before hiding the split overlay so handoff is seamless */
+                        vaultMiniCubes.forEach((mini, idx) => {
+                            const entry = splitCubeEntries[idx];
+                            if (entry) {
+                                mini.angle = entry.finalAngle % 360;
+                                mini.mesh.rotation.x = 0;
+                                mini.mesh.rotation.y = THREE.MathUtils.degToRad(mini.angle);
+                                mini.renderer.render(mini.scene, mini.camera);
+                            }
+                        });
                         stopSplitAnimation();
                         document.querySelectorAll('#vaultGrid .vault-node-slot').forEach((s) => {
                             s.classList.remove('morph-hidden');
@@ -2084,7 +2099,7 @@
             }, 76);
         }
 
-        /* Reverse 6-part reassemble: word cubes break away from grid, crack inward, and fuse back into the big cube */
+        /* Reverse 6-part reassemble: word cubes break away from grid and fuse back into the big cube */
         function returnToRankVault() {
             if (isTransitioning || isCategoryTransitioning) return;
             clearCategoryTimers();
@@ -2125,12 +2140,12 @@
             initSplitWebglStage();
 
             const fractureFuse = [
-                { x: -0.26, y:  0.26, z:  0.22, burstX: -0.65, burstY:  0.55, burstZ:  0.65, tiltX: -0.28, tiltY: -0.35, tiltZ:  0.20 },
-                { x:  0.26, y:  0.26, z:  0.18, burstX:  0.65, burstY:  0.55, burstZ:  0.55, tiltX: -0.25, tiltY:  0.35, tiltZ: -0.20 },
-                { x: -0.26, y:  0.00, z:  0.26, burstX: -0.70, burstY:  0.05, burstZ:  0.70, tiltX:  0.08, tiltY: -0.42, tiltZ:  0.15 },
-                { x:  0.26, y:  0.00, z:  0.14, burstX:  0.70, burstY: -0.05, burstZ:  0.55, tiltX: -0.08, tiltY:  0.42, tiltZ: -0.15 },
-                { x: -0.26, y: -0.26, z:  0.20, burstX: -0.65, burstY: -0.55, burstZ:  0.60, tiltX:  0.28, tiltY: -0.32, tiltZ: -0.18 },
-                { x:  0.26, y: -0.26, z:  0.24, burstX:  0.65, burstY: -0.55, burstZ:  0.68, tiltX:  0.25, tiltY:  0.32, tiltZ:  0.18 }
+                { x: -0.18, y:  0.22, z:  0.18, spreadX: -0.20, spreadY:  0.18, spreadZ:  0.28, tiltX: -0.18, tiltY: -0.22, tiltZ:  0.12 },
+                { x:  0.18, y:  0.22, z:  0.16, spreadX:  0.20, spreadY:  0.18, spreadZ:  0.24, tiltX: -0.16, tiltY:  0.22, tiltZ: -0.12 },
+                { x: -0.20, y:  0.00, z:  0.20, spreadX: -0.22, spreadY:  0.04, spreadZ:  0.30, tiltX:  0.05, tiltY: -0.26, tiltZ:  0.08 },
+                { x:  0.20, y:  0.00, z:  0.14, spreadX:  0.22, spreadY: -0.04, spreadZ:  0.22, tiltX: -0.05, tiltY:  0.26, tiltZ: -0.08 },
+                { x: -0.18, y: -0.22, z:  0.18, spreadX: -0.20, spreadY: -0.18, spreadZ:  0.28, tiltX:  0.18, tiltY: -0.20, tiltZ: -0.12 },
+                { x:  0.18, y: -0.22, z:  0.20, spreadX:  0.20, spreadY: -0.18, spreadZ:  0.30, tiltX:  0.16, tiltY:  0.20, tiltZ:  0.12 }
             ];
 
             splitCubeEntries = words.map((item, idx) => {
@@ -2146,7 +2161,7 @@
                     startPos,
                     endPos: f,
                     startScale: startPos.scale,
-                    endScale: 0.46,
+                    endScale: 0.45,
                     startRotY: idx * 25
                 };
             });
@@ -2157,7 +2172,7 @@
             function animateAssemble(now) {
                 const rawT = Math.min(1, (now - startTime) / duration);
                 const ease = easeInOutCubic(rawT);
-                const crackPulse = Math.sin(rawT * Math.PI);
+                const crackCurve = Math.sin(rawT * Math.PI) * (1 - rawT * 0.5);
 
                 splitCubeEntries.forEach((entry) => {
                     const f = entry.endPos;
@@ -2165,16 +2180,16 @@
                     const baseY = entry.startPos.y + (f.y - entry.startPos.y) * ease;
                     const baseZ = entry.startPos.z + (f.z - entry.startPos.z) * ease;
 
-                    entry.group.position.x = baseX + f.burstX * crackPulse * 0.35;
-                    entry.group.position.y = baseY + f.burstY * crackPulse * 0.35;
-                    entry.group.position.z = baseZ + f.burstZ * crackPulse * 0.42;
+                    entry.group.position.x = baseX + f.spreadX * crackCurve;
+                    entry.group.position.y = baseY + f.spreadY * crackCurve;
+                    entry.group.position.z = baseZ + f.spreadZ * crackCurve;
 
                     const s = entry.startScale + (entry.endScale - entry.startScale) * ease;
                     entry.group.scale.setScalar(s);
 
-                    entry.group.rotation.x = f.tiltX * crackPulse;
-                    entry.group.rotation.y = THREE.MathUtils.degToRad(entry.startRotY * (1 - ease)) + f.tiltY * crackPulse;
-                    entry.group.rotation.z = f.tiltZ * crackPulse;
+                    entry.group.rotation.x = f.tiltX * crackCurve;
+                    entry.group.rotation.y = THREE.MathUtils.degToRad(entry.startRotY * (1 - ease)) + f.tiltY * crackCurve;
+                    entry.group.rotation.z = f.tiltZ * crackCurve;
                 });
 
                 if (rawT > 0.75 && holder && holder.classList.contains('hidden-during-split')) {
@@ -2460,7 +2475,7 @@
                 ctx.beginPath();
                 ctx.moveTo(sx, sy);
                 ctx.lineTo(sx + dx, sy + dy);
-                ctx.stroke();
+                bctx.stroke();
             }
         }
 
@@ -2932,6 +2947,7 @@
             const scrollEl = document.getElementById('vaultScroll');
             disposeVaultMiniCubes();
             grid.innerHTML = '';
+            if (scrollEl) scrollEl.scrollLeft = 0;
 
             const visibleWords = words.slice(0, 6);
 
@@ -3035,155 +3051,4 @@
                 createMultiStoneTextures([wordData.ex1], { fontSize: 34 }, base + 11),
                 createMultiStoneTextures([wordData.ex2], { fontSize: 34 }, base + 23),
                 createMultiStoneTextures([wordData.definition], { fontSize: 34 }, base + 37),
-                createMultiStoneTextures([wordData.visual], { isEmoji: true }, base + 51),
-                createMultiStoneTextures([wordData.word, wordData.phonetic], { isTitle: true }, base + 67),
-                createMultiStoneTextures([wordData.ex3], { fontSize: 34 }, base + 83)
-            ];
-
-            const materials = faceSets.map((set) => new THREE.MeshStandardMaterial({
-                map: set.map,
-                bumpMap: set.bumpMap,
-                bumpScale: 0.055,
-                roughness: 0.94,
-                metalness: 0.02
-            }));
-
-            stoneCubeGroup = createOutlinedStoneCubeGroup(geom, materials, 1.03);
-            scene.add(stoneCubeGroup);
-
-            targetRotX = 0;
-            targetRotY = 0;
-            currentRotX = 0;
-            currentRotY = 0;
-            stoneCubeGroup.rotation.set(0, 0, 0);
-        }
-
-        function initThreeCube(wordData, cubeSeedBase = 1) {
-            const host = document.getElementById('threeCanvasHost');
-            if (!host || typeof THREE === 'undefined') return;
-
-            if (!renderer) {
-                scene = new THREE.Scene();
-                camera = new THREE.PerspectiveCamera(38, 1, 0.1, 100);
-                camera.position.set(0, 0, 5.5);
-                camera.lookAt(0, 0, 0);
-
-                renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-                renderer.setSize(264, 264);
-                renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-                host.innerHTML = '';
-                host.appendChild(renderer.domElement);
-
-                const ambient = new THREE.AmbientLight(0xc8cddc, 0.85);
-                scene.add(ambient);
-
-                const keyLight = new THREE.DirectionalLight(0xe4e6ed, 0.52);
-                keyLight.position.set(2, 2.5, 4);
-                scene.add(keyLight);
-
-                const rimLight = new THREE.DirectionalLight(0x818cf8, 0.2);
-                rimLight.position.set(-2.5, -1.5, -2);
-                scene.add(rimLight);
-            }
-
-            buildInspectionCubeMesh(wordData, cubeSeedBase);
-
-            if (!threeAnimId) {
-                renderThreeLoop();
-            }
-        }
-
-        function renderThreeLoop() {
-            threeAnimId = requestAnimationFrame(renderThreeLoop);
-            if (!renderer || !scene || !camera) return;
-
-            currentRotX += (targetRotX - currentRotX) * 0.14;
-            currentRotY += (targetRotY - currentRotY) * 0.14;
-
-            if (stoneCubeGroup) {
-                stoneCubeGroup.rotation.x = THREE.MathUtils.degToRad(currentRotX);
-                stoneCubeGroup.rotation.y = THREE.MathUtils.degToRad(currentRotY);
-                stoneCubeGroup.position.y = Math.sin(performance.now() * 0.0022) * 0.035;
-            }
-
-            renderer.render(scene, camera);
-        }
-
-        function inspectMemoryCube(wordData, sourceSlot, cubeSeedBase = 1) {
-            const vault = document.getElementById('memoryVault');
-            const cubeStage = document.getElementById('cubeStage');
-            const holder = document.getElementById('cubeDepthHolder');
-            const board = document.getElementById('retroBoard');
-
-            if (activePickedSlot) {
-                activePickedSlot.classList.remove('picked-out');
-            }
-            activePickedSlot = sourceSlot || null;
-            if (sourceSlot) {
-                sourceSlot.classList.add('picked-out');
-            }
-
-            initThreeCube(wordData, cubeSeedBase);
-
-            vault.classList.add('defocused');
-            board.classList.add('blurred-bg');
-
-            holder.classList.remove('approached');
-            cubeStage.style.display = 'flex';
-            holder.offsetHeight;
-
-            requestAnimationFrame(() => {
-                holder.classList.add('approached');
-            });
-        }
-
-        function returnToVault() {
-            const vault = document.getElementById('memoryVault');
-            const cubeStage = document.getElementById('cubeStage');
-            const holder = document.getElementById('cubeDepthHolder');
-            const board = document.getElementById('retroBoard');
-
-            if (activePickedSlot) {
-                activePickedSlot.classList.remove('picked-out');
-                activePickedSlot = null;
-            }
-
-            holder.classList.remove('approached');
-            board.classList.remove('blurred-bg');
-            vault.classList.remove('defocused');
-            cubeStage.style.display = 'none';
-        }
-
-        function alignYToUprightFront() {
-            targetRotY = Math.round(targetRotY / 360) * 360;
-        }
-
-        function tiltUp() {
-            alignYToUprightFront();
-            targetRotX = targetRotX > 0 ? 0 : -90;
-        }
-
-        function tiltDown() {
-            alignYToUprightFront();
-            targetRotX = targetRotX < 0 ? 0 : 90;
-        }
-
-        function turnLeft() {
-            targetRotX = 0;
-            targetRotY += 90;
-        }
-
-        function turnRight() {
-            targetRotX = 0;
-            targetRotY -= 90;
-        }
-
-        function turnBack() {
-            targetRotX = 0;
-            targetRotY += 180;
-        }
-
-        updateNarrativeView();
-    </script>
-</body>
-</html>
+                createMultiStone
