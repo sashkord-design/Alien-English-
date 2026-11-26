@@ -176,18 +176,18 @@
             pointer-events: none;
             transform: scale(1);
             filter: blur(0px);
-            transition: opacity 0.2s ease, filter 0.2s cubic-bezier(0.22, 1, 0.36, 1), transform 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+            transition: opacity 0.2s ease, filter 0.24s cubic-bezier(0.22, 1, 0.36, 1), transform 0.24s cubic-bezier(0.22, 1, 0.36, 1);
             will-change: filter, transform;
         }
 
         .bg-layer.blur-active {
-            transition: opacity 0.16s ease, filter 0.14s ease-out, transform 0.14s ease-out !important;
+            transition: opacity 0.16s ease, filter 0.16s ease-out, transform 0.16s ease-out !important;
             filter: blur(8px) !important;
             transform: scale(1.07) !important;
         }
 
         .bg-layer.blur-clear {
-            transition: opacity 0.18s ease, filter 0.24s cubic-bezier(0.16, 1, 0.3, 1), transform 0.24s cubic-bezier(0.16, 1, 0.3, 1) !important;
+            transition: opacity 0.18s ease, filter 0.26s cubic-bezier(0.16, 1, 0.3, 1), transform 0.26s cubic-bezier(0.16, 1, 0.3, 1) !important;
             filter: blur(0px) !important;
             transform: scale(1) !important;
         }
@@ -665,7 +665,7 @@
             height: 100%;
             padding: 12px 18px 12px;
             position: relative;
-            overflow: hidden;
+            overflow: visible;
             transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), filter 0.3s ease, opacity 0.3s ease;
         }
 
@@ -697,6 +697,7 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
+            z-index: 10;
         }
 
         .pink-pill-box::before {
@@ -720,11 +721,12 @@
             align-items: center;
             justify-content: center;
             position: relative;
+            overflow: visible;
             user-select: none;
             -webkit-user-select: none;
         }
 
-        /* Starts ~3x smaller on entry, approaches to 280px over 1s, then gently levitates */
+        /* IMPORTANT: No CSS filter: blur on WebGL cube holder so iOS Safari never clips the 3D canvas */
         .category-cube-holder {
             position: relative;
             width: 280px;
@@ -734,9 +736,8 @@
             justify-content: center;
             transform: scale(0.33);
             opacity: 0.9;
-            filter: blur(0px);
-            transition: transform 1s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.45s ease, filter 0.45s ease;
-            will-change: transform, opacity, filter;
+            transition: transform 1s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.45s ease;
+            will-change: transform, opacity;
         }
 
         .category-cube-holder.settled {
@@ -745,29 +746,26 @@
             animation: category-levitate 4.4s ease-in-out infinite;
         }
 
-        /* Inverse arrival from word cubes: flies in large & blurred over word cubes, settling into place */
+        /* Inverse arrival from word cubes: enters large from foreground over blurred word cubes, settles into place */
         .category-cube-holder.inverse-from-words {
             animation: none !important;
             transition: none !important;
-            transform: scale(2.15) !important;
-            filter: blur(8px) !important;
-            opacity: 0.55 !important;
+            transform: scale(2.35) !important;
+            opacity: 0 !important;
         }
 
         .category-cube-holder.inverse-settle {
-            animation: category-levitate 4.4s ease-in-out 0.32s infinite !important;
-            transition: transform 0.32s cubic-bezier(0.16, 1, 0.3, 1), filter 0.28s ease-out, opacity 0.24s ease-out !important;
+            animation: category-levitate 4.4s ease-in-out 0.34s infinite !important;
+            transition: transform 0.34s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.14s ease-out !important;
             transform: scale(1) !important;
-            filter: blur(0px) !important;
             opacity: 1 !important;
         }
 
-        /* Fly-through past screen with late dissolve so cube stays visible longer */
+        /* Fly-through past screen with late dissolve so cube stays solid longer while spinning */
         .category-cube-holder.fly-past {
             animation: none !important;
-            transition: transform 0.24s cubic-bezier(0.28, 0.04, 0.72, 0.96), opacity 0.1s ease-in 0.14s, filter 0.12s ease-in 0.11s !important;
+            transition: transform 0.34s cubic-bezier(0.25, 0.05, 0.72, 0.96), opacity 0.11s ease-in 0.23s !important;
             transform: scale(2.45) !important;
-            filter: blur(8px) !important;
             opacity: 0 !important;
         }
 
@@ -809,6 +807,9 @@
             border-radius: 10px;
             cursor: pointer;
             transform: translate(-50%, -50%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .cat-hit-btn.cat-center {
@@ -846,6 +847,38 @@
             height: 36px;
         }
 
+        /* Smooth 60fps overlay label that chatters on tap without rebuilding WebGL textures */
+        .cat-chatter-label {
+            display: none;
+            font-weight: 900;
+            color: #111215;
+            letter-spacing: 0.01em;
+            text-shadow: 0 0 3px rgba(202, 205, 212, 0.9);
+            user-select: none;
+            pointer-events: none;
+            animation: label-chatter-fast 0.11s linear infinite;
+        }
+
+        .cat-hit-btn.cat-center .cat-chatter-label {
+            font-size: 16.5px;
+        }
+
+        .cat-hit-btn:not(.cat-center) .cat-chatter-label {
+            font-size: 13.5px;
+        }
+
+        .cat-hit-btn.chattering .cat-chatter-label {
+            display: inline-block;
+        }
+
+        @keyframes label-chatter-fast {
+            0% { transform: translate(-3.5px, 1.5px); }
+            25% { transform: translate(3.5px, -1.5px); }
+            50% { transform: translate(-2.5px, -2px); }
+            75% { transform: translate(2.5px, 2px); }
+            100% { transform: translate(-3.5px, 1.5px); }
+        }
+
         /* 3. MEMORY STORAGE: 6 CUBES (2x3) */
         .memory-vault {
             display: none;
@@ -875,12 +908,12 @@
             transition: filter 0.28s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.24s ease, transform 0.28s cubic-bezier(0.16, 1, 0.3, 1) !important;
         }
 
-        /* When returning to rank, word cubes blur out as the big cube flies in over them */
+        /* When returning to rank, word cubes blur out smoothly as the big cube flies in over them */
         .memory-vault.defocus-exit {
             filter: blur(8px) !important;
-            opacity: 0.45 !important;
-            transform: scale(1.03) !important;
-            transition: filter 0.24s ease-out, opacity 0.24s ease-out, transform 0.24s ease-out !important;
+            opacity: 0 !important;
+            transform: scale(0.96) !important;
+            transition: filter 0.24s ease-out, opacity 0.26s ease-out, transform 0.26s ease-out !important;
         }
 
         .memory-vault.defocused {
@@ -1232,11 +1265,11 @@
                         </div>
 
                         <div class="category-face-hit-layer" id="categoryFaceHitLayer">
-                            <button class="cat-hit-btn cat-tl" data-slot="tl" onclick="onCategorySpotTap('tl')" aria-label="Top-left category"></button>
-                            <button class="cat-hit-btn cat-tr" data-slot="tr" onclick="onCategorySpotTap('tr')" aria-label="Top-right category"></button>
-                            <button class="cat-hit-btn cat-center" data-slot="center" onclick="onCategorySpotTap('center')" aria-label="Center category"></button>
-                            <button class="cat-hit-btn cat-bl" data-slot="bl" onclick="onCategorySpotTap('bl')" aria-label="Bottom-left category"></button>
-                            <button class="cat-hit-btn cat-br" data-slot="br" onclick="onCategorySpotTap('br')" aria-label="Bottom-right category"></button>
+                            <button class="cat-hit-btn cat-tl" data-slot="tl" onclick="onCategorySpotTap('tl', this)" aria-label="Top-left category"><span class="cat-chatter-label"></span></button>
+                            <button class="cat-hit-btn cat-tr" data-slot="tr" onclick="onCategorySpotTap('tr', this)" aria-label="Top-right category"><span class="cat-chatter-label"></span></button>
+                            <button class="cat-hit-btn cat-center" data-slot="center" onclick="onCategorySpotTap('center', this)" aria-label="Center category"><span class="cat-chatter-label"></span></button>
+                            <button class="cat-hit-btn cat-bl" data-slot="bl" onclick="onCategorySpotTap('bl', this)" aria-label="Bottom-left category"><span class="cat-chatter-label"></span></button>
+                            <button class="cat-hit-btn cat-br" data-slot="br" onclick="onCategorySpotTap('br', this)" aria-label="Bottom-right category"><span class="cat-chatter-label"></span></button>
                         </div>
                     </div>
                 </div>
@@ -1297,7 +1330,6 @@
         let letterRevealTimer = null;
         let entrySpinTimer = null;
         let rushStepTimer = null;
-        let labelChatterTimer = null;
 
         let vaultSpinRaf = null;
         let activePickedSlot = null;
@@ -1347,14 +1379,12 @@
         let catTargetRotY = 0;
         let catCurrentRotX = 0;
         let catCurrentRotY = 0;
-        let catFlightSpinY = 0;
-        let catFlightActive = false;
         let catAnimId = null;
         let frontFaceIndex = 4;
         let engravedByFace = {
             4: { center: '', tl: '', tr: '', bl: '', br: '' }
         };
-        let labelChatterOffset = { faceIdx: -1, slotKey: '', dx: 0, dy: 0 };
+        let hiddenTextureSlot = { faceIdx: -1, slotKey: '' };
 
         const CUBE_OFFSETS = [
             { x: -1, y: 1 },  { x: 1, y: -1 },
@@ -1642,6 +1672,18 @@
             }
         }
 
+        function resetChatterOverlays() {
+            document.querySelectorAll('.cat-hit-btn.chattering').forEach((btn) => {
+                btn.classList.remove('chattering');
+                const span = btn.querySelector('.cat-chatter-label');
+                if (span) span.textContent = '';
+            });
+            if (hiddenTextureSlot.faceIdx !== -1) {
+                hiddenTextureSlot = { faceIdx: -1, slotKey: '' };
+                rebuildCategoryCubeMesh();
+            }
+        }
+
         function clearCategoryTimers() {
             if (letterRevealTimer) {
                 clearInterval(letterRevealTimer);
@@ -1655,13 +1697,7 @@
                 clearTimeout(rushStepTimer);
                 rushStepTimer = null;
             }
-            if (labelChatterTimer) {
-                clearInterval(labelChatterTimer);
-                labelChatterTimer = null;
-            }
-            labelChatterOffset = { faceIdx: -1, slotKey: '', dx: 0, dy: 0 };
-            catFlightActive = false;
-            catFlightSpinY = 0;
+            resetChatterOverlays();
         }
 
         function triggerCategoryEntrySequence(fromWordVault = false) {
@@ -1675,11 +1711,11 @@
 
             if (fromWordVault) {
                 catCurrentRotX = 0;
-                catCurrentRotY = 0;
+                catCurrentRotY = -360;
                 catTargetRotX = 0;
                 catTargetRotY = 0;
                 frontFaceIndex = 4;
-                if (catCubeGroup) catCubeGroup.rotation.set(0, 0, 0);
+                if (catCubeGroup) catCubeGroup.rotation.set(0, THREE.MathUtils.degToRad(-360), 0);
 
                 holder.classList.add('inverse-from-words');
                 if (vaultBg) {
@@ -1698,15 +1734,19 @@
                 });
 
                 entrySpinTimer = setTimeout(() => {
+                    catCurrentRotX = 0;
+                    catCurrentRotY = 0;
+                    catTargetRotX = 0;
+                    catTargetRotY = 0;
+                    if (catCubeGroup) catCubeGroup.rotation.set(0, 0, 0);
                     holder.classList.remove('inverse-settle');
                     holder.classList.add('settled');
-                }, 340);
+                }, 360);
                 return;
             }
 
             holder.style.transform = 'scale(0.33)';
             holder.style.opacity = '0.9';
-            holder.style.filter = 'blur(0px)';
             holder.offsetHeight;
 
             catCurrentRotX = -12;
@@ -1719,7 +1759,6 @@
                 holder.classList.add('settled');
                 holder.style.transform = '';
                 holder.style.opacity = '';
-                holder.style.filter = '';
             });
 
             entrySpinTimer = setTimeout(() => {
@@ -1819,11 +1858,13 @@
             currentVault.style.display = 'flex';
             currentVault.classList.remove('pos-left', 'pos-right');
             currentVault.classList.add('pos-center');
+            currentVault.style.zIndex = '2';
 
             rankVault.style.transition = 'none';
             rankVault.style.display = 'flex';
             rankVault.classList.remove('pos-left', 'pos-right');
             rankVault.classList.add('pos-center');
+            rankVault.style.zIndex = '4';
 
             initCategoryCube();
             triggerCategoryEntrySequence(true);
@@ -1834,11 +1875,13 @@
 
             transitionTimer = setTimeout(() => {
                 currentVault.classList.remove('defocus-exit');
+                currentVault.style.zIndex = '';
+                rankVault.style.zIndex = '';
                 setSoloPage('rankVault');
                 isTransitioning = false;
                 isCategoryTransitioning = false;
                 transitionTimer = null;
-            }, 350);
+            }, 370);
         }
 
         function returnToStudyFromVault() {
@@ -1857,8 +1900,8 @@
             transitionPage(vault, workspace, 'backward');
         }
 
-        /* Only category label chatters -> cube spins & flies through + background blurs -> 2x shorter gap -> word cubes clear */
-        function openMemoryVaultFromCategory(categoryName, faceIdx = 4, slotKey = 'center') {
+        /* 1) Only category word chatters -> 2) Cube rotates full turn & flies through + bg blurs -> 3) Word cubes clear */
+        function openMemoryVaultFromCategory(categoryName, faceIdx = 4, slotKey = 'center', btnEl = null) {
             if (isTransitioning || isCategoryTransitioning) return;
             clearCategoryTimers();
             isTransitioning = true;
@@ -1872,29 +1915,21 @@
             const words = getStoredWords();
             saveStoredWords(words);
 
-            let tick = 0;
-            labelChatterTimer = setInterval(() => {
-                tick++;
-                const sign = tick % 2 === 0 ? 1 : -1;
-                labelChatterOffset = {
-                    faceIdx,
-                    slotKey,
-                    dx: sign * (tick % 3 === 0 ? 7 : 5),
-                    dy: (tick % 4 === 0 ? -3 : 3) * sign
-                };
-                rebuildCategoryCubeMesh();
-            }, 28);
+            /* Smooth 60fps chatter of only the category text */
+            hiddenTextureSlot = { faceIdx, slotKey };
+            rebuildCategoryCubeMesh();
+
+            if (btnEl) {
+                const span = btnEl.querySelector('.cat-chatter-label');
+                if (span) span.textContent = categoryName;
+                btnEl.classList.add('chattering');
+            }
 
             rushStepTimer = setTimeout(() => {
-                if (labelChatterTimer) {
-                    clearInterval(labelChatterTimer);
-                    labelChatterTimer = null;
-                }
-                labelChatterOffset = { faceIdx: -1, slotKey: '', dx: 0, dy: 0 };
-                rebuildCategoryCubeMesh();
+                resetChatterOverlays();
 
-                catFlightActive = true;
-                catFlightSpinY = 0;
+                /* Full spin + fly-through toward camera */
+                catTargetRotY += 360;
 
                 if (holder) {
                     holder.classList.remove('settled', 'inverse-from-words', 'inverse-settle', 'fly-past');
@@ -1908,11 +1943,7 @@
                     vaultBg.classList.add('blur-active');
                 }
 
-                /* Half the post-disappearance delay (~85ms) before word cubes appear */
                 rushStepTimer = setTimeout(() => {
-                    catFlightActive = false;
-                    catFlightSpinY = 0;
-
                     stopVaultSpinning();
                     disposeVaultMiniCubes();
 
@@ -1940,11 +1971,13 @@
                     rushStepTimer = setTimeout(() => {
                         vault.classList.remove('defocus-settle');
                         if (holder) holder.classList.remove('fly-past');
+                        catCurrentRotY = Math.round(catTargetRotY / 360) * 360;
+                        catTargetRotY = catCurrentRotY;
                         isCategoryTransitioning = false;
                         isTransitioning = false;
-                    }, 290);
-                }, 85);
-            }, 125);
+                    }, 280);
+                }, 260);
+            }, 220);
         }
 
         function seededRand(seed) {
@@ -2355,7 +2388,7 @@
 
             if (options.isCategoryCluster) {
                 const engraved = options.engraved || {};
-                const chatter = options.chatter || null;
+                const hideSlot = options.hideSlot || '';
                 const spots = [
                     { key: 'tl', x: size * 0.25, y: size * 0.24 },
                     { key: 'tr', x: size * 0.75, y: size * 0.24 },
@@ -2365,19 +2398,17 @@
                 ];
 
                 spots.forEach((spot) => {
+                    if (spot.key === hideSlot) return;
                     const label = engraved[spot.key];
                     if (!label) return;
                     const basePx = spot.key === 'center' ? 42 : 35;
                     const fontPx = Math.round(basePx * scale);
                     const fontStr = `900 ${fontPx}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
 
-                    const extraX = chatter && chatter.slotKey === spot.key ? chatter.dx * scale : 0;
-                    const extraY = chatter && chatter.slotKey === spot.key ? chatter.dy * scale : 0;
-
                     drawCrispText(
                         label,
-                        spot.x + extraX,
-                        spot.y + extraY,
+                        spot.x,
+                        spot.y,
                         fontStr,
                         '#111215',
                         4.5,
@@ -2505,7 +2536,7 @@
             return group;
         }
 
-        /* Single large category cube (no self-spin, only levitate + flip + flight spin) */
+        /* Single large category cube */
         function rebuildCategoryCubeMesh() {
             if (!catScene || typeof THREE === 'undefined') return;
             if (catCubeGroup) {
@@ -2517,7 +2548,7 @@
             const materials = Array.from({ length: 6 }, (_, faceIdx) => {
                 const faceSeed = 500 + faceIdx * 19;
                 const faceEngraved = engravedByFace[faceIdx];
-                const activeChatter = labelChatterOffset.faceIdx === faceIdx ? labelChatterOffset : null;
+                const hideSlot = hiddenTextureSlot.faceIdx === faceIdx ? hiddenTextureSlot.slotKey : '';
                 const stoneSet = faceEngraved
                     ? createMultiStoneTextures(
                         [],
@@ -2525,7 +2556,7 @@
                             isCategoryCluster: true,
                             hasPurplePebbles: true,
                             engraved: faceEngraved,
-                            chatter: activeChatter
+                            hideSlot
                         },
                         faceSeed
                     )
@@ -2547,7 +2578,7 @@
             catCubeGroup = createOutlinedStoneCubeGroup(geom, materials, 1.032);
             catCubeGroup.rotation.set(
                 THREE.MathUtils.degToRad(catCurrentRotX),
-                THREE.MathUtils.degToRad(catCurrentRotY + catFlightSpinY),
+                THREE.MathUtils.degToRad(catCurrentRotY),
                 0
             );
             catScene.add(catCubeGroup);
@@ -2585,8 +2616,6 @@
             catTargetRotY = 0;
             catCurrentRotX = 0;
             catCurrentRotY = 0;
-            catFlightSpinY = 0;
-            catFlightActive = false;
             frontFaceIndex = 4;
 
             rebuildCategoryCubeMesh();
@@ -2600,15 +2629,12 @@
             catAnimId = requestAnimationFrame(renderCategoryLoop);
             if (!catRenderer || !catScene || !catCamera) return;
 
-            catCurrentRotX += (catTargetRotX - catCurrentRotX) * 0.18;
-            catCurrentRotY += (catTargetRotY - catCurrentRotY) * 0.18;
-            if (catFlightActive) {
-                catFlightSpinY += 5.5;
-            }
+            catCurrentRotX += (catTargetRotX - catCurrentRotX) * 0.2;
+            catCurrentRotY += (catTargetRotY - catCurrentRotY) * 0.2;
 
             if (catCubeGroup) {
                 catCubeGroup.rotation.x = THREE.MathUtils.degToRad(catCurrentRotX);
-                catCubeGroup.rotation.y = THREE.MathUtils.degToRad(catCurrentRotY + catFlightSpinY);
+                catCubeGroup.rotation.y = THREE.MathUtils.degToRad(catCurrentRotY);
                 catCubeGroup.position.y = 0;
             }
 
@@ -2642,14 +2668,14 @@
             }
         }
 
-        function onCategorySpotTap(spotKey) {
+        function onCategorySpotTap(spotKey, btnEl) {
             if (isTransitioning || isCategoryTransitioning) return;
 
             const faceMap = CUBE_FACES_CATEGORIES[frontFaceIndex];
             const categoryLabel = faceMap ? faceMap[spotKey] : '';
             if (!categoryLabel || !unlockedCategories.has(categoryLabel)) return;
 
-            openMemoryVaultFromCategory(categoryLabel, frontFaceIndex, spotKey);
+            openMemoryVaultFromCategory(categoryLabel, frontFaceIndex, spotKey, btnEl);
         }
 
         function disposeVaultMiniCubes() {
