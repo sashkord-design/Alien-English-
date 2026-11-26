@@ -165,18 +165,25 @@
         /* Background layers anchored on all sides with dark backing */
         .bg-layer {
             position: fixed;
-            left: -12px;
-            right: -12px;
-            top: -12px;
-            bottom: -12px;
+            left: -14px;
+            right: -14px;
+            top: -14px;
+            bottom: -14px;
             width: auto;
             height: auto;
             background-color: var(--vault-base);
             z-index: 0;
             pointer-events: none;
             transform: scale(1);
-            transition: opacity 0.25s ease, filter 0.45s cubic-bezier(0.22, 1, 0.36, 1), transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+            filter: blur(0px);
+            transition: opacity 0.25s ease, filter 0.42s cubic-bezier(0.22, 1, 0.36, 1), transform 0.42s cubic-bezier(0.22, 1, 0.36, 1);
             will-change: filter, transform;
+        }
+
+        .bg-layer.instant-blur {
+            transition: opacity 0.25s ease !important;
+            filter: blur(8px) !important;
+            transform: scale(1.08) !important;
         }
 
         .bg-first-page {
@@ -732,20 +739,11 @@
             animation: category-levitate 4.4s ease-in-out infinite;
         }
 
-        /* Step A: clearly rush closer to player first */
-        .category-cube-holder.zoom-near {
+        /* Single uninterrupted fly-through past screen with late blur & fade */
+        .category-cube-holder.fly-past {
             animation: none !important;
-            transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.25s ease, filter 0.25s ease !important;
-            transform: scale(1.62) !important;
-            opacity: 1 !important;
-            filter: blur(1.5px) !important;
-        }
-
-        /* Step B: dissolve & defocus right after approaching */
-        .category-cube-holder.dissolve-out {
-            animation: none !important;
-            transition: transform 0.28s cubic-bezier(0.32, 0, 0.67, 0), opacity 0.28s ease-out, filter 0.28s ease-out !important;
-            transform: scale(1.88) !important;
+            transition: transform 0.44s cubic-bezier(0.28, 0.04, 0.72, 0.96), opacity 0.22s ease-in 0.22s, filter 0.24s ease-in 0.2s !important;
+            transform: scale(2.45) !important;
             filter: blur(9px) !important;
             opacity: 0 !important;
         }
@@ -849,7 +847,7 @@
         /* Continuous defocus handoff from category cube into word cubes */
         .memory-vault.defocus-reveal {
             filter: blur(8px);
-            opacity: 0.35;
+            opacity: 0.45;
             transform: scale(1.04);
             transition: none !important;
         }
@@ -858,7 +856,7 @@
             filter: blur(0px);
             opacity: 1;
             transform: scale(1);
-            transition: filter 0.48s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.42s ease, transform 0.48s cubic-bezier(0.16, 1, 0.3, 1) !important;
+            transition: filter 0.44s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.38s ease, transform 0.44s cubic-bezier(0.16, 1, 0.3, 1) !important;
         }
 
         .memory-vault.defocused {
@@ -1639,7 +1637,7 @@
 
             isCategoryTransitioning = false;
             if (board) board.classList.remove('blurred-bg');
-            holder.classList.remove('zoom-near', 'dissolve-out', 'settled');
+            holder.classList.remove('fly-past', 'settled');
             holder.style.transform = 'scale(0.33)';
             holder.style.opacity = '0.9';
             holder.style.filter = 'blur(0px)';
@@ -1769,61 +1767,64 @@
             transitionPage(vault, workspace, 'backward');
         }
 
-        /* 1) Large cube approaches clearly first; 2) dissolves + blurs background; 3) word cubes & background come into focus together */
+        /* Seamless fly-through of large cube + continuous blur across background and word cubes */
         function openMemoryVaultFromCategory(categoryName) {
             if (isTransitioning || isCategoryTransitioning) return;
+            clearCategoryTimers();
             isTransitioning = true;
             isCategoryTransitioning = true;
 
             const holder = document.getElementById('categoryCubeHolder');
             const vault = document.getElementById('memoryVault');
             const board = document.getElementById('retroBoard');
+            const vaultBg = document.querySelector('.bg-vault-page');
 
             const words = getStoredWords();
             saveStoredWords(words);
 
             if (holder) {
-                holder.classList.remove('settled', 'dissolve-out');
-                holder.classList.add('zoom-near');
+                holder.classList.remove('settled', 'fly-past');
+                holder.offsetHeight;
+                requestAnimationFrame(() => {
+                    holder.classList.add('fly-past');
+                });
             }
 
             rushStepTimer = setTimeout(() => {
-                if (holder) {
-                    holder.classList.remove('zoom-near');
-                    holder.classList.add('dissolve-out');
+                if (vaultBg) {
+                    vaultBg.classList.add('instant-blur');
                 }
-                if (board) {
-                    board.classList.add('blurred-bg');
-                }
+
+                stopVaultSpinning();
+                disposeVaultMiniCubes();
+
+                board.classList.remove('clouds-bg', 'blurred-bg');
+                board.classList.add('vault-bg');
+                vault.classList.remove('defocused', 'defocus-settle');
+                vault.classList.add('defocus-reveal');
+
+                setSoloPage('memoryVault');
+                renderVaultGrid(words);
+                startVaultSpinning();
+
+                vault.offsetHeight;
+                if (vaultBg) vaultBg.offsetHeight;
+
+                requestAnimationFrame(() => {
+                    if (vaultBg) {
+                        vaultBg.classList.remove('instant-blur');
+                    }
+                    vault.classList.remove('defocus-reveal');
+                    vault.classList.add('defocus-settle');
+                });
 
                 rushStepTimer = setTimeout(() => {
-                    stopVaultSpinning();
-                    disposeVaultMiniCubes();
-
-                    board.classList.remove('clouds-bg');
-                    board.classList.add('vault-bg');
-                    vault.classList.remove('defocused', 'defocus-settle');
-                    vault.classList.add('defocus-reveal');
-
-                    setSoloPage('memoryVault');
-                    renderVaultGrid(words);
-                    startVaultSpinning();
-
-                    vault.offsetHeight;
-                    requestAnimationFrame(() => {
-                        vault.classList.remove('defocus-reveal');
-                        vault.classList.add('defocus-settle');
-                        board.classList.remove('blurred-bg');
-                    });
-
-                    rushStepTimer = setTimeout(() => {
-                        vault.classList.remove('defocus-settle');
-                        if (holder) holder.classList.remove('dissolve-out');
-                        isCategoryTransitioning = false;
-                        isTransitioning = false;
-                    }, 500);
-                }, 270);
-            }, 320);
+                    vault.classList.remove('defocus-settle');
+                    if (holder) holder.classList.remove('fly-past');
+                    isCategoryTransitioning = false;
+                    isTransitioning = false;
+                }, 460);
+            }, 340);
         }
 
         function seededRand(seed) {
@@ -2389,7 +2390,6 @@
 
             const geom = createChippedStoneCubeGeometry(1.98, 41);
 
-            /* BoxGeometry material order: 0:+X, 1:-X, 2:+Y, 3:-Y, 4:+Z (front face), 5:-Z */
             const materials = Array.from({ length: 6 }, (_, faceIdx) => {
                 const faceSeed = 500 + faceIdx * 19;
                 const faceEngraved = engravedByFace[faceIdx];
