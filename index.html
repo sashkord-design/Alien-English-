@@ -481,15 +481,13 @@
             border: 2px solid var(--ink-dark);
             border-radius: 14px;
             overflow: hidden;
-            padding: 14px 18px;
+            padding: 16px 18px;
             text-align: center;
             margin-bottom: 4px;
             box-shadow: 2px 3px 0px var(--ink-dark);
             display: flex;
-            flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 6px;
         }
 
         .riddle-text {
@@ -497,23 +495,6 @@
             line-height: 1.38;
             font-weight: 700;
             color: var(--ink-dark);
-        }
-
-        .unlock-banner {
-            display: none;
-            font-size: 11px;
-            font-weight: 800;
-            letter-spacing: 0.05em;
-            text-transform: uppercase;
-            color: #4c1d95;
-            background: rgba(196, 181, 253, 0.55);
-            border: 1.5px solid rgba(76, 29, 149, 0.45);
-            border-radius: 8px;
-            padding: 3px 10px;
-        }
-
-        .unlock-banner.visible {
-            display: inline-block;
         }
 
         .cards-grid {
@@ -660,7 +641,7 @@
             box-shadow: 1px 1px 0px var(--ink-dark);
         }
 
-        /* 2.5 SINGLE LARGE CATEGORY CUBE VAULT (NO SELF-SPIN, ONLY LEVITATE + FLIP) */
+        /* 2.5 SINGLE LARGE CATEGORY CUBE VAULT */
         .rank-vault {
             display: none;
             flex-direction: column;
@@ -729,7 +710,7 @@
             -webkit-user-select: none;
         }
 
-        /* ~6% larger than Apple cube (264px -> 280px) */
+        /* Starts ~3x smaller on entry, approaches to 280px over 1s, then gently levitates */
         .category-cube-holder {
             position: relative;
             width: 280px;
@@ -737,19 +718,30 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            animation: category-levitate 4.4s ease-in-out infinite;
-            transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
-            will-change: transform;
+            transform: scale(0.33);
+            opacity: 0.9;
+            transition: transform 1s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.5s ease, filter 0.5s ease;
+            will-change: transform, opacity, filter;
         }
 
-        .category-cube-holder.approaching {
-            animation: none;
-            transform: scale(1.24);
+        .category-cube-holder.settled {
+            transform: scale(1);
+            opacity: 1;
+            animation: category-levitate 4.4s ease-in-out infinite;
+        }
+
+        /* 0.5s rush toward player with defocus & fade out */
+        .category-cube-holder.rush-out {
+            animation: none !important;
+            transition: transform 0.5s cubic-bezier(0.32, 0, 0.67, 0), opacity 0.5s ease-out, filter 0.5s ease-out !important;
+            transform: scale(1.75) !important;
+            filter: blur(9px) !important;
+            opacity: 0 !important;
         }
 
         @keyframes category-levitate {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-5px); }
+            0%, 100% { transform: translateY(0px) scale(1); }
+            50% { transform: translateY(-5px) scale(1); }
         }
 
         #categoryCubeCanvasHost {
@@ -770,7 +762,6 @@
             pointer-events: none;
         }
 
-        /* Interactive 5-category hit spots on front face + edge flip zones */
         .category-face-hit-layer {
             position: absolute;
             inset: 44px;
@@ -792,65 +783,42 @@
         .cat-hit-btn.cat-center {
             left: 50%;
             top: 50%;
-            width: 94px;
-            height: 36px;
+            width: 112px;
+            height: 42px;
         }
 
         .cat-hit-btn.cat-tl {
             left: 25%;
             top: 24%;
-            width: 82px;
-            height: 34px;
+            width: 88px;
+            height: 36px;
         }
 
         .cat-hit-btn.cat-tr {
             left: 75%;
             top: 24%;
-            width: 82px;
-            height: 34px;
+            width: 88px;
+            height: 36px;
         }
 
         .cat-hit-btn.cat-bl {
             left: 25%;
             top: 76%;
-            width: 82px;
-            height: 34px;
+            width: 88px;
+            height: 36px;
         }
 
         .cat-hit-btn.cat-br {
             left: 75%;
             top: 76%;
-            width: 82px;
-            height: 34px;
+            width: 88px;
+            height: 36px;
         }
 
         .cat-hit-btn.violet-flash {
             background-color: rgba(124, 58, 237, 0.34);
             box-shadow: 0 0 16px rgba(99, 102, 241, 0.85), inset 0 0 10px rgba(167, 139, 250, 0.8);
             transform: translate(-50%, -50%) scale(1.08);
-        }
-
-        .category-status-hint {
-            position: absolute;
-            bottom: 4px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 25;
-            font-size: 11px;
-            font-weight: 700;
-            color: #e9d5ff;
-            background: rgba(24, 24, 27, 0.72);
-            border: 1px solid rgba(196, 181, 253, 0.45);
-            border-radius: 8px;
-            padding: 4px 10px;
-            white-space: nowrap;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.18s ease;
-        }
-
-        .category-status-hint.visible {
-            opacity: 1;
         }
 
         /* 3. MEMORY STORAGE: 6 CUBES (2x3) */
@@ -864,7 +832,22 @@
             padding: 10px 0 8px;
             position: relative;
             overflow: hidden;
-            transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), filter 0.25s ease;
+            transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), filter 0.45s ease, opacity 0.45s ease;
+        }
+
+        /* Continuous defocus handoff from category cube rush into word cubes */
+        .memory-vault.defocus-reveal {
+            filter: blur(8px);
+            opacity: 0.35;
+            transform: scale(1.04);
+            transition: none !important;
+        }
+
+        .memory-vault.defocus-settle {
+            filter: blur(0px);
+            opacity: 1;
+            transform: scale(1);
+            transition: filter 0.48s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.42s ease, transform 0.48s cubic-bezier(0.16, 1, 0.3, 1) !important;
         }
 
         .memory-vault.defocused {
@@ -1123,7 +1106,6 @@
             <div class="scan-workspace page-slide pos-right" id="scanWorkspace" style="display: none;">
                 <div class="riddle-box">
                     <div class="riddle-text">The fruit that fell on Alan’s head</div>
-                    <div class="unlock-banner" id="unlockBanner">New category unlocked: NATURE</div>
                 </div>
 
                 <div class="cards-grid" id="cardsGrid">
@@ -1224,8 +1206,6 @@
                             <button class="cat-hit-btn cat-br" data-slot="br" onclick="onCategorySpotTap('br', this)" aria-label="Bottom-right category"></button>
                         </div>
                     </div>
-
-                    <div class="category-status-hint" id="categoryStatusHint"></div>
                 </div>
 
                 <button class="bottom-nav-btn pink-pill-box" id="backFromRankBtn" onclick="returnFromRankToStudy()"><span>back</span></button>
@@ -1279,8 +1259,10 @@
 
         let isSolved = false;
         let unlockedCategories = new Set();
-        let hasEngravedNature = false;
-        let isCategoryApproaching = false;
+        let hasEngravedFirstNature = false;
+        let isCategoryRushing = false;
+        let letterRevealTimer = null;
+        let entrySpinTimer = null;
 
         let vaultSpinRaf = null;
         let activePickedSlot = null;
@@ -1288,11 +1270,9 @@
         let narrativeIndex = 0;
         let transitionTimer = null;
         let isTransitioning = false;
-        let statusHintTimer = null;
 
         const PAGE_IDS = ['introScreen', 'scanWorkspace', 'rankVault', 'memoryVault'];
 
-        /* 6 faces x 5 categories = 30 categories; Face 0 follows sketch layout with NATURE in center */
         const CUBE_FACES_CATEGORIES = [
             {
                 center: 'NATURE',
@@ -1361,7 +1341,7 @@
         let currentRotY = 0;
         let threeAnimId = null;
 
-        /* Single large category cube state (no auto-rotation, only levitation + manual flip) */
+        /* Single large category cube state */
         let catScene, catCamera, catRenderer, catCubeGroup;
         let catTargetRotX = 0;
         let catTargetRotY = 0;
@@ -1369,6 +1349,7 @@
         let catCurrentRotY = 0;
         let catAnimId = null;
         let activeCategoryFaceIndex = 0;
+        let currentEngravedMap = { center: '', tl: '', tr: '', bl: '', br: '' };
 
         const CUBE_OFFSETS = [
             { x: -1, y: 1 },  { x: 1, y: -1 },
@@ -1636,11 +1617,6 @@
                     }
                 });
 
-                const banner = document.getElementById('unlockBanner');
-                if (banner) {
-                    banner.classList.add('visible');
-                }
-
                 const actionRow = document.getElementById('actionRow');
                 actionRow.classList.remove('visible');
                 actionRow.offsetHeight;
@@ -1661,15 +1637,73 @@
             }
         }
 
-        function showCategoryHint(message) {
-            const hint = document.getElementById('categoryStatusHint');
-            if (!hint) return;
-            hint.textContent = message;
-            hint.classList.add('visible');
-            if (statusHintTimer) clearTimeout(statusHintTimer);
-            statusHintTimer = setTimeout(() => {
-                hint.classList.remove('visible');
-            }, 1500);
+        function clearCategoryTimers() {
+            if (letterRevealTimer) {
+                clearInterval(letterRevealTimer);
+                letterRevealTimer = null;
+            }
+            if (entrySpinTimer) {
+                clearTimeout(entrySpinTimer);
+                entrySpinTimer = null;
+            }
+        }
+
+        function triggerCategoryEntrySequence() {
+            clearCategoryTimers();
+            const holder = document.getElementById('categoryCubeHolder');
+            if (!holder) return;
+
+            isCategoryRushing = false;
+            holder.classList.remove('rush-out', 'settled');
+            holder.style.transform = 'scale(0.33)';
+            holder.style.opacity = '0.9';
+            holder.offsetHeight;
+
+            /* 1-second spin + zoom up to full size */
+            catCurrentRotX = -10;
+            catCurrentRotY = 0;
+            catTargetRotX = 0;
+            catTargetRotY = 360;
+
+            requestAnimationFrame(() => {
+                holder.classList.add('settled');
+                holder.style.transform = '';
+                holder.style.opacity = '';
+            });
+
+            entrySpinTimer = setTimeout(() => {
+                catCurrentRotY = 0;
+                catTargetRotY = 0;
+                catCurrentRotX = 0;
+                catTargetRotX = 0;
+
+                if (unlockedCategories.has('NATURE') && !hasEngravedFirstNature) {
+                    hasEngravedFirstNature = true;
+                    engraveWordLetterByLetter('NATURE', 'center');
+                }
+            }, 1020);
+        }
+
+        function engraveWordLetterByLetter(fullWord, slotKey) {
+            if (letterRevealTimer) {
+                clearInterval(letterRevealTimer);
+                letterRevealTimer = null;
+            }
+
+            let idx = 0;
+            currentEngravedMap[slotKey] = '';
+            rebuildCategoryCubeMesh();
+
+            letterRevealTimer = setInterval(() => {
+                idx++;
+                currentEngravedMap[slotKey] = fullWord.slice(0, idx);
+                rebuildCategoryCubeMesh();
+
+                if (idx >= fullWord.length) {
+                    clearInterval(letterRevealTimer);
+                    letterRevealTimer = null;
+                }
+            }, 65);
         }
 
         function openRankVault() {
@@ -1677,12 +1711,9 @@
             const workspace = document.getElementById('scanWorkspace');
             const rankVault = document.getElementById('rankVault');
             const board = document.getElementById('retroBoard');
-            const holder = document.getElementById('categoryCubeHolder');
 
             stopVaultSpinning();
             disposeVaultMiniCubes();
-            isCategoryApproaching = false;
-            if (holder) holder.classList.remove('approaching');
 
             board.classList.remove('clouds-bg', 'blurred-bg');
             board.classList.add('vault-bg');
@@ -1690,16 +1721,13 @@
 
             transitionPage(workspace, rankVault, 'forward', () => {
                 initCategoryCube();
-                if (unlockedCategories.has('NATURE') && !hasEngravedNature) {
-                    hasEngravedNature = true;
-                    rebuildCategoryCubeMesh();
-                    showCategoryHint('Engraved on cube: NATURE');
-                }
+                triggerCategoryEntrySequence();
             });
         }
 
         function returnFromRankToStudy() {
             if (isTransitioning) return;
+            clearCategoryTimers();
             const rankVault = document.getElementById('rankVault');
             const workspace = document.getElementById('scanWorkspace');
             const board = document.getElementById('retroBoard');
@@ -1715,12 +1743,10 @@
             const currentVault = document.getElementById('memoryVault');
             const rankVault = document.getElementById('rankVault');
             const board = document.getElementById('retroBoard');
-            const holder = document.getElementById('categoryCubeHolder');
 
             stopVaultSpinning();
             disposeVaultMiniCubes();
-            isCategoryApproaching = false;
-            if (holder) holder.classList.remove('approaching');
+            currentVault.classList.remove('defocus-reveal', 'defocus-settle');
 
             board.classList.remove('clouds-bg', 'blurred-bg');
             board.classList.add('vault-bg');
@@ -1728,6 +1754,7 @@
 
             transitionPage(currentVault, rankVault, 'backward', () => {
                 initCategoryCube();
+                triggerCategoryEntrySequence();
             });
         }
 
@@ -1739,6 +1766,7 @@
 
             stopVaultSpinning();
             disposeVaultMiniCubes();
+            vault.classList.remove('defocus-reveal', 'defocus-settle');
 
             board.classList.remove('vault-bg', 'blurred-bg');
             board.classList.add('clouds-bg');
@@ -1746,36 +1774,49 @@
             transitionPage(vault, workspace, 'backward');
         }
 
+        /* Single continuous defocus transition: category cube rushes toward player & blurs -> word cubes settle from same blur */
         function openMemoryVaultFromCategory(categoryName) {
-            if (isTransitioning) return;
+            if (isTransitioning || isCategoryRushing) return;
             isTransitioning = true;
+            isCategoryRushing = true;
 
-            const rankVault = document.getElementById('rankVault');
+            const holder = document.getElementById('categoryCubeHolder');
             const vault = document.getElementById('memoryVault');
             const board = document.getElementById('retroBoard');
-            const holder = document.getElementById('categoryCubeHolder');
 
             const words = getStoredWords();
             saveStoredWords(words);
 
-            isCategoryApproaching = true;
-            if (holder) holder.classList.add('approaching');
+            if (holder) {
+                holder.classList.add('rush-out');
+            }
 
             setTimeout(() => {
+                stopVaultSpinning();
+                disposeVaultMiniCubes();
+
                 board.classList.remove('clouds-bg', 'blurred-bg');
                 board.classList.add('vault-bg');
-                vault.classList.remove('defocused');
+                vault.classList.remove('defocused', 'defocus-settle');
+                vault.classList.add('defocus-reveal');
 
                 setSoloPage('memoryVault');
                 renderVaultGrid(words);
                 startVaultSpinning();
 
+                vault.offsetHeight;
+                requestAnimationFrame(() => {
+                    vault.classList.remove('defocus-reveal');
+                    vault.classList.add('defocus-settle');
+                });
+
                 setTimeout(() => {
-                    isCategoryApproaching = false;
-                    if (holder) holder.classList.remove('approaching');
+                    vault.classList.remove('defocus-settle');
+                    if (holder) holder.classList.remove('rush-out');
+                    isCategoryRushing = false;
                     isTransitioning = false;
-                }, 120);
-            }, 220);
+                }, 500);
+            }, 480);
         }
 
         function seededRand(seed) {
@@ -2185,8 +2226,8 @@
             };
 
             if (options.isCategoryCluster) {
-                /* 5 categories on one face following sketch: center + 4 corners, ~20% smaller font */
-                const cluster = options.cluster || {};
+                /* Only already-engraved / unlocked words appear on the face; larger readable font */
+                const engraved = options.engraved || {};
                 const spots = [
                     { key: 'tl', x: size * 0.25, y: size * 0.24 },
                     { key: 'tr', x: size * 0.75, y: size * 0.24 },
@@ -2196,21 +2237,20 @@
                 ];
 
                 spots.forEach((spot) => {
-                    const label = cluster[spot.key];
+                    const label = engraved[spot.key];
                     if (!label) return;
-                    const isUnlocked = unlockedCategories.has(label);
-                    const basePx = spot.key === 'center' ? 25 : 22;
+                    const basePx = spot.key === 'center' ? 40 : 34;
                     const fontPx = Math.round(basePx * scale);
-                    const fontStr = `800 ${fontPx}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+                    const fontStr = `900 ${fontPx}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
 
                     drawCrispText(
                         label,
                         spot.x,
                         spot.y,
                         fontStr,
-                        isUnlocked ? '#111215' : '#3f3f46',
-                        3.5,
-                        isUnlocked ? 1 : 0.55
+                        '#111215',
+                        4.5,
+                        1
                     );
                 });
             } else if (options.isEmoji) {
@@ -2342,17 +2382,16 @@
             }
 
             const geom = createChippedStoneCubeGeometry(1.98, 41);
-            const showCategories = hasEngravedNature || unlockedCategories.size > 0;
 
             const materials = Array.from({ length: 6 }, (_, faceIdx) => {
                 const faceSeed = 500 + faceIdx * 19;
-                const stoneSet = showCategories
+                const stoneSet = faceIdx === 0
                     ? createMultiStoneTextures(
                         [],
                         {
                             isCategoryCluster: true,
                             hasPurplePebbles: true,
-                            cluster: CUBE_FACES_CATEGORIES[faceIdx % CUBE_FACES_CATEGORIES.length]
+                            engraved: currentEngravedMap
                         },
                         faceSeed
                     )
@@ -2425,8 +2464,8 @@
             catAnimId = requestAnimationFrame(renderCategoryLoop);
             if (!catRenderer || !catScene || !catCamera) return;
 
-            catCurrentRotX += (catTargetRotX - catCurrentRotX) * 0.15;
-            catCurrentRotY += (catTargetRotY - catCurrentRotY) * 0.15;
+            catCurrentRotX += (catTargetRotX - catCurrentRotX) * 0.16;
+            catCurrentRotY += (catTargetRotY - catCurrentRotY) * 0.16;
 
             if (catCubeGroup) {
                 catCubeGroup.rotation.x = THREE.MathUtils.degToRad(catCurrentRotX);
@@ -2438,7 +2477,7 @@
         }
 
         function flipCategoryCube(direction) {
-            if (isCategoryApproaching) return;
+            if (isCategoryRushing) return;
             if (direction === 'up') {
                 catTargetRotY = Math.round(catTargetRotY / 360) * 360;
                 catTargetRotX = catTargetRotX > 0 ? 0 : -90;
@@ -2465,21 +2504,11 @@
         }
 
         function onCategorySpotTap(spotKey, btnEl) {
-            if (isTransitioning || isCategoryApproaching) return;
+            if (isTransitioning || isCategoryRushing) return;
 
             const faceData = CUBE_FACES_CATEGORIES[activeCategoryFaceIndex % CUBE_FACES_CATEGORIES.length];
             const categoryLabel = faceData[spotKey];
-            if (!categoryLabel) return;
-
-            if (!hasEngravedNature && !unlockedCategories.has(categoryLabel)) {
-                showCategoryHint('Complete an exercise to unlock categories');
-                return;
-            }
-
-            if (!unlockedCategories.has(categoryLabel)) {
-                showCategoryHint(`${categoryLabel} — locked`);
-                return;
-            }
+            if (!categoryLabel || !unlockedCategories.has(categoryLabel)) return;
 
             if (btnEl) {
                 btnEl.classList.add('violet-flash');
@@ -2488,7 +2517,7 @@
             setTimeout(() => {
                 if (btnEl) btnEl.classList.remove('violet-flash');
                 openMemoryVaultFromCategory(categoryLabel);
-            }, 140);
+            }, 110);
         }
 
         function disposeVaultMiniCubes() {
