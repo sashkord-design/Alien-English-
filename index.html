@@ -175,7 +175,7 @@
             z-index: 0;
             pointer-events: none;
             transform: scale(1);
-            transition: opacity 0.35s ease, filter 0.35s ease, transform 0.35s ease;
+            transition: opacity 0.25s ease, filter 0.25s ease, transform 0.25s ease;
         }
 
         .bg-first-page {
@@ -254,7 +254,7 @@
             margin: auto;
             width: 100%;
             height: 100%;
-            transition: transform 0.36s cubic-bezier(0.22, 1, 0.36, 1);
+            transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
             will-change: transform;
             backface-visibility: hidden;
             -webkit-backface-visibility: hidden;
@@ -481,13 +481,15 @@
             border: 2px solid var(--ink-dark);
             border-radius: 14px;
             overflow: hidden;
-            padding: 16px 18px;
+            padding: 14px 18px;
             text-align: center;
             margin-bottom: 4px;
             box-shadow: 2px 3px 0px var(--ink-dark);
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
+            gap: 6px;
         }
 
         .riddle-text {
@@ -495,6 +497,23 @@
             line-height: 1.38;
             font-weight: 700;
             color: var(--ink-dark);
+        }
+
+        .unlock-banner {
+            display: none;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            color: #4c1d95;
+            background: rgba(196, 181, 253, 0.55);
+            border: 1.5px solid rgba(76, 29, 149, 0.45);
+            border-radius: 8px;
+            padding: 3px 10px;
+        }
+
+        .unlock-banner.visible {
+            display: inline-block;
         }
 
         .cards-grid {
@@ -641,7 +660,7 @@
             box-shadow: 1px 1px 0px var(--ink-dark);
         }
 
-        /* 2.5 RANK CATEGORY VAULT (SAME BASE COLOR AS WORD CUBES + SMALL PURPLE/DARK-PURPLE PEBBLES) */
+        /* 2.5 SINGLE LARGE CATEGORY CUBE VAULT (NO SELF-SPIN, ONLY LEVITATE + FLIP) */
         .rank-vault {
             display: none;
             flex-direction: column;
@@ -649,10 +668,10 @@
             justify-content: space-between;
             width: 100%;
             height: 100%;
-            padding: 12px 24px 12px;
+            padding: 12px 18px 12px;
             position: relative;
             overflow: hidden;
-            transition: transform 0.36s cubic-bezier(0.22, 1, 0.36, 1), filter 0.35s ease;
+            transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), filter 0.25s ease, opacity 0.25s ease;
         }
 
         .rank-vault.defocused {
@@ -699,66 +718,139 @@
             z-index: 1;
         }
 
-        .rank-grid-2x2 {
+        .category-cube-stage {
             flex: 1;
             width: 100%;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 8px 0;
+            position: relative;
+            user-select: none;
+            -webkit-user-select: none;
         }
 
-        .rank-grid-inner {
-            display: grid;
-            grid-template-columns: repeat(2, 133px);
-            grid-template-rows: repeat(2, 133px);
-            gap: 8px;
-            align-items: center;
-            justify-items: center;
-        }
-
-        .rank-cube-slot {
-            width: 133px;
-            height: 133px;
-            cursor: pointer;
-            animation: node-levitate 4.6s ease-in-out infinite;
+        /* ~6% larger than Apple cube (264px -> 280px) */
+        .category-cube-holder {
+            position: relative;
+            width: 280px;
+            height: 280px;
             display: flex;
             align-items: center;
             justify-content: center;
+            animation: category-levitate 4.4s ease-in-out infinite;
+            transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+            will-change: transform;
         }
 
-        .rank-cube-canvas {
-            width: 133px;
-            height: 133px;
-            display: block;
+        .category-cube-holder.approaching {
+            animation: none;
+            transform: scale(1.24);
         }
 
-        .empty-category-panel {
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            justify-content: space-between;
-            width: 100%;
-            height: 100%;
-            padding: 12px 18px 12px;
+        @keyframes category-levitate {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-5px); }
+        }
+
+        #categoryCubeCanvasHost {
+            width: 280px;
+            height: 280px;
             position: relative;
+            z-index: 5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
         }
 
-        .empty-category-card {
-            width: 100%;
-            max-width: 300px;
-            background-image: url('frame.png');
-            background-size: cover;
-            background-position: center;
-            border: 2px solid var(--ink-dark);
-            border-radius: 14px;
-            overflow: hidden;
-            padding: 18px 16px;
-            text-align: center;
-            box-shadow: 2px 3px 0px var(--ink-dark);
-            font-size: 13px;
+        #categoryCubeCanvasHost canvas {
+            display: block;
+            width: 280px !important;
+            height: 280px !important;
+            pointer-events: none;
+        }
+
+        /* Interactive 5-category hit spots on front face + edge flip zones */
+        .category-face-hit-layer {
+            position: absolute;
+            inset: 44px;
+            z-index: 22;
+            pointer-events: none;
+        }
+
+        .cat-hit-btn {
+            position: absolute;
+            pointer-events: auto;
+            background: transparent;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transform: translate(-50%, -50%);
+            transition: background-color 0.14s ease, box-shadow 0.14s ease, transform 0.14s ease;
+        }
+
+        .cat-hit-btn.cat-center {
+            left: 50%;
+            top: 50%;
+            width: 94px;
+            height: 36px;
+        }
+
+        .cat-hit-btn.cat-tl {
+            left: 25%;
+            top: 24%;
+            width: 82px;
+            height: 34px;
+        }
+
+        .cat-hit-btn.cat-tr {
+            left: 75%;
+            top: 24%;
+            width: 82px;
+            height: 34px;
+        }
+
+        .cat-hit-btn.cat-bl {
+            left: 25%;
+            top: 76%;
+            width: 82px;
+            height: 34px;
+        }
+
+        .cat-hit-btn.cat-br {
+            left: 75%;
+            top: 76%;
+            width: 82px;
+            height: 34px;
+        }
+
+        .cat-hit-btn.violet-flash {
+            background-color: rgba(124, 58, 237, 0.34);
+            box-shadow: 0 0 16px rgba(99, 102, 241, 0.85), inset 0 0 10px rgba(167, 139, 250, 0.8);
+            transform: translate(-50%, -50%) scale(1.08);
+        }
+
+        .category-status-hint {
+            position: absolute;
+            bottom: 4px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 25;
+            font-size: 11px;
             font-weight: 700;
-            color: var(--ink-dark);
+            color: #e9d5ff;
+            background: rgba(24, 24, 27, 0.72);
+            border: 1px solid rgba(196, 181, 253, 0.45);
+            border-radius: 8px;
+            padding: 4px 10px;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.18s ease;
+        }
+
+        .category-status-hint.visible {
+            opacity: 1;
         }
 
         /* 3. MEMORY STORAGE: 6 CUBES (2x3) */
@@ -772,7 +864,7 @@
             padding: 10px 0 8px;
             position: relative;
             overflow: hidden;
-            transition: transform 0.36s cubic-bezier(0.22, 1, 0.36, 1), filter 0.35s ease;
+            transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), filter 0.25s ease;
         }
 
         .memory-vault.defocused {
@@ -936,7 +1028,7 @@
             align-items: center;
             justify-content: center;
             transform: scale(0.88);
-            transition: transform 0.36s cubic-bezier(0.22, 1, 0.36, 1);
+            transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
             pointer-events: none;
         }
 
@@ -964,8 +1056,8 @@
 
         .touch-overlay {
             position: absolute;
-            inset: 32px;
-            z-index: 20;
+            inset: 28px;
+            z-index: 15;
             display: grid;
             grid-template-columns: 1fr 1fr 1fr;
             grid-template-rows: 1fr 1fr 1fr;
@@ -1031,6 +1123,7 @@
             <div class="scan-workspace page-slide pos-right" id="scanWorkspace" style="display: none;">
                 <div class="riddle-box">
                     <div class="riddle-text">The fruit that fell on Alan’s head</div>
+                    <div class="unlock-banner" id="unlockBanner">New category unlocked: NATURE</div>
                 </div>
 
                 <div class="cards-grid" id="cardsGrid">
@@ -1101,20 +1194,41 @@
                 </div>
             </div>
 
-            <!-- Screen 2.5: Rank Categories Vault -->
+            <!-- Screen 2.5: Single Large Levitating Category Cube -->
             <div class="rank-vault page-slide pos-right" id="rankVault" style="display: none;">
                 <div class="pink-pill-box"><span>rank</span></div>
-                <div class="rank-grid-2x2">
-                    <div class="rank-grid-inner" id="rankGridInner"></div>
-                </div>
-                <button class="bottom-nav-btn pink-pill-box" id="backFromRankBtn" onclick="returnFromRankToStudy()"><span>back</span></button>
-            </div>
 
-            <!-- Screen 2.6: Empty Category Placeholder -->
-            <div class="empty-category-panel page-slide pos-right" id="emptyCategoryPanel" style="display: none;">
-                <div class="pink-pill-box" id="emptyCategoryTitle"><span>category</span></div>
-                <div class="empty-category-card">This category is empty for now.</div>
-                <button class="bottom-nav-btn" onclick="returnToRankVault()"><span>back to rank</span></button>
+                <div class="category-cube-stage" id="categoryCubeStage">
+                    <div class="category-cube-holder" id="categoryCubeHolder">
+                        <div id="categoryCubeCanvasHost"></div>
+
+                        <div class="touch-overlay" id="categoryFlipOverlay">
+                            <div class="zone" onclick="flipCategoryCube('up')"></div>
+                            <div class="zone" onclick="flipCategoryCube('up')"></div>
+                            <div class="zone" onclick="flipCategoryCube('up')"></div>
+
+                            <div class="zone" onclick="flipCategoryCube('left')"></div>
+                            <div class="zone" onclick="flipCategoryCube('back')"></div>
+                            <div class="zone" onclick="flipCategoryCube('right')"></div>
+
+                            <div class="zone" onclick="flipCategoryCube('down')"></div>
+                            <div class="zone" onclick="flipCategoryCube('down')"></div>
+                            <div class="zone" onclick="flipCategoryCube('down')"></div>
+                        </div>
+
+                        <div class="category-face-hit-layer" id="categoryFaceHitLayer">
+                            <button class="cat-hit-btn cat-tl" data-slot="tl" onclick="onCategorySpotTap('tl', this)" aria-label="Top-left category"></button>
+                            <button class="cat-hit-btn cat-tr" data-slot="tr" onclick="onCategorySpotTap('tr', this)" aria-label="Top-right category"></button>
+                            <button class="cat-hit-btn cat-center" data-slot="center" onclick="onCategorySpotTap('center', this)" aria-label="Center category"></button>
+                            <button class="cat-hit-btn cat-bl" data-slot="bl" onclick="onCategorySpotTap('bl', this)" aria-label="Bottom-left category"></button>
+                            <button class="cat-hit-btn cat-br" data-slot="br" onclick="onCategorySpotTap('br', this)" aria-label="Bottom-right category"></button>
+                        </div>
+                    </div>
+
+                    <div class="category-status-hint" id="categoryStatusHint"></div>
+                </div>
+
+                <button class="bottom-nav-btn pink-pill-box" id="backFromRankBtn" onclick="returnFromRankToStudy()"><span>back</span></button>
             </div>
 
             <!-- Screen 3: Memory Storage 6 Cubes (2x3) -->
@@ -1164,20 +1278,64 @@
         }
 
         let isSolved = false;
+        let unlockedCategories = new Set();
+        let hasEngravedNature = false;
+        let isCategoryApproaching = false;
+
         let vaultSpinRaf = null;
         let activePickedSlot = null;
         let vaultMiniCubes = [];
         let narrativeIndex = 0;
         let transitionTimer = null;
         let isTransitioning = false;
+        let statusHintTimer = null;
 
-        const PAGE_IDS = ['introScreen', 'scanWorkspace', 'rankVault', 'emptyCategoryPanel', 'memoryVault'];
+        const PAGE_IDS = ['introScreen', 'scanWorkspace', 'rankVault', 'memoryVault'];
 
-        const RANK_CATEGORIES = [
-            { id: 'nature', label: 'NATURE', hasVault: true },
-            { id: 'family', label: 'FAMILY', hasVault: false },
-            { id: 'body', label: 'BODY', hasVault: false },
-            { id: 'food', label: 'FOOD', hasVault: false }
+        /* 6 faces x 5 categories = 30 categories; Face 0 follows sketch layout with NATURE in center */
+        const CUBE_FACES_CATEGORIES = [
+            {
+                center: 'NATURE',
+                tl: 'FAMILY',
+                tr: 'BODY',
+                bl: 'FOOD',
+                br: 'HOUSE'
+            },
+            {
+                center: 'FOREST',
+                tl: 'RIVER',
+                tr: 'MOUNTAIN',
+                bl: 'WEATHER',
+                br: 'ANIMALS'
+            },
+            {
+                center: 'TIME',
+                tl: 'MORNING',
+                tr: 'NIGHT',
+                bl: 'SEASONS',
+                br: 'CALENDAR'
+            },
+            {
+                center: 'CITY',
+                tl: 'STREET',
+                tr: 'MARKET',
+                bl: 'TRAVEL',
+                br: 'TRANSPORT'
+            },
+            {
+                center: 'MIND',
+                tl: 'FEELINGS',
+                tr: 'THOUGHTS',
+                bl: 'DREAMS',
+                br: 'MEMORY'
+            },
+            {
+                center: 'ACTION',
+                tl: 'MOVEMENT',
+                tr: 'SPEECH',
+                bl: 'WORK',
+                br: 'SKILLS'
+            }
         ];
 
         const INTRO_NARRATIVE_PAGES = [
@@ -1189,15 +1347,28 @@
         let refCubeImageReady = false;
         refCubeImage.onload = () => {
             refCubeImageReady = true;
+            if (document.getElementById('rankVault').style.display === 'flex') {
+                rebuildCategoryCubeMesh();
+            }
         };
         refCubeImage.src = 'Cube1_3.webp';
 
+        /* Word inspection cube state */
         let scene, camera, renderer, stoneCubeGroup;
         let targetRotX = 0;
         let targetRotY = 0;
         let currentRotX = 0;
         let currentRotY = 0;
         let threeAnimId = null;
+
+        /* Single large category cube state (no auto-rotation, only levitation + manual flip) */
+        let catScene, catCamera, catRenderer, catCubeGroup;
+        let catTargetRotX = 0;
+        let catTargetRotY = 0;
+        let catCurrentRotX = 0;
+        let catCurrentRotY = 0;
+        let catAnimId = null;
+        let activeCategoryFaceIndex = 0;
 
         const CUBE_OFFSETS = [
             { x: -1, y: 1 },  { x: 1, y: -1 },
@@ -1402,8 +1573,8 @@
             toEl.offsetHeight;
 
             requestAnimationFrame(() => {
-                fromEl.style.transition = 'transform 0.36s cubic-bezier(0.22, 1, 0.36, 1)';
-                toEl.style.transition = 'transform 0.36s cubic-bezier(0.22, 1, 0.36, 1)';
+                fromEl.style.transition = 'transform 0.3s cubic-bezier(0.22, 1, 0.36, 1)';
+                toEl.style.transition = 'transform 0.3s cubic-bezier(0.22, 1, 0.36, 1)';
 
                 fromEl.classList.remove('pos-center');
                 fromEl.classList.add(direction === 'forward' ? 'pos-left' : 'pos-right');
@@ -1420,7 +1591,7 @@
                 setSoloPage(toEl.id);
                 isTransitioning = false;
                 transitionTimer = null;
-            }, 375);
+            }, 315);
         }
 
         function startScan(btn) {
@@ -1436,7 +1607,7 @@
                 board.classList.remove('vault-bg');
                 board.classList.add('clouds-bg');
                 transitionPage(intro, workspace, 'forward');
-            }, 100);
+            }, 80);
         }
 
         function handleCardTap(slot) {
@@ -1447,6 +1618,7 @@
 
             if (isCorrect) {
                 isSolved = true;
+                unlockedCategories.add('NATURE');
                 slotEl.classList.add('correct', 'flipped');
 
                 const otherExamples = [
@@ -1463,6 +1635,11 @@
                         otherSlot.classList.add('flipped');
                     }
                 });
+
+                const banner = document.getElementById('unlockBanner');
+                if (banner) {
+                    banner.classList.add('visible');
+                }
 
                 const actionRow = document.getElementById('actionRow');
                 actionRow.classList.remove('visible');
@@ -1484,21 +1661,40 @@
             }
         }
 
+        function showCategoryHint(message) {
+            const hint = document.getElementById('categoryStatusHint');
+            if (!hint) return;
+            hint.textContent = message;
+            hint.classList.add('visible');
+            if (statusHintTimer) clearTimeout(statusHintTimer);
+            statusHintTimer = setTimeout(() => {
+                hint.classList.remove('visible');
+            }, 1500);
+        }
+
         function openRankVault() {
             if (isTransitioning) return;
             const workspace = document.getElementById('scanWorkspace');
             const rankVault = document.getElementById('rankVault');
             const board = document.getElementById('retroBoard');
+            const holder = document.getElementById('categoryCubeHolder');
 
             stopVaultSpinning();
             disposeVaultMiniCubes();
+            isCategoryApproaching = false;
+            if (holder) holder.classList.remove('approaching');
 
             board.classList.remove('clouds-bg', 'blurred-bg');
             board.classList.add('vault-bg');
             rankVault.classList.remove('defocused');
 
             transitionPage(workspace, rankVault, 'forward', () => {
-                renderRankWordCubes();
+                initCategoryCube();
+                if (unlockedCategories.has('NATURE') && !hasEngravedNature) {
+                    hasEngravedNature = true;
+                    rebuildCategoryCubeMesh();
+                    showCategoryHint('Engraved on cube: NATURE');
+                }
             });
         }
 
@@ -1514,45 +1710,24 @@
             transitionPage(rankVault, workspace, 'backward');
         }
 
-        function handleRankCategoryClick(category) {
-            if (isTransitioning) return;
-            if (category.hasVault) {
-                openMemoryVaultFromRank();
-            } else {
-                openEmptyCategory(category.label);
-            }
-        }
-
-        function openEmptyCategory(categoryLabel) {
-            if (isTransitioning) return;
-            const rankVault = document.getElementById('rankVault');
-            const emptyPanel = document.getElementById('emptyCategoryPanel');
-            const titleEl = document.getElementById('emptyCategoryTitle');
-
-            if (titleEl) {
-                titleEl.innerHTML = `<span>${categoryLabel.toLowerCase()}</span>`;
-            }
-
-            transitionPage(rankVault, emptyPanel, 'forward');
-        }
-
         function returnToRankVault() {
             if (isTransitioning) return;
             const currentVault = document.getElementById('memoryVault');
-            const emptyPanel = document.getElementById('emptyCategoryPanel');
             const rankVault = document.getElementById('rankVault');
             const board = document.getElementById('retroBoard');
+            const holder = document.getElementById('categoryCubeHolder');
 
             stopVaultSpinning();
             disposeVaultMiniCubes();
+            isCategoryApproaching = false;
+            if (holder) holder.classList.remove('approaching');
 
             board.classList.remove('clouds-bg', 'blurred-bg');
             board.classList.add('vault-bg');
             rankVault.classList.remove('defocused');
 
-            const fromEl = currentVault.style.display === 'flex' ? currentVault : emptyPanel;
-            transitionPage(fromEl, rankVault, 'backward', () => {
-                renderRankWordCubes();
+            transitionPage(currentVault, rankVault, 'backward', () => {
+                initCategoryCube();
             });
         }
 
@@ -1571,23 +1746,36 @@
             transitionPage(vault, workspace, 'backward');
         }
 
-        function openMemoryVaultFromRank() {
+        function openMemoryVaultFromCategory(categoryName) {
             if (isTransitioning) return;
+            isTransitioning = true;
+
             const rankVault = document.getElementById('rankVault');
             const vault = document.getElementById('memoryVault');
             const board = document.getElementById('retroBoard');
+            const holder = document.getElementById('categoryCubeHolder');
 
             const words = getStoredWords();
             saveStoredWords(words);
 
-            board.classList.remove('clouds-bg', 'blurred-bg');
-            board.classList.add('vault-bg');
-            vault.classList.remove('defocused');
+            isCategoryApproaching = true;
+            if (holder) holder.classList.add('approaching');
 
-            transitionPage(rankVault, vault, 'forward', () => {
+            setTimeout(() => {
+                board.classList.remove('clouds-bg', 'blurred-bg');
+                board.classList.add('vault-bg');
+                vault.classList.remove('defocused');
+
+                setSoloPage('memoryVault');
                 renderVaultGrid(words);
                 startVaultSpinning();
-            });
+
+                setTimeout(() => {
+                    isCategoryApproaching = false;
+                    if (holder) holder.classList.remove('approaching');
+                    isTransitioning = false;
+                }, 120);
+            }, 220);
         }
 
         function seededRand(seed) {
@@ -1596,7 +1784,7 @@
         }
 
         function createChippedStoneCubeGeometry(size, seedOffset = 1) {
-            const segs = 20;
+            const segs = 16;
             const geom = new THREE.BoxGeometry(size, size, size, segs, segs, segs);
             const pos = geom.attributes.position;
             const half = size * 0.5;
@@ -1684,7 +1872,7 @@
             temp.height = size;
             const tctx = temp.getContext('2d');
 
-            const strips = 64;
+            const strips = 36;
             for (let i = 0; i < strips; i++) {
                 const u0 = i / strips;
                 const u1 = (i + 1) / strips;
@@ -1735,7 +1923,7 @@
 
             const scale = size / 512;
             const tones = ['rgba(186, 189, 198, 0.55)', 'rgba(154, 158, 168, 0.55)', 'rgba(134, 138, 148, 0.45)'];
-            for (let i = 0; i < 12; i++) {
+            for (let i = 0; i < 10; i++) {
                 const s = seedOffset * 193 + i * 31;
                 const cx = seededRand(s + 1) * size;
                 const cy = seededRand(s + 2) * size;
@@ -1761,7 +1949,7 @@
                 ctx.restore();
             }
 
-            for (let p = 0; p < 22; p++) {
+            for (let p = 0; p < 16; p++) {
                 const s = seedOffset * 613 + p * 23;
                 const px = (28 + seededRand(s + 1) * 456) * scale;
                 const py = (28 + seededRand(s + 2) * 456) * scale;
@@ -1791,18 +1979,18 @@
                 const s = seedOffset * 977 + g * 13;
                 const gx = seededRand(s + 1) * size;
                 const gy = seededRand(s + 2) * size;
-                const gw = (1.1 + seededRand(s + 3) * 1.9) * scale;
-                const gh = (1.1 + seededRand(s + 4) * 1.9) * scale;
+                const gw = (1.8 + seededRand(s + 3) * 2.6) * scale;
+                const gh = (1.8 + seededRand(s + 4) * 2.6) * scale;
                 const pick = seededRand(s + 5);
 
                 if (pick < 0.42) {
-                    ctx.fillStyle = 'rgba(204, 207, 214, 0.20)';
+                    ctx.fillStyle = 'rgba(204, 207, 214, 0.22)';
                     bctx.fillStyle = 'rgb(162, 162, 162)';
                 } else if (pick < 0.88) {
-                    ctx.fillStyle = 'rgba(112, 116, 126, 0.22)';
+                    ctx.fillStyle = 'rgba(112, 116, 126, 0.24)';
                     bctx.fillStyle = 'rgb(90, 90, 90)';
                 } else {
-                    ctx.fillStyle = 'rgba(72, 75, 84, 0.25)';
+                    ctx.fillStyle = 'rgba(72, 75, 84, 0.26)';
                     bctx.fillStyle = 'rgb(58, 58, 58)';
                 }
 
@@ -1814,12 +2002,12 @@
                 const s = seedOffset * 1811 + k * 29;
                 const sx = seededRand(s + 1) * size;
                 const sy = seededRand(s + 2) * size;
-                const len = (3 + seededRand(s + 3) * 8) * scale;
+                const len = (3.5 + seededRand(s + 3) * 8) * scale;
                 const ang = seededRand(s + 4) * Math.PI * 2;
                 const dx = Math.cos(ang) * len;
                 const dy = Math.sin(ang) * len;
 
-                ctx.strokeStyle = k % 2 === 0 ? 'rgba(208, 211, 218, 0.16)' : 'rgba(92, 96, 106, 0.20)';
+                ctx.strokeStyle = k % 2 === 0 ? 'rgba(208, 211, 218, 0.17)' : 'rgba(92, 96, 106, 0.21)';
                 ctx.lineWidth = scale;
                 ctx.beginPath();
                 ctx.moveTo(sx, sy);
@@ -1841,17 +2029,17 @@
             const purpleShades = ['#8b5cf6', '#4c1d95', '#7c3aed', '#3b0764'];
             const centerX = size * 0.5;
             const centerY = size * 0.5;
-            const safeHalfW = size * 0.34;
-            const safeHalfH = size * 0.17;
+            const safeHalfW = size * 0.36;
+            const safeHalfH = size * 0.22;
 
             let placed = 0;
             let attempt = 0;
 
-            while (placed < pebbleCount && attempt < 60) {
+            while (placed < pebbleCount && attempt < 48) {
                 attempt++;
                 const s = seedOffset * 2411 + attempt * 37;
-                const px = 40 * scale + seededRand(s + 1) * (size - 80 * scale);
-                const py = 40 * scale + seededRand(s + 2) * (size - 80 * scale);
+                const px = 42 * scale + seededRand(s + 1) * (size - 84 * scale);
+                const py = 42 * scale + seededRand(s + 2) * (size - 84 * scale);
                 const rx = (5.5 + seededRand(s + 3) * 7.5) * scale;
                 const ry = rx * (0.62 + seededRand(s + 4) * 0.26);
 
@@ -1914,7 +2102,7 @@
 
         function drawInkEdgeCracksAndChips(ctx, bctx, size, seedOffset) {
             const scale = size / 512;
-            const edgeNotchCount = 12;
+            const edgeNotchCount = 10;
             for (let i = 0; i < edgeNotchCount; i++) {
                 const s = seedOffset * 317 + i * 47;
                 const side = i % 4;
@@ -1982,7 +2170,9 @@
             ctx.lineJoin = 'round';
             ctx.lineCap = 'round';
 
-            const drawCrispText = (txt, x, y, fontStr, fillStr = '#111215', haloWidth = 4.5) => {
+            const drawCrispText = (txt, x, y, fontStr, fillStr = '#111215', haloWidth = 4.5, alpha = 1) => {
+                ctx.save();
+                ctx.globalAlpha = alpha;
                 ctx.font = fontStr;
                 if (haloWidth > 0) {
                     ctx.strokeStyle = 'rgba(202, 205, 212, 0.78)';
@@ -1991,9 +2181,39 @@
                 }
                 ctx.fillStyle = fillStr;
                 ctx.fillText(txt, x, y);
+                ctx.restore();
             };
 
-            if (options.isEmoji) {
+            if (options.isCategoryCluster) {
+                /* 5 categories on one face following sketch: center + 4 corners, ~20% smaller font */
+                const cluster = options.cluster || {};
+                const spots = [
+                    { key: 'tl', x: size * 0.25, y: size * 0.24 },
+                    { key: 'tr', x: size * 0.75, y: size * 0.24 },
+                    { key: 'center', x: size * 0.50, y: size * 0.50 },
+                    { key: 'bl', x: size * 0.25, y: size * 0.76 },
+                    { key: 'br', x: size * 0.75, y: size * 0.76 }
+                ];
+
+                spots.forEach((spot) => {
+                    const label = cluster[spot.key];
+                    if (!label) return;
+                    const isUnlocked = unlockedCategories.has(label);
+                    const basePx = spot.key === 'center' ? 25 : 22;
+                    const fontPx = Math.round(basePx * scale);
+                    const fontStr = `800 ${fontPx}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+
+                    drawCrispText(
+                        label,
+                        spot.x,
+                        spot.y,
+                        fontStr,
+                        isUnlocked ? '#111215' : '#3f3f46',
+                        3.5,
+                        isUnlocked ? 1 : 0.55
+                    );
+                });
+            } else if (options.isEmoji) {
                 drawCrispText(lines[0], size / 2, size / 2 + 4 * scale, `${Math.round(132 * scale)}px sans-serif`, '#111215', 5);
             } else if (options.isMiniWord) {
                 const word = lines[0];
@@ -2065,7 +2285,7 @@
         }
 
         function createMultiStoneTextures(lines, options = {}, seedOffset = 1) {
-            const size = options.isMiniWord ? 384 : 768;
+            const size = options.isMiniWord ? 256 : 512;
             const colorCanvas = document.createElement('canvas');
             colorCanvas.width = size;
             colorCanvas.height = size;
@@ -2114,65 +2334,161 @@
             return group;
         }
 
-        function renderRankWordCubes() {
-            const gridEl = document.getElementById('rankGridInner');
-            gridEl.innerHTML = '';
+        /* Single large category cube (no self-spin, only levitate + flip) */
+        function rebuildCategoryCubeMesh() {
+            if (!catScene || typeof THREE === 'undefined') return;
+            if (catCubeGroup) {
+                catScene.remove(catCubeGroup);
+            }
 
-            RANK_CATEGORIES.forEach((cat, index) => {
-                const slot = document.createElement('div');
-                slot.className = 'rank-cube-slot';
-                slot.style.animationDelay = ((index * 0.5) % 3.2) + 's';
+            const geom = createChippedStoneCubeGeometry(1.98, 41);
+            const showCategories = hasEngravedNature || unlockedCategories.size > 0;
 
-                const canvas = document.createElement('canvas');
-                canvas.className = 'rank-cube-canvas';
-                canvas.width = 266;
-                canvas.height = 266;
-                slot.appendChild(canvas);
+            const materials = Array.from({ length: 6 }, (_, faceIdx) => {
+                const faceSeed = 500 + faceIdx * 19;
+                const stoneSet = showCategories
+                    ? createMultiStoneTextures(
+                        [],
+                        {
+                            isCategoryCluster: true,
+                            hasPurplePebbles: true,
+                            cluster: CUBE_FACES_CATEGORIES[faceIdx % CUBE_FACES_CATEGORIES.length]
+                        },
+                        faceSeed
+                    )
+                    : createMultiStoneTextures(
+                        [],
+                        { hasPurplePebbles: true },
+                        faceSeed
+                    );
 
-                slot.onclick = () => handleRankCategoryClick(cat);
-                gridEl.appendChild(slot);
-
-                if (typeof THREE !== 'undefined') {
-                    const miniScene = new THREE.Scene();
-                    const miniCam = new THREE.PerspectiveCamera(36, 1, 0.1, 50);
-                    miniCam.position.set(0, 0, 5.15);
-                    miniCam.lookAt(0, 0, 0);
-
-                    const miniRenderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
-                    miniRenderer.setSize(133, 133);
-                    miniRenderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-
-                    miniScene.add(new THREE.AmbientLight(0xc8cddc, 0.85));
-                    const dLight = new THREE.DirectionalLight(0xe4e6ed, 0.52);
-                    dLight.position.set(2, 2.5, 4);
-                    miniScene.add(dLight);
-
-                    const geom = createChippedStoneCubeGeometry(2.04, 30 + index * 7);
-
-                    const mats = Array.from({ length: 6 }, (_, faceIdx) => {
-                        const faceSeed = (index + 2) * 100 + faceIdx * 17;
-                        const stoneSet = createMultiStoneTextures(
-                            [cat.label],
-                            { isMiniWord: true, hasPurplePebbles: true },
-                            faceSeed
-                        );
-                        return new THREE.MeshStandardMaterial({
-                            map: stoneSet.map,
-                            bumpMap: stoneSet.bumpMap,
-                            bumpScale: 0.055,
-                            roughness: 0.94,
-                            metalness: 0.02
-                        });
-                    });
-
-                    const cubeGroup = createOutlinedStoneCubeGroup(geom, mats, 1.038);
-                    cubeGroup.rotation.set(0, 0, 0);
-                    miniScene.add(cubeGroup);
-
-                    miniRenderer.render(miniScene, miniCam);
-                    miniRenderer.dispose();
-                }
+                return new THREE.MeshStandardMaterial({
+                    map: stoneSet.map,
+                    bumpMap: stoneSet.bumpMap,
+                    bumpScale: 0.055,
+                    roughness: 0.94,
+                    metalness: 0.02
+                });
             });
+
+            catCubeGroup = createOutlinedStoneCubeGroup(geom, materials, 1.032);
+            catCubeGroup.rotation.set(
+                THREE.MathUtils.degToRad(catCurrentRotX),
+                THREE.MathUtils.degToRad(catCurrentRotY),
+                0
+            );
+            catScene.add(catCubeGroup);
+        }
+
+        function initCategoryCube() {
+            const host = document.getElementById('categoryCubeCanvasHost');
+            if (!host || typeof THREE === 'undefined') return;
+
+            if (!catRenderer) {
+                catScene = new THREE.Scene();
+                catCamera = new THREE.PerspectiveCamera(38, 1, 0.1, 100);
+                catCamera.position.set(0, 0, 5.45);
+                catCamera.lookAt(0, 0, 0);
+
+                catRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+                catRenderer.setSize(280, 280);
+                catRenderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+                host.innerHTML = '';
+                host.appendChild(catRenderer.domElement);
+
+                const ambient = new THREE.AmbientLight(0xc8cddc, 0.85);
+                catScene.add(ambient);
+
+                const keyLight = new THREE.DirectionalLight(0xe4e6ed, 0.52);
+                keyLight.position.set(2, 2.5, 4);
+                catScene.add(keyLight);
+
+                const rimLight = new THREE.DirectionalLight(0x818cf8, 0.22);
+                rimLight.position.set(-2.5, -1.5, -2);
+                catScene.add(rimLight);
+            }
+
+            catTargetRotX = 0;
+            catTargetRotY = 0;
+            catCurrentRotX = 0;
+            catCurrentRotY = 0;
+            activeCategoryFaceIndex = 0;
+
+            rebuildCategoryCubeMesh();
+
+            if (!catAnimId) {
+                renderCategoryLoop();
+            }
+        }
+
+        function renderCategoryLoop() {
+            catAnimId = requestAnimationFrame(renderCategoryLoop);
+            if (!catRenderer || !catScene || !catCamera) return;
+
+            catCurrentRotX += (catTargetRotX - catCurrentRotX) * 0.15;
+            catCurrentRotY += (catTargetRotY - catCurrentRotY) * 0.15;
+
+            if (catCubeGroup) {
+                catCubeGroup.rotation.x = THREE.MathUtils.degToRad(catCurrentRotX);
+                catCubeGroup.rotation.y = THREE.MathUtils.degToRad(catCurrentRotY);
+                catCubeGroup.position.y = 0;
+            }
+
+            catRenderer.render(catScene, catCamera);
+        }
+
+        function flipCategoryCube(direction) {
+            if (isCategoryApproaching) return;
+            if (direction === 'up') {
+                catTargetRotY = Math.round(catTargetRotY / 360) * 360;
+                catTargetRotX = catTargetRotX > 0 ? 0 : -90;
+            } else if (direction === 'down') {
+                catTargetRotY = Math.round(catTargetRotY / 360) * 360;
+                catTargetRotX = catTargetRotX < 0 ? 0 : 90;
+            } else if (direction === 'left') {
+                catTargetRotX = 0;
+                catTargetRotY += 90;
+            } else if (direction === 'right') {
+                catTargetRotX = 0;
+                catTargetRotY -= 90;
+            } else if (direction === 'back') {
+                catTargetRotX = 0;
+                catTargetRotY += 180;
+            }
+
+            const normY = (((Math.round(catTargetRotY / 90)) % 4) + 4) % 4;
+            if (Math.abs(catTargetRotX) === 90) {
+                activeCategoryFaceIndex = catTargetRotX < 0 ? 2 : 3;
+            } else {
+                activeCategoryFaceIndex = normY === 0 ? 0 : normY === 1 ? 4 : normY === 2 ? 5 : 1;
+            }
+        }
+
+        function onCategorySpotTap(spotKey, btnEl) {
+            if (isTransitioning || isCategoryApproaching) return;
+
+            const faceData = CUBE_FACES_CATEGORIES[activeCategoryFaceIndex % CUBE_FACES_CATEGORIES.length];
+            const categoryLabel = faceData[spotKey];
+            if (!categoryLabel) return;
+
+            if (!hasEngravedNature && !unlockedCategories.has(categoryLabel)) {
+                showCategoryHint('Complete an exercise to unlock categories');
+                return;
+            }
+
+            if (!unlockedCategories.has(categoryLabel)) {
+                showCategoryHint(`${categoryLabel} — locked`);
+                return;
+            }
+
+            if (btnEl) {
+                btnEl.classList.add('violet-flash');
+            }
+
+            setTimeout(() => {
+                if (btnEl) btnEl.classList.remove('violet-flash');
+                openMemoryVaultFromCategory(categoryLabel);
+            }, 140);
         }
 
         function disposeVaultMiniCubes() {
