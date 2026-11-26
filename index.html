@@ -706,6 +706,7 @@
             align-items: center;
             justify-content: center;
             padding: 8px 0;
+            perspective: 750px;
         }
 
         .rank-grid-inner {
@@ -717,7 +718,7 @@
             justify-items: center;
         }
 
-        /* Variant 1: Smooth zoom on selected rank cube + gentle shrink/fade on neighbors */
+        /* Variant 3: Gentle stone tilt accent on selected rank cube + subtle fade on others */
         .rank-cube-slot {
             width: 133px;
             height: 133px;
@@ -726,21 +727,23 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.26s ease;
+            transform-style: preserve-3d;
+            transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.26s ease, filter 0.26s ease;
             will-change: transform, opacity;
         }
 
-        .rank-cube-slot.zoom-selected {
+        .rank-cube-slot.accent-tilt {
             animation: none !important;
-            transform: scale(1.14);
+            transform: perspective(650px) rotateY(15deg) rotateX(-7deg) scale(1.06);
             opacity: 1;
             z-index: 5;
         }
 
-        .rank-cube-slot.zoom-dimmed {
+        .rank-cube-slot.accent-fade {
             animation: none !important;
-            transform: scale(0.84);
-            opacity: 0;
+            transform: scale(0.95);
+            opacity: 0.16;
+            filter: brightness(0.8);
         }
 
         .rank-cube-canvas {
@@ -845,19 +848,19 @@
             will-change: transform, opacity;
         }
 
-        /* Variant 1: Calm staggered cascade entrance for word cubes */
-        .vault-node-slot.cascade-in {
-            animation: word-cube-cascade 0.42s cubic-bezier(0.22, 1, 0.36, 1) var(--cascade-delay, 0ms) both;
+        /* Variant 3: Column-by-column wave entrance for word cubes */
+        .vault-node-slot.wave-in {
+            animation: word-cube-wave 0.44s cubic-bezier(0.22, 1, 0.36, 1) var(--wave-delay, 0ms) both;
         }
 
-        @keyframes word-cube-cascade {
+        @keyframes word-cube-wave {
             0% {
                 opacity: 0;
-                transform: translateY(12px) scale(0.88);
+                transform: translateX(12px) scale(0.93);
             }
             100% {
                 opacity: 1;
-                transform: translateY(0) scale(1);
+                transform: translateX(0) scale(1);
             }
         }
 
@@ -1604,6 +1607,7 @@
             transitionPage(vault, workspace, 'backward');
         }
 
+        /* Variant 3: Gentle stone tilt accent + column-by-column wave into memory vault */
         function openMemoryVaultFromRank(clickedSlotEl) {
             if (isTransitioning) return;
             isTransitioning = true;
@@ -1616,9 +1620,9 @@
             if (clickedSlotEl) {
                 rankSlots.forEach((slot) => {
                     if (slot === clickedSlotEl) {
-                        slot.classList.add('zoom-selected');
+                        slot.classList.add('accent-tilt');
                     } else {
-                        slot.classList.add('zoom-dimmed');
+                        slot.classList.add('accent-fade');
                     }
                 });
             }
@@ -1632,13 +1636,13 @@
 
             setTimeout(() => {
                 setSoloPage('memoryVault');
-                renderVaultGrid(words, { cascade: true });
+                renderVaultGrid(words, { wave: true });
                 startVaultSpinning();
 
                 setTimeout(() => {
                     isTransitioning = false;
-                }, 520);
-            }, 240);
+                }, 560);
+            }, 260);
         }
 
         function seededRand(seed) {
@@ -2311,16 +2315,21 @@
 
             scrollEl.classList.toggle('has-overflow', grid.scrollWidth > scrollEl.clientWidth);
 
-            if (animOptions.cascade && createdSlots.length > 0) {
+            if (animOptions.wave && createdSlots.length > 0) {
+                const rowsCount = 3;
                 createdSlots.forEach((slot, idx) => {
-                    slot.style.setProperty('--cascade-delay', `${idx * 45}ms`);
-                    slot.classList.add('cascade-in');
+                    const colIdx = Math.floor(idx / rowsCount);
+                    const rowIdx = idx % rowsCount;
+                    const waveDelay = colIdx * 140 + rowIdx * 45;
+
+                    slot.style.setProperty('--wave-delay', `${waveDelay}ms`);
+                    slot.classList.add('wave-in');
 
                     setTimeout(() => {
-                        slot.classList.remove('cascade-in');
-                        slot.style.removeProperty('--cascade-delay');
+                        slot.classList.remove('wave-in');
+                        slot.style.removeProperty('--wave-delay');
                         slot.style.animationDelay = ((idx * 0.45) % 3.2) + 's';
-                    }, 480 + idx * 45);
+                    }, 520 + waveDelay);
                 });
             }
         }
