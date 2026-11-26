@@ -165,17 +165,18 @@
         /* Background layers anchored on all sides with dark backing */
         .bg-layer {
             position: fixed;
-            left: -8px;
-            right: -8px;
-            top: -8px;
-            bottom: -8px;
+            left: -12px;
+            right: -12px;
+            top: -12px;
+            bottom: -12px;
             width: auto;
             height: auto;
             background-color: var(--vault-base);
             z-index: 0;
             pointer-events: none;
             transform: scale(1);
-            transition: opacity 0.25s ease, filter 0.25s ease, transform 0.25s ease;
+            transition: opacity 0.25s ease, filter 0.45s cubic-bezier(0.22, 1, 0.36, 1), transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+            will-change: filter, transform;
         }
 
         .bg-first-page {
@@ -225,12 +226,12 @@
 
         .retro-board.blurred-bg .bg-layer {
             transform: scale(1.08);
-            filter: blur(6px) brightness(0.88);
+            filter: blur(8px) brightness(0.88);
         }
 
         .retro-board.blurred-bg .bg-clouds-page {
             transform: scale(1.08);
-            filter: blur(6px) saturate(0.8) brightness(0.9);
+            filter: blur(8px) saturate(0.8) brightness(0.9);
         }
 
         .content-wrap {
@@ -720,7 +721,8 @@
             justify-content: center;
             transform: scale(0.33);
             opacity: 0.9;
-            transition: transform 1s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.5s ease, filter 0.5s ease;
+            filter: blur(0px);
+            transition: transform 1s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.45s ease, filter 0.45s ease;
             will-change: transform, opacity, filter;
         }
 
@@ -730,11 +732,20 @@
             animation: category-levitate 4.4s ease-in-out infinite;
         }
 
-        /* 0.5s rush toward player with defocus & fade out */
-        .category-cube-holder.rush-out {
+        /* Step A: clearly rush closer to player first */
+        .category-cube-holder.zoom-near {
             animation: none !important;
-            transition: transform 0.5s cubic-bezier(0.32, 0, 0.67, 0), opacity 0.5s ease-out, filter 0.5s ease-out !important;
-            transform: scale(1.75) !important;
+            transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.25s ease, filter 0.25s ease !important;
+            transform: scale(1.62) !important;
+            opacity: 1 !important;
+            filter: blur(1.5px) !important;
+        }
+
+        /* Step B: dissolve & defocus right after approaching */
+        .category-cube-holder.dissolve-out {
+            animation: none !important;
+            transition: transform 0.28s cubic-bezier(0.32, 0, 0.67, 0), opacity 0.28s ease-out, filter 0.28s ease-out !important;
+            transform: scale(1.88) !important;
             filter: blur(9px) !important;
             opacity: 0 !important;
         }
@@ -783,8 +794,8 @@
         .cat-hit-btn.cat-center {
             left: 50%;
             top: 50%;
-            width: 112px;
-            height: 42px;
+            width: 116px;
+            height: 44px;
         }
 
         .cat-hit-btn.cat-tl {
@@ -835,7 +846,7 @@
             transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), filter 0.45s ease, opacity 0.45s ease;
         }
 
-        /* Continuous defocus handoff from category cube rush into word cubes */
+        /* Continuous defocus handoff from category cube into word cubes */
         .memory-vault.defocus-reveal {
             filter: blur(8px);
             opacity: 0.35;
@@ -1260,9 +1271,10 @@
         let isSolved = false;
         let unlockedCategories = new Set();
         let hasEngravedFirstNature = false;
-        let isCategoryRushing = false;
+        let isCategoryTransitioning = false;
         let letterRevealTimer = null;
         let entrySpinTimer = null;
+        let rushStepTimer = null;
 
         let vaultSpinRaf = null;
         let activePickedSlot = null;
@@ -1273,50 +1285,15 @@
 
         const PAGE_IDS = ['introScreen', 'scanWorkspace', 'rankVault', 'memoryVault'];
 
-        const CUBE_FACES_CATEGORIES = [
-            {
-                center: 'NATURE',
-                tl: 'FAMILY',
-                tr: 'BODY',
-                bl: 'FOOD',
-                br: 'HOUSE'
-            },
-            {
-                center: 'FOREST',
-                tl: 'RIVER',
-                tr: 'MOUNTAIN',
-                bl: 'WEATHER',
-                br: 'ANIMALS'
-            },
-            {
-                center: 'TIME',
-                tl: 'MORNING',
-                tr: 'NIGHT',
-                bl: 'SEASONS',
-                br: 'CALENDAR'
-            },
-            {
-                center: 'CITY',
-                tl: 'STREET',
-                tr: 'MARKET',
-                bl: 'TRAVEL',
-                br: 'TRANSPORT'
-            },
-            {
-                center: 'MIND',
-                tl: 'FEELINGS',
-                tr: 'THOUGHTS',
-                bl: 'DREAMS',
-                br: 'MEMORY'
-            },
-            {
-                center: 'ACTION',
-                tl: 'MOVEMENT',
-                tr: 'SPEECH',
-                bl: 'WORK',
-                br: 'SKILLS'
-            }
-        ];
+        /* BoxGeometry face order: 0:+X, 1:-X, 2:+Y, 3:-Y, 4:+Z (front), 5:-Z (back) */
+        const CUBE_FACES_CATEGORIES = {
+            4: { center: 'NATURE', tl: 'FAMILY', tr: 'BODY', bl: 'FOOD', br: 'HOUSE' },
+            0: { center: 'FOREST', tl: 'RIVER', tr: 'MOUNTAIN', bl: 'WEATHER', br: 'ANIMALS' },
+            1: { center: 'TIME', tl: 'MORNING', tr: 'NIGHT', bl: 'SEASONS', br: 'CALENDAR' },
+            2: { center: 'CITY', tl: 'STREET', tr: 'MARKET', bl: 'TRAVEL', br: 'TRANSPORT' },
+            3: { center: 'MIND', tl: 'FEELINGS', tr: 'THOUGHTS', bl: 'DREAMS', br: 'MEMORY' },
+            5: { center: 'ACTION', tl: 'MOVEMENT', tr: 'SPEECH', bl: 'WORK', br: 'SKILLS' }
+        };
 
         const INTRO_NARRATIVE_PAGES = [
             "Alan wandered into an orchard and saw various fruits lying on the ground. While looking around, something suddenly fell on his head. It was red and firm. And it was...",
@@ -1348,8 +1325,10 @@
         let catCurrentRotX = 0;
         let catCurrentRotY = 0;
         let catAnimId = null;
-        let activeCategoryFaceIndex = 0;
-        let currentEngravedMap = { center: '', tl: '', tr: '', bl: '', br: '' };
+        let frontFaceIndex = 4;
+        let engravedByFace = {
+            4: { center: '', tl: '', tr: '', bl: '', br: '' }
+        };
 
         const CUBE_OFFSETS = [
             { x: -1, y: 1 },  { x: 1, y: -1 },
@@ -1646,57 +1625,73 @@
                 clearTimeout(entrySpinTimer);
                 entrySpinTimer = null;
             }
+            if (rushStepTimer) {
+                clearTimeout(rushStepTimer);
+                rushStepTimer = null;
+            }
         }
 
         function triggerCategoryEntrySequence() {
             clearCategoryTimers();
             const holder = document.getElementById('categoryCubeHolder');
+            const board = document.getElementById('retroBoard');
             if (!holder) return;
 
-            isCategoryRushing = false;
-            holder.classList.remove('rush-out', 'settled');
+            isCategoryTransitioning = false;
+            if (board) board.classList.remove('blurred-bg');
+            holder.classList.remove('zoom-near', 'dissolve-out', 'settled');
             holder.style.transform = 'scale(0.33)';
             holder.style.opacity = '0.9';
+            holder.style.filter = 'blur(0px)';
             holder.offsetHeight;
 
-            /* 1-second spin + zoom up to full size */
-            catCurrentRotX = -10;
+            catCurrentRotX = -12;
             catCurrentRotY = 0;
             catTargetRotX = 0;
             catTargetRotY = 360;
+            frontFaceIndex = 4;
 
             requestAnimationFrame(() => {
                 holder.classList.add('settled');
                 holder.style.transform = '';
                 holder.style.opacity = '';
+                holder.style.filter = '';
             });
 
             entrySpinTimer = setTimeout(() => {
-                catCurrentRotY = 0;
-                catTargetRotY = 0;
                 catCurrentRotX = 0;
+                catCurrentRotY = 0;
                 catTargetRotX = 0;
+                catTargetRotY = 0;
+                frontFaceIndex = 4;
+                if (catCubeGroup) {
+                    catCubeGroup.rotation.set(0, 0, 0);
+                }
 
                 if (unlockedCategories.has('NATURE') && !hasEngravedFirstNature) {
                     hasEngravedFirstNature = true;
-                    engraveWordLetterByLetter('NATURE', 'center');
+                    engraveWordLetterByLetter('NATURE', 4, 'center');
                 }
-            }, 1020);
+            }, 980);
         }
 
-        function engraveWordLetterByLetter(fullWord, slotKey) {
+        function engraveWordLetterByLetter(fullWord, faceIdx, slotKey) {
             if (letterRevealTimer) {
                 clearInterval(letterRevealTimer);
                 letterRevealTimer = null;
             }
 
+            if (!engravedByFace[faceIdx]) {
+                engravedByFace[faceIdx] = { center: '', tl: '', tr: '', bl: '', br: '' };
+            }
+
             let idx = 0;
-            currentEngravedMap[slotKey] = '';
+            engravedByFace[faceIdx][slotKey] = '';
             rebuildCategoryCubeMesh();
 
             letterRevealTimer = setInterval(() => {
                 idx++;
-                currentEngravedMap[slotKey] = fullWord.slice(0, idx);
+                engravedByFace[faceIdx][slotKey] = fullWord.slice(0, idx);
                 rebuildCategoryCubeMesh();
 
                 if (idx >= fullWord.length) {
@@ -1774,11 +1769,11 @@
             transitionPage(vault, workspace, 'backward');
         }
 
-        /* Single continuous defocus transition: category cube rushes toward player & blurs -> word cubes settle from same blur */
+        /* 1) Large cube approaches clearly first; 2) dissolves + blurs background; 3) word cubes & background come into focus together */
         function openMemoryVaultFromCategory(categoryName) {
-            if (isTransitioning || isCategoryRushing) return;
+            if (isTransitioning || isCategoryTransitioning) return;
             isTransitioning = true;
-            isCategoryRushing = true;
+            isCategoryTransitioning = true;
 
             const holder = document.getElementById('categoryCubeHolder');
             const vault = document.getElementById('memoryVault');
@@ -1788,35 +1783,47 @@
             saveStoredWords(words);
 
             if (holder) {
-                holder.classList.add('rush-out');
+                holder.classList.remove('settled', 'dissolve-out');
+                holder.classList.add('zoom-near');
             }
 
-            setTimeout(() => {
-                stopVaultSpinning();
-                disposeVaultMiniCubes();
+            rushStepTimer = setTimeout(() => {
+                if (holder) {
+                    holder.classList.remove('zoom-near');
+                    holder.classList.add('dissolve-out');
+                }
+                if (board) {
+                    board.classList.add('blurred-bg');
+                }
 
-                board.classList.remove('clouds-bg', 'blurred-bg');
-                board.classList.add('vault-bg');
-                vault.classList.remove('defocused', 'defocus-settle');
-                vault.classList.add('defocus-reveal');
+                rushStepTimer = setTimeout(() => {
+                    stopVaultSpinning();
+                    disposeVaultMiniCubes();
 
-                setSoloPage('memoryVault');
-                renderVaultGrid(words);
-                startVaultSpinning();
+                    board.classList.remove('clouds-bg');
+                    board.classList.add('vault-bg');
+                    vault.classList.remove('defocused', 'defocus-settle');
+                    vault.classList.add('defocus-reveal');
 
-                vault.offsetHeight;
-                requestAnimationFrame(() => {
-                    vault.classList.remove('defocus-reveal');
-                    vault.classList.add('defocus-settle');
-                });
+                    setSoloPage('memoryVault');
+                    renderVaultGrid(words);
+                    startVaultSpinning();
 
-                setTimeout(() => {
-                    vault.classList.remove('defocus-settle');
-                    if (holder) holder.classList.remove('rush-out');
-                    isCategoryRushing = false;
-                    isTransitioning = false;
-                }, 500);
-            }, 480);
+                    vault.offsetHeight;
+                    requestAnimationFrame(() => {
+                        vault.classList.remove('defocus-reveal');
+                        vault.classList.add('defocus-settle');
+                        board.classList.remove('blurred-bg');
+                    });
+
+                    rushStepTimer = setTimeout(() => {
+                        vault.classList.remove('defocus-settle');
+                        if (holder) holder.classList.remove('dissolve-out');
+                        isCategoryTransitioning = false;
+                        isTransitioning = false;
+                    }, 500);
+                }, 270);
+            }, 320);
         }
 
         function seededRand(seed) {
@@ -2226,7 +2233,6 @@
             };
 
             if (options.isCategoryCluster) {
-                /* Only already-engraved / unlocked words appear on the face; larger readable font */
                 const engraved = options.engraved || {};
                 const spots = [
                     { key: 'tl', x: size * 0.25, y: size * 0.24 },
@@ -2239,7 +2245,7 @@
                 spots.forEach((spot) => {
                     const label = engraved[spot.key];
                     if (!label) return;
-                    const basePx = spot.key === 'center' ? 40 : 34;
+                    const basePx = spot.key === 'center' ? 42 : 35;
                     const fontPx = Math.round(basePx * scale);
                     const fontStr = `900 ${fontPx}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
 
@@ -2383,15 +2389,17 @@
 
             const geom = createChippedStoneCubeGeometry(1.98, 41);
 
+            /* BoxGeometry material order: 0:+X, 1:-X, 2:+Y, 3:-Y, 4:+Z (front face), 5:-Z */
             const materials = Array.from({ length: 6 }, (_, faceIdx) => {
                 const faceSeed = 500 + faceIdx * 19;
-                const stoneSet = faceIdx === 0
+                const faceEngraved = engravedByFace[faceIdx];
+                const stoneSet = faceEngraved
                     ? createMultiStoneTextures(
                         [],
                         {
                             isCategoryCluster: true,
                             hasPurplePebbles: true,
-                            engraved: currentEngravedMap
+                            engraved: faceEngraved
                         },
                         faceSeed
                     )
@@ -2451,7 +2459,7 @@
             catTargetRotY = 0;
             catCurrentRotX = 0;
             catCurrentRotY = 0;
-            activeCategoryFaceIndex = 0;
+            frontFaceIndex = 4;
 
             rebuildCategoryCubeMesh();
 
@@ -2464,8 +2472,8 @@
             catAnimId = requestAnimationFrame(renderCategoryLoop);
             if (!catRenderer || !catScene || !catCamera) return;
 
-            catCurrentRotX += (catTargetRotX - catCurrentRotX) * 0.16;
-            catCurrentRotY += (catTargetRotY - catCurrentRotY) * 0.16;
+            catCurrentRotX += (catTargetRotX - catCurrentRotX) * 0.18;
+            catCurrentRotY += (catTargetRotY - catCurrentRotY) * 0.18;
 
             if (catCubeGroup) {
                 catCubeGroup.rotation.x = THREE.MathUtils.degToRad(catCurrentRotX);
@@ -2477,7 +2485,7 @@
         }
 
         function flipCategoryCube(direction) {
-            if (isCategoryRushing) return;
+            if (isCategoryTransitioning) return;
             if (direction === 'up') {
                 catTargetRotY = Math.round(catTargetRotY / 360) * 360;
                 catTargetRotX = catTargetRotX > 0 ? 0 : -90;
@@ -2497,17 +2505,17 @@
 
             const normY = (((Math.round(catTargetRotY / 90)) % 4) + 4) % 4;
             if (Math.abs(catTargetRotX) === 90) {
-                activeCategoryFaceIndex = catTargetRotX < 0 ? 2 : 3;
+                frontFaceIndex = catTargetRotX < 0 ? 3 : 2;
             } else {
-                activeCategoryFaceIndex = normY === 0 ? 0 : normY === 1 ? 4 : normY === 2 ? 5 : 1;
+                frontFaceIndex = normY === 0 ? 4 : normY === 1 ? 1 : normY === 2 ? 5 : 0;
             }
         }
 
         function onCategorySpotTap(spotKey, btnEl) {
-            if (isTransitioning || isCategoryRushing) return;
+            if (isTransitioning || isCategoryTransitioning) return;
 
-            const faceData = CUBE_FACES_CATEGORIES[activeCategoryFaceIndex % CUBE_FACES_CATEGORIES.length];
-            const categoryLabel = faceData[spotKey];
+            const faceMap = CUBE_FACES_CATEGORIES[frontFaceIndex];
+            const categoryLabel = faceMap ? faceMap[spotKey] : '';
             if (!categoryLabel || !unlockedCategories.has(categoryLabel)) return;
 
             if (btnEl) {
@@ -2517,7 +2525,7 @@
             setTimeout(() => {
                 if (btnEl) btnEl.classList.remove('violet-flash');
                 openMemoryVaultFromCategory(categoryLabel);
-            }, 110);
+            }, 100);
         }
 
         function disposeVaultMiniCubes() {
