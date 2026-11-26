@@ -176,18 +176,18 @@
             pointer-events: none;
             transform: scale(1);
             filter: blur(0px);
-            transition: opacity 0.22s ease, filter 0.24s cubic-bezier(0.22, 1, 0.36, 1), transform 0.24s cubic-bezier(0.22, 1, 0.36, 1);
+            transition: opacity 0.2s ease, filter 0.2s cubic-bezier(0.22, 1, 0.36, 1), transform 0.2s cubic-bezier(0.22, 1, 0.36, 1);
             will-change: filter, transform;
         }
 
         .bg-layer.blur-active {
-            transition: opacity 0.2s ease, filter 0.18s ease-out, transform 0.18s ease-out !important;
+            transition: opacity 0.16s ease, filter 0.14s ease-out, transform 0.14s ease-out !important;
             filter: blur(8px) !important;
             transform: scale(1.07) !important;
         }
 
         .bg-layer.blur-clear {
-            transition: opacity 0.2s ease, filter 0.32s cubic-bezier(0.16, 1, 0.3, 1), transform 0.32s cubic-bezier(0.16, 1, 0.3, 1) !important;
+            transition: opacity 0.18s ease, filter 0.24s cubic-bezier(0.16, 1, 0.3, 1), transform 0.24s cubic-bezier(0.16, 1, 0.3, 1) !important;
             filter: blur(0px) !important;
             transform: scale(1) !important;
         }
@@ -666,19 +666,7 @@
             padding: 12px 18px 12px;
             position: relative;
             overflow: hidden;
-            transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), filter 0.38s ease, opacity 0.38s ease;
-        }
-
-        .rank-vault.blur-enter {
-            filter: blur(8px);
-            opacity: 0.45;
-            transition: none !important;
-        }
-
-        .rank-vault.blur-settle {
-            filter: blur(0px);
-            opacity: 1;
-            transition: filter 0.36s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease !important;
+            transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), filter 0.3s ease, opacity 0.3s ease;
         }
 
         .rank-vault.defocused {
@@ -757,25 +745,29 @@
             animation: category-levitate 4.4s ease-in-out infinite;
         }
 
-        /* Fast chatter right on tap */
-        .category-cube-holder.chatter {
-            animation: category-chatter 0.12s linear infinite !important;
+        /* Inverse arrival from word cubes: flies in large & blurred over word cubes, settling into place */
+        .category-cube-holder.inverse-from-words {
+            animation: none !important;
+            transition: none !important;
+            transform: scale(2.15) !important;
+            filter: blur(8px) !important;
+            opacity: 0.55 !important;
         }
 
-        @keyframes category-chatter {
-            0% { transform: translate(-3px, 1px) rotate(-1.4deg) scale(1.01); }
-            25% { transform: translate(3px, -1px) rotate(1.4deg) scale(1.02); }
-            50% { transform: translate(-2.5px, -1.5px) rotate(-1deg) scale(1.01); }
-            75% { transform: translate(2.5px, 1.5px) rotate(1deg) scale(1.02); }
-            100% { transform: translate(-3px, 1px) rotate(-1.4deg) scale(1.01); }
+        .category-cube-holder.inverse-settle {
+            animation: category-levitate 4.4s ease-in-out 0.32s infinite !important;
+            transition: transform 0.32s cubic-bezier(0.16, 1, 0.3, 1), filter 0.28s ease-out, opacity 0.24s ease-out !important;
+            transform: scale(1) !important;
+            filter: blur(0px) !important;
+            opacity: 1 !important;
         }
 
-        /* 2x faster fly-through past screen (0.22s) */
+        /* Fly-through past screen with late dissolve so cube stays visible longer */
         .category-cube-holder.fly-past {
             animation: none !important;
-            transition: transform 0.22s cubic-bezier(0.28, 0.04, 0.72, 0.96), opacity 0.12s ease-in 0.1s, filter 0.12s ease-in 0.09s !important;
+            transition: transform 0.24s cubic-bezier(0.28, 0.04, 0.72, 0.96), opacity 0.1s ease-in 0.14s, filter 0.12s ease-in 0.11s !important;
             transform: scale(2.45) !important;
-            filter: blur(9px) !important;
+            filter: blur(8px) !important;
             opacity: 0 !important;
         }
 
@@ -865,7 +857,7 @@
             padding: 10px 0 8px;
             position: relative;
             overflow: hidden;
-            transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), filter 0.36s ease, opacity 0.36s ease;
+            transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), filter 0.3s ease, opacity 0.3s ease;
         }
 
         /* Continuous defocus handoff from category cube into word cubes */
@@ -880,7 +872,15 @@
             filter: blur(0px);
             opacity: 1;
             transform: scale(1);
-            transition: filter 0.34s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease, transform 0.34s cubic-bezier(0.16, 1, 0.3, 1) !important;
+            transition: filter 0.28s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.24s ease, transform 0.28s cubic-bezier(0.16, 1, 0.3, 1) !important;
+        }
+
+        /* When returning to rank, word cubes blur out as the big cube flies in over them */
+        .memory-vault.defocus-exit {
+            filter: blur(8px) !important;
+            opacity: 0.45 !important;
+            transform: scale(1.03) !important;
+            transition: filter 0.24s ease-out, opacity 0.24s ease-out, transform 0.24s ease-out !important;
         }
 
         .memory-vault.defocused {
@@ -1232,11 +1232,11 @@
                         </div>
 
                         <div class="category-face-hit-layer" id="categoryFaceHitLayer">
-                            <button class="cat-hit-btn cat-tl" data-slot="tl" onclick="onCategorySpotTap('tl', this)" aria-label="Top-left category"></button>
-                            <button class="cat-hit-btn cat-tr" data-slot="tr" onclick="onCategorySpotTap('tr', this)" aria-label="Top-right category"></button>
-                            <button class="cat-hit-btn cat-center" data-slot="center" onclick="onCategorySpotTap('center', this)" aria-label="Center category"></button>
-                            <button class="cat-hit-btn cat-bl" data-slot="bl" onclick="onCategorySpotTap('bl', this)" aria-label="Bottom-left category"></button>
-                            <button class="cat-hit-btn cat-br" data-slot="br" onclick="onCategorySpotTap('br', this)" aria-label="Bottom-right category"></button>
+                            <button class="cat-hit-btn cat-tl" data-slot="tl" onclick="onCategorySpotTap('tl')" aria-label="Top-left category"></button>
+                            <button class="cat-hit-btn cat-tr" data-slot="tr" onclick="onCategorySpotTap('tr')" aria-label="Top-right category"></button>
+                            <button class="cat-hit-btn cat-center" data-slot="center" onclick="onCategorySpotTap('center')" aria-label="Center category"></button>
+                            <button class="cat-hit-btn cat-bl" data-slot="bl" onclick="onCategorySpotTap('bl')" aria-label="Bottom-left category"></button>
+                            <button class="cat-hit-btn cat-br" data-slot="br" onclick="onCategorySpotTap('br')" aria-label="Bottom-right category"></button>
                         </div>
                     </div>
                 </div>
@@ -1297,6 +1297,7 @@
         let letterRevealTimer = null;
         let entrySpinTimer = null;
         let rushStepTimer = null;
+        let labelChatterTimer = null;
 
         let vaultSpinRaf = null;
         let activePickedSlot = null;
@@ -1346,11 +1347,14 @@
         let catTargetRotY = 0;
         let catCurrentRotX = 0;
         let catCurrentRotY = 0;
+        let catFlightSpinY = 0;
+        let catFlightActive = false;
         let catAnimId = null;
         let frontFaceIndex = 4;
         let engravedByFace = {
             4: { center: '', tl: '', tr: '', bl: '', br: '' }
         };
+        let labelChatterOffset = { faceIdx: -1, slotKey: '', dx: 0, dy: 0 };
 
         const CUBE_OFFSETS = [
             { x: -1, y: 1 },  { x: 1, y: -1 },
@@ -1651,28 +1655,58 @@
                 clearTimeout(rushStepTimer);
                 rushStepTimer = null;
             }
+            if (labelChatterTimer) {
+                clearInterval(labelChatterTimer);
+                labelChatterTimer = null;
+            }
+            labelChatterOffset = { faceIdx: -1, slotKey: '', dx: 0, dy: 0 };
+            catFlightActive = false;
+            catFlightSpinY = 0;
         }
 
-        function triggerCategoryEntrySequence(withBlurArrival = false) {
+        function triggerCategoryEntrySequence(fromWordVault = false) {
             clearCategoryTimers();
             const holder = document.getElementById('categoryCubeHolder');
-            const rankVault = document.getElementById('rankVault');
             const vaultBg = document.querySelector('.bg-vault-page');
             if (!holder) return;
 
             isCategoryTransitioning = false;
-            holder.classList.remove('fly-past', 'chatter', 'settled');
+            holder.classList.remove('fly-past', 'settled', 'inverse-from-words', 'inverse-settle');
+
+            if (fromWordVault) {
+                catCurrentRotX = 0;
+                catCurrentRotY = 0;
+                catTargetRotX = 0;
+                catTargetRotY = 0;
+                frontFaceIndex = 4;
+                if (catCubeGroup) catCubeGroup.rotation.set(0, 0, 0);
+
+                holder.classList.add('inverse-from-words');
+                if (vaultBg) {
+                    vaultBg.classList.remove('blur-clear');
+                    vaultBg.classList.add('blur-active');
+                }
+                holder.offsetHeight;
+
+                requestAnimationFrame(() => {
+                    holder.classList.remove('inverse-from-words');
+                    holder.classList.add('inverse-settle');
+                    if (vaultBg) {
+                        vaultBg.classList.remove('blur-active');
+                        vaultBg.classList.add('blur-clear');
+                    }
+                });
+
+                entrySpinTimer = setTimeout(() => {
+                    holder.classList.remove('inverse-settle');
+                    holder.classList.add('settled');
+                }, 340);
+                return;
+            }
+
             holder.style.transform = 'scale(0.33)';
             holder.style.opacity = '0.9';
             holder.style.filter = 'blur(0px)';
-
-            if (withBlurArrival && rankVault && vaultBg) {
-                rankVault.classList.remove('blur-settle');
-                rankVault.classList.add('blur-enter');
-                vaultBg.classList.remove('blur-clear');
-                vaultBg.classList.add('blur-active');
-            }
-
             holder.offsetHeight;
 
             catCurrentRotX = -12;
@@ -1686,13 +1720,6 @@
                 holder.style.transform = '';
                 holder.style.opacity = '';
                 holder.style.filter = '';
-
-                if (withBlurArrival && rankVault && vaultBg) {
-                    rankVault.classList.remove('blur-enter');
-                    rankVault.classList.add('blur-settle');
-                    vaultBg.classList.remove('blur-active');
-                    vaultBg.classList.add('blur-clear');
-                }
             });
 
             entrySpinTimer = setTimeout(() => {
@@ -1772,29 +1799,46 @@
 
         function returnToRankVault() {
             if (isTransitioning) return;
+            clearCategoryTimers();
+            isTransitioning = true;
+            isCategoryTransitioning = true;
+
             const currentVault = document.getElementById('memoryVault');
             const rankVault = document.getElementById('rankVault');
             const board = document.getElementById('retroBoard');
-            const vaultBg = document.querySelector('.bg-vault-page');
 
-            clearCategoryTimers();
             stopVaultSpinning();
             disposeVaultMiniCubes();
-            currentVault.classList.remove('defocus-reveal', 'defocus-settle');
+            currentVault.classList.remove('defocus-reveal', 'defocus-settle', 'defocus-exit');
 
             board.classList.remove('clouds-bg', 'blurred-bg');
             board.classList.add('vault-bg');
             rankVault.classList.remove('defocused');
 
-            if (vaultBg) {
-                vaultBg.classList.remove('blur-clear');
-                vaultBg.classList.add('blur-active');
-            }
+            currentVault.style.transition = 'none';
+            currentVault.style.display = 'flex';
+            currentVault.classList.remove('pos-left', 'pos-right');
+            currentVault.classList.add('pos-center');
 
-            transitionPage(currentVault, rankVault, 'backward', () => {
-                initCategoryCube();
-                triggerCategoryEntrySequence(true);
+            rankVault.style.transition = 'none';
+            rankVault.style.display = 'flex';
+            rankVault.classList.remove('pos-left', 'pos-right');
+            rankVault.classList.add('pos-center');
+
+            initCategoryCube();
+            triggerCategoryEntrySequence(true);
+
+            requestAnimationFrame(() => {
+                currentVault.classList.add('defocus-exit');
             });
+
+            transitionTimer = setTimeout(() => {
+                currentVault.classList.remove('defocus-exit');
+                setSoloPage('rankVault');
+                isTransitioning = false;
+                isCategoryTransitioning = false;
+                transitionTimer = null;
+            }, 350);
         }
 
         function returnToStudyFromVault() {
@@ -1805,7 +1849,7 @@
 
             stopVaultSpinning();
             disposeVaultMiniCubes();
-            vault.classList.remove('defocus-reveal', 'defocus-settle');
+            vault.classList.remove('defocus-reveal', 'defocus-settle', 'defocus-exit');
 
             board.classList.remove('vault-bg', 'blurred-bg');
             board.classList.add('clouds-bg');
@@ -1813,8 +1857,8 @@
             transitionPage(vault, workspace, 'backward');
         }
 
-        /* Fast chatter -> 2x faster fly-through + simultaneous background blur -> word cubes & background clear */
-        function openMemoryVaultFromCategory(categoryName) {
+        /* Only category label chatters -> cube spins & flies through + background blurs -> 2x shorter gap -> word cubes clear */
+        function openMemoryVaultFromCategory(categoryName, faceIdx = 4, slotKey = 'center') {
             if (isTransitioning || isCategoryTransitioning) return;
             clearCategoryTimers();
             isTransitioning = true;
@@ -1828,28 +1872,53 @@
             const words = getStoredWords();
             saveStoredWords(words);
 
-            if (holder) {
-                holder.classList.remove('settled', 'fly-past');
-                holder.classList.add('chatter');
-            }
+            let tick = 0;
+            labelChatterTimer = setInterval(() => {
+                tick++;
+                const sign = tick % 2 === 0 ? 1 : -1;
+                labelChatterOffset = {
+                    faceIdx,
+                    slotKey,
+                    dx: sign * (tick % 3 === 0 ? 7 : 5),
+                    dy: (tick % 4 === 0 ? -3 : 3) * sign
+                };
+                rebuildCategoryCubeMesh();
+            }, 28);
 
             rushStepTimer = setTimeout(() => {
+                if (labelChatterTimer) {
+                    clearInterval(labelChatterTimer);
+                    labelChatterTimer = null;
+                }
+                labelChatterOffset = { faceIdx: -1, slotKey: '', dx: 0, dy: 0 };
+                rebuildCategoryCubeMesh();
+
+                catFlightActive = true;
+                catFlightSpinY = 0;
+
                 if (holder) {
-                    holder.classList.remove('chatter');
-                    holder.classList.add('fly-past');
+                    holder.classList.remove('settled', 'inverse-from-words', 'inverse-settle', 'fly-past');
+                    holder.offsetHeight;
+                    requestAnimationFrame(() => {
+                        holder.classList.add('fly-past');
+                    });
                 }
                 if (vaultBg) {
                     vaultBg.classList.remove('blur-clear');
                     vaultBg.classList.add('blur-active');
                 }
 
+                /* Half the post-disappearance delay (~85ms) before word cubes appear */
                 rushStepTimer = setTimeout(() => {
+                    catFlightActive = false;
+                    catFlightSpinY = 0;
+
                     stopVaultSpinning();
                     disposeVaultMiniCubes();
 
                     board.classList.remove('clouds-bg', 'blurred-bg');
                     board.classList.add('vault-bg');
-                    vault.classList.remove('defocused', 'defocus-settle');
+                    vault.classList.remove('defocused', 'defocus-settle', 'defocus-exit');
                     vault.classList.add('defocus-reveal');
 
                     setSoloPage('memoryVault');
@@ -1873,9 +1942,9 @@
                         if (holder) holder.classList.remove('fly-past');
                         isCategoryTransitioning = false;
                         isTransitioning = false;
-                    }, 340);
-                }, 170);
-            }, 120);
+                    }, 290);
+                }, 85);
+            }, 125);
         }
 
         function seededRand(seed) {
@@ -2286,6 +2355,7 @@
 
             if (options.isCategoryCluster) {
                 const engraved = options.engraved || {};
+                const chatter = options.chatter || null;
                 const spots = [
                     { key: 'tl', x: size * 0.25, y: size * 0.24 },
                     { key: 'tr', x: size * 0.75, y: size * 0.24 },
@@ -2301,10 +2371,13 @@
                     const fontPx = Math.round(basePx * scale);
                     const fontStr = `900 ${fontPx}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
 
+                    const extraX = chatter && chatter.slotKey === spot.key ? chatter.dx * scale : 0;
+                    const extraY = chatter && chatter.slotKey === spot.key ? chatter.dy * scale : 0;
+
                     drawCrispText(
                         label,
-                        spot.x,
-                        spot.y,
+                        spot.x + extraX,
+                        spot.y + extraY,
                         fontStr,
                         '#111215',
                         4.5,
@@ -2432,7 +2505,7 @@
             return group;
         }
 
-        /* Single large category cube (no self-spin, only levitate + flip) */
+        /* Single large category cube (no self-spin, only levitate + flip + flight spin) */
         function rebuildCategoryCubeMesh() {
             if (!catScene || typeof THREE === 'undefined') return;
             if (catCubeGroup) {
@@ -2444,13 +2517,15 @@
             const materials = Array.from({ length: 6 }, (_, faceIdx) => {
                 const faceSeed = 500 + faceIdx * 19;
                 const faceEngraved = engravedByFace[faceIdx];
+                const activeChatter = labelChatterOffset.faceIdx === faceIdx ? labelChatterOffset : null;
                 const stoneSet = faceEngraved
                     ? createMultiStoneTextures(
                         [],
                         {
                             isCategoryCluster: true,
                             hasPurplePebbles: true,
-                            engraved: faceEngraved
+                            engraved: faceEngraved,
+                            chatter: activeChatter
                         },
                         faceSeed
                     )
@@ -2472,7 +2547,7 @@
             catCubeGroup = createOutlinedStoneCubeGroup(geom, materials, 1.032);
             catCubeGroup.rotation.set(
                 THREE.MathUtils.degToRad(catCurrentRotX),
-                THREE.MathUtils.degToRad(catCurrentRotY),
+                THREE.MathUtils.degToRad(catCurrentRotY + catFlightSpinY),
                 0
             );
             catScene.add(catCubeGroup);
@@ -2510,6 +2585,8 @@
             catTargetRotY = 0;
             catCurrentRotX = 0;
             catCurrentRotY = 0;
+            catFlightSpinY = 0;
+            catFlightActive = false;
             frontFaceIndex = 4;
 
             rebuildCategoryCubeMesh();
@@ -2525,10 +2602,13 @@
 
             catCurrentRotX += (catTargetRotX - catCurrentRotX) * 0.18;
             catCurrentRotY += (catTargetRotY - catCurrentRotY) * 0.18;
+            if (catFlightActive) {
+                catFlightSpinY += 5.5;
+            }
 
             if (catCubeGroup) {
                 catCubeGroup.rotation.x = THREE.MathUtils.degToRad(catCurrentRotX);
-                catCubeGroup.rotation.y = THREE.MathUtils.degToRad(catCurrentRotY);
+                catCubeGroup.rotation.y = THREE.MathUtils.degToRad(catCurrentRotY + catFlightSpinY);
                 catCubeGroup.position.y = 0;
             }
 
@@ -2562,14 +2642,14 @@
             }
         }
 
-        function onCategorySpotTap(spotKey, btnEl) {
+        function onCategorySpotTap(spotKey) {
             if (isTransitioning || isCategoryTransitioning) return;
 
             const faceMap = CUBE_FACES_CATEGORIES[frontFaceIndex];
             const categoryLabel = faceMap ? faceMap[spotKey] : '';
             if (!categoryLabel || !unlockedCategories.has(categoryLabel)) return;
 
-            openMemoryVaultFromCategory(categoryLabel);
+            openMemoryVaultFromCategory(categoryLabel, frontFaceIndex, spotKey);
         }
 
         function disposeVaultMiniCubes() {
