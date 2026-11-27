@@ -1623,11 +1623,11 @@
 
         /*
          * Splash -> Prologue sequence:
-         * 0.0s .. 2.0s: fade to black (2s - 1s faster than before)
+         * 0.0s .. 2.0s: fade to black (2s)
          * 2.0s .. 4.0s: fade in "Prologue" (2s)
-         * 4.0s .. 7.0s: hold "Prologue" fixed (3s)
-         * 7.0s .. 8.0s: fade out "Prologue" (1s - 1s faster)
-         * 8.0s .. 11.0s: fade out black curtain to reveal Page 2 (3s)
+         * 4.0s .. 5.0s: hold "Prologue" (1s)
+         * 5.0s .. 6.0s: fade out "Prologue" (1s — 2s earlier than 7.0s..8.0s)
+         * 6.0s .. 9.0s: fade out black curtain to reveal Page 2 (3s)
          */
         function enterFromSplash(btn) {
             const splash = document.getElementById('startSplash');
@@ -1681,24 +1681,24 @@
                     titleCard.classList.add('title-visible');
                 }, 2000);
 
-                // 7.0s (after 2s fade-in + 3s hold): fade out "Prologue" over 1s
+                // 5.0s: fade out "Prologue" over 1s (2s earlier than before)
                 const t2 = setTimeout(() => {
                     titleCard.classList.remove('title-visible');
                     titleCard.classList.add('title-fading-out');
-                }, 7000);
+                }, 5000);
 
-                // 8.0s ("Prologue" is gone): fade out black curtain over 3s into Page 2
+                // 6.0s ("Prologue" is gone): fade out black curtain over 3s into Page 2
                 const t3 = setTimeout(() => {
                     curtain.classList.add('curtain-exit');
                     curtain.classList.remove('curtain-visible');
-                }, 8000);
+                }, 6000);
 
-                // 11.05s: hide curtain
+                // 9.05s: hide curtain
                 const t4 = setTimeout(() => {
                     curtain.style.display = 'none';
                     curtain.classList.remove('curtain-exit');
                     titleCard.classList.remove('title-fading-out');
-                }, 11050);
+                }, 9050);
 
                 prologueTimers.push(t1, t2, t3, t4);
             }, 90);
@@ -2570,6 +2570,92 @@
             return geom;
         }
 
+        function traceOrganicRaggedBlob(ctx, cx, cy, baseR, seed, lobeCount = 7) {
+            const steps = 48;
+            const p1 = seededRand(seed + 11) * Math.PI * 2;
+            const p2 = seededRand(seed + 23) * Math.PI * 2;
+            const p3 = seededRand(seed + 37) * Math.PI * 2;
+            const amp1 = 0.16 + seededRand(seed + 41) * 0.14;
+            const amp2 = 0.09 + seededRand(seed + 53) * 0.10;
+            const amp3 = 0.05 + seededRand(seed + 67) * 0.07;
+
+            ctx.beginPath();
+            for (let i = 0; i <= steps; i++) {
+                const a = (i / steps) * Math.PI * 2;
+                const mod = 1
+                    + amp1 * Math.sin(a * lobeCount + p1)
+                    + amp2 * Math.cos(a * (lobeCount + 2) + p2)
+                    + amp3 * Math.sin(a * (lobeCount * 2 + 1) + p3);
+                const r = baseR * Math.max(0.55, mod);
+                const px = cx + Math.cos(a) * r;
+                const py = cy + Math.sin(a) * r;
+                if (i === 0) ctx.moveTo(px, py);
+                else ctx.lineTo(px, py);
+            }
+            ctx.closePath();
+        }
+
+        function drawSoftRaggedGreyPatches(ctx, size, seedOffset, useReferenceColors = false) {
+            const scale = size / 512;
+            const patchCount = 7;
+
+            const colors = useReferenceColors
+                ? [
+                    'rgba(182, 185, 194, 0.34)',
+                    'rgba(148, 152, 162, 0.30)',
+                    'rgba(128, 132, 142, 0.24)'
+                ]
+                : [
+                    'rgba(190, 193, 202, 0.44)',
+                    'rgba(150, 154, 164, 0.42)',
+                    'rgba(128, 132, 144, 0.34)'
+                ];
+
+            for (let i = 0; i < patchCount; i++) {
+                const s = seedOffset * 193 + i * 37;
+                const cx = (75 + seededRand(s + 1) * 362) * scale;
+                const cy = (75 + seededRand(s + 2) * 362) * scale;
+                const rx = (52 + seededRand(s + 3) * 78) * scale;
+                const ry = (38 + seededRand(s + 4) * 64) * scale;
+                const ang = seededRand(s + 5) * Math.PI;
+                const lobes = 5 + Math.floor(seededRand(s + 6) * 4);
+
+                ctx.save();
+                ctx.translate(cx, cy);
+                ctx.rotate(ang);
+                ctx.scale(1, ry / rx);
+                ctx.filter = `blur(${Math.max(2.5, 6.5 * scale)}px)`;
+
+                traceOrganicRaggedBlob(ctx, 0, 0, rx, s + 10, lobes);
+                ctx.fillStyle = colors[i % colors.length];
+                ctx.fill();
+
+                // Secondary smaller ragged lobe overlapping edge for organic irregularity
+                const subX = (seededRand(s + 7) - 0.5) * rx * 0.65;
+                const subY = (seededRand(s + 8) - 0.5) * rx * 0.65;
+                traceOrganicRaggedBlob(ctx, subX, subY, rx * 0.58, s + 29, lobes + 1);
+                ctx.fillStyle = colors[(i + 1) % colors.length];
+                ctx.fill();
+
+                ctx.restore();
+            }
+
+            // Subtle soft-edged small irregular speckles
+            for (let p = 0; p < 12; p++) {
+                const s = seedOffset * 613 + p * 23;
+                const px = (34 + seededRand(s + 1) * 444) * scale;
+                const py = (34 + seededRand(s + 2) * 444) * scale;
+                const r = (4 + seededRand(s + 3) * 8) * scale;
+
+                ctx.save();
+                ctx.filter = `blur(${Math.max(1.2, 2.4 * scale)}px)`;
+                traceOrganicRaggedBlob(ctx, px, py, r, s + 5, 5);
+                ctx.fillStyle = p % 2 === 0 ? 'rgba(116, 120, 130, 0.36)' : 'rgba(196, 199, 206, 0.32)';
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
         function sampleRealCubeFace(ctx, size, seedOffset) {
             if (!refCubeImageReady || !refCubeImage.naturalWidth) return false;
 
@@ -2639,62 +2725,18 @@
             ctx.drawImage(temp, -size / 2, -size / 2, size, size);
             ctx.restore();
 
-            ctx.fillStyle = 'rgba(150, 154, 166, 0.22)';
+            ctx.fillStyle = 'rgba(156, 160, 172, 0.24)';
             ctx.fillRect(0, 0, size, size);
+
+            drawSoftRaggedGreyPatches(ctx, size, seedOffset, true);
 
             return true;
         }
 
         function drawFallbackCube1_3Base(ctx, size, seedOffset) {
-            ctx.fillStyle = '#aeb1ba';
+            ctx.fillStyle = '#b4b7c0';
             ctx.fillRect(0, 0, size, size);
-
-            const scale = size / 512;
-            const tones = ['rgba(186, 189, 198, 0.55)', 'rgba(154, 158, 168, 0.55)', 'rgba(134, 138, 148, 0.45)'];
-            for (let i = 0; i < 10; i++) {
-                const s = seedOffset * 193 + i * 31;
-                const cx = seededRand(s + 1) * size;
-                const cy = seededRand(s + 2) * size;
-                const rx = (60 + seededRand(s + 3) * 110) * scale;
-                const ry = (30 + seededRand(s + 4) * 55) * scale;
-                const ang = (seededRand(s + 5) - 0.5) * 1.4;
-
-                ctx.save();
-                ctx.translate(cx, cy);
-                ctx.rotate(ang);
-                ctx.beginPath();
-                for (let v = 0; v < 6; v++) {
-                    const a = (v / 6) * Math.PI * 2;
-                    const m = 0.65 + seededRand(s + v * 11) * 0.6;
-                    const px = Math.cos(a) * rx * m;
-                    const py = Math.sin(a) * ry * m;
-                    if (v === 0) ctx.moveTo(px, py);
-                    else ctx.lineTo(px, py);
-                }
-                ctx.closePath();
-                ctx.fillStyle = tones[i % tones.length];
-                ctx.fill();
-                ctx.restore();
-            }
-
-            for (let p = 0; p < 16; p++) {
-                const s = seedOffset * 613 + p * 23;
-                const px = (28 + seededRand(s + 1) * 456) * scale;
-                const py = (28 + seededRand(s + 2) * 456) * scale;
-                const rx = (2 + seededRand(s + 3) * 5) * scale;
-                const ry = rx * 0.65;
-
-                ctx.save();
-                ctx.translate(px, py);
-                ctx.fillStyle = 'rgba(102, 106, 116, 0.8)';
-                ctx.strokeStyle = 'rgba(24, 24, 27, 0.78)';
-                ctx.lineWidth = 1.3 * scale;
-                ctx.beginPath();
-                ctx.ellipse(0, 0, rx, ry, seededRand(s + 4) * Math.PI, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.stroke();
-                ctx.restore();
-            }
+            drawSoftRaggedGreyPatches(ctx, size, seedOffset, false);
         }
 
         function applySurfaceRoughness(ctx, bctx, size, seedOffset) {
