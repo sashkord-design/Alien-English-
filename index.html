@@ -13,7 +13,7 @@
     <style>
         :root {
             --ink-dark: #18181b;
-            --story-bg: #ece5d5;
+            --story-bg: #163352;
             --vault-base: #22183a;
             --wrong-text: #7e22ce;
             --correct-text: #15803d;
@@ -162,6 +162,74 @@
             }
         }
 
+        /* PROLOGUE CINEMATIC BLACKOUT & TITLE CURTAIN */
+        .prologue-curtain {
+            position: fixed;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 80;
+            background-color: #05060a;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            opacity: 0;
+            pointer-events: auto;
+            transition: opacity 3s ease-in-out;
+            will-change: opacity;
+        }
+
+        .prologue-curtain.curtain-visible {
+            opacity: 1;
+        }
+
+        .prologue-title-card {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transform: scale(0.95);
+            transition: opacity 2s ease-in-out, transform 2s cubic-bezier(0.22, 1, 0.36, 1);
+            will-change: opacity, transform;
+            user-select: none;
+        }
+
+        .prologue-title-card.title-visible {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .prologue-comic-text {
+            font-family: "Trebuchet MS", "Arial Rounded MT Bold", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            font-size: clamp(40px, 11vw, 56px);
+            font-weight: 900;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: #f4ead2;
+            -webkit-text-stroke: 2.4px #141418;
+            paint-order: stroke fill;
+            text-shadow:
+                3px 4px 0px #141418,
+                0px 0px 26px rgba(244, 234, 210, 0.22);
+            position: relative;
+            padding: 6px 14px;
+        }
+
+        .prologue-comic-text::after {
+            content: '';
+            position: absolute;
+            left: 14px;
+            right: 14px;
+            bottom: -4px;
+            height: 4px;
+            border-radius: 99px;
+            background-color: #fcd34d;
+            border: 1.5px solid #141418;
+            box-shadow: 2px 2px 0px #141418;
+        }
+
         /* Background layers anchored on all sides with dark backing */
         .bg-layer {
             position: fixed;
@@ -181,10 +249,11 @@
         }
 
         .bg-first-page {
-            background:
-                radial-gradient(circle at 50% 24%, rgba(255, 250, 238, 0.72) 0%, rgba(236, 229, 213, 0.25) 58%, rgba(212, 201, 178, 0.65) 100%),
-                repeating-radial-gradient(circle at 20% 30%, rgba(24, 24, 27, 0.025) 0 1px, transparent 1px 6px);
-            background-color: var(--story-bg);
+            background-color: #163352;
+            background-image: url('Background0.jpeg'), url('Background0.webp'), url('Background0.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
             opacity: 1;
         }
 
@@ -310,9 +379,10 @@
             height: 100%;
             display: block;
             object-fit: cover;
-            object-position: center 22%;
+            object-position: center center;
             user-select: none;
             -webkit-user-drag: none;
+            transition: opacity 0.2s ease;
         }
 
         .narrative-box {
@@ -355,7 +425,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 12px;
+            gap: 14px;
             padding-top: 4px;
             flex-shrink: 0;
         }
@@ -387,10 +457,12 @@
         }
 
         .narrative-page-indicator {
-            font-size: 10.5px;
-            font-weight: 700;
+            font-size: 11px;
+            font-weight: 800;
             color: var(--ink-dark);
             letter-spacing: 0.04em;
+            min-width: 14px;
+            text-align: center;
         }
 
         .intro-bottom-group {
@@ -736,7 +808,6 @@
             animation: category-levitate 4.4s ease-in-out infinite;
         }
 
-        /* Whole-cube vibration before splitting */
         .category-cube-holder.cube-shivering {
             animation: big-cube-chatter 0.065s linear infinite !important;
             transform: scale(1) !important;
@@ -974,7 +1045,6 @@
             font-size: 10.5px;
         }
 
-        /* Shared pink action button lowered cleanly toward bottom */
         .bottom-nav-btn {
             position: relative;
             margin-top: 8px;
@@ -1100,9 +1170,16 @@
             src="start page.webp"
             alt="Alan the Alien"
             data-fallbacks='["start%20page.webp","start page.png","start%20page.png","start page.jpg","start%20page.jpg"]'
-            onerror="cycleSplashSrc(this)"
+            onerror="cycleImgSrc(this)"
         >
         <button class="splash-start-btn" id="splashStartBtn" onclick="enterFromSplash(this)"><span>to start</span></button>
+    </div>
+
+    <!-- Prologue Blackout & Comic Title Transition Overlay -->
+    <div class="prologue-curtain" id="prologueCurtain">
+        <div class="prologue-title-card" id="prologueTitleCard">
+            <span class="prologue-comic-text">Prologue</span>
+        </div>
     </div>
 
     <div class="retro-board" id="retroBoard">
@@ -1113,21 +1190,27 @@
 
         <div class="content-wrap">
 
-            <!-- Screen 1: Intro Narrative -->
+            <!-- Screen 1: Intro Narrative (Prologue Pages 1, 2, 3) -->
             <div class="intro-screen page-slide pos-center" id="introScreen">
                 <div class="intro-frame-box">
-                    <img src="Alan%20and%20the%20apple.jpg" alt="Alan in the orchard" class="intro-illustration">
+                    <img
+                        id="introIllustration"
+                        src="nr_i1.webp"
+                        alt="Prologue scene"
+                        class="intro-illustration"
+                        onerror="cycleImgSrc(this)"
+                    >
                 </div>
 
                 <div class="narrative-box">
                     <div class="narrative-body">
                         <p class="narrative-text" id="narrativeText">
-                            Alan wandered into an orchard and saw various fruits lying on the ground. While looking around, something suddenly fell on his head. It was red and firm. And it was...
+                            Once, in a galaxy far, far away, there was a wonderful planet, full of life—until greedy and foolish politicians caused an ecological disaster. As a result, almost all of its inhabitants had to leave and look for a new home.
                         </p>
                     </div>
                     <div class="narrative-pager">
                         <button class="mini-text-arrow" id="textPrevBtn" onclick="cycleNarrativeText(-1)" aria-label="Previous text"><span>‹</span></button>
-                        <span class="narrative-page-indicator" id="narrativePageIndicator">1 / 2</span>
+                        <span class="narrative-page-indicator" id="narrativePageIndicator">1</span>
                         <button class="mini-text-arrow" id="textNextBtn" onclick="cycleNarrativeText(1)" aria-label="Next text"><span>›</span></button>
                     </div>
                 </div>
@@ -1293,7 +1376,7 @@
         const VAULT_COLS = 2;
         const CATEGORY_WORD_COUNT = 4;
 
-        function cycleSplashSrc(imgEl) {
+        function cycleImgSrc(imgEl) {
             try {
                 const list = JSON.parse(imgEl.dataset.fallbacks || '[]');
                 const idx = Number(imgEl.dataset.fbIdx || '0');
@@ -1312,6 +1395,7 @@
         let entrySpinTimer = null;
         let rushStepTimer = null;
         let splitAnimRaf = null;
+        let prologueTimers = [];
 
         let vaultSpinRaf = null;
         let activePickedSlot = null;
@@ -1331,9 +1415,22 @@
             5: { center: 'ACTION', tl: 'MOVEMENT', tr: 'SPEECH', bl: 'WORK', br: 'SKILLS' }
         };
 
-        const INTRO_NARRATIVE_PAGES = [
-            "Alan wandered into an orchard and saw various fruits lying on the ground. While looking around, something suddenly fell on his head. It was red and firm. And it was...",
-            "He picked it up and turned it over in his purple hands. Every new object in this strange world holds a word worth remembering before the next step."
+        const PROLOGUE_SLIDES = [
+            {
+                text: "Once, in a galaxy far, far away, there was a wonderful planet, full of life—until greedy and foolish politicians caused an ecological disaster. As a result, almost all of its inhabitants had to leave and look for a new home.",
+                img: "nr_i1.webp",
+                fallbacks: ["nr_i1.png", "nr_i1.jpg", "nr_i1.jpeg"]
+            },
+            {
+                text: "Among them was a young man named Alan, who lost his parents in the disaster and was left all alone. To find a new home, he traveled through space in an escape capsule and—quite by accident—landed on Earth.",
+                img: "nr_i2.webp",
+                fallbacks: ["nr_i2.png", "nr_i2.jpg", "nr_i2.jpeg"]
+            },
+            {
+                text: "So begins a story of hard but exciting adventures. Will he be able to learn a strange new language and truly belong in this amazing place? It is all in his hands!",
+                img: "nr_i3.png",
+                fallbacks: ["nr_i3.webp", "nr_i3.jpg", "nr_i3.jpeg"]
+            }
         ];
 
         const refCubeImage = new Image();
@@ -1372,7 +1469,6 @@
         const SPLIT_CAM_Z = 5.45;
         const SPLIT_FOV_DEG = 38;
 
-        /* Symmetric quadrant offsets (0 = centered, no right-shift bias) */
         const CUBE_OFFSETS = [
             { x: 0, y: 0 },
             { x: 0, y: 0 },
@@ -1380,7 +1476,6 @@
             { x: 0, y: 0 }
         ];
 
-        /* Symmetric 2x2 trajectories: left cubes move left (-arcX), right cubes move right (+arcX) */
         const QUADRANT_CHOREOGRAPHY = [
             { arcX: -0.22, arcY:  0.14, arcZ:  0.34, spinX: -0.18, spinY: -0.45, spinZ:  0.12, delay: 0.00 },
             { arcX:  0.22, arcY:  0.14, arcZ:  0.34, spinX: -0.18, spinY:  0.45, spinZ: -0.12, delay: 0.02 },
@@ -1440,7 +1535,6 @@
             return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
         }
 
-        /* Subtle weighted stone settle without sideways drift */
         function easeStoneSettle(t) {
             if (t <= 0) return 0;
             if (t >= 1) return 1;
@@ -1469,32 +1563,111 @@
             });
         }
 
+        function clearPrologueTimers() {
+            prologueTimers.forEach((id) => clearTimeout(id));
+            prologueTimers = [];
+        }
+
+        /*
+         * Cinematic Splash -> Prologue sequence:
+         * 1. Slow fade to black over 3s
+         * 2. Fade-in "Prologue" in comic style over 2s
+         * 3. Hold "Prologue" fixed for 3s
+         * 4. Fade out black curtain over 3s into Page 2 (introScreen)
+         */
         function enterFromSplash(btn) {
             const splash = document.getElementById('startSplash');
-            if (!splash) return;
+            const curtain = document.getElementById('prologueCurtain');
+            const titleCard = document.getElementById('prologueTitleCard');
+            const board = document.getElementById('retroBoard');
+            if (!splash || !curtain || !titleCard) return;
 
-            if (btn) btn.classList.add('pressed');
+            if (btn && btn.disabled) return;
+            if (btn) {
+                btn.disabled = true;
+                btn.classList.add('pressed');
+            }
 
-            setTimeout(() => {
+            clearPrologueTimers();
+            narrativeIndex = 0;
+            updateNarrativeView();
+
+            const t0 = setTimeout(() => {
                 if (btn) btn.classList.remove('pressed');
-                splash.style.display = 'flex';
-                splash.classList.add('slide-out');
-                setTimeout(() => {
+
+                // Prepare page 2 underneath before curtain fades out
+                board.classList.remove('clouds-bg', 'vault-bg', 'blurred-bg');
+                setSoloPage('introScreen');
+
+                // Reset curtain state and fade to black over 3s
+                curtain.style.transition = 'none';
+                curtain.style.display = 'flex';
+                curtain.classList.remove('curtain-visible');
+                titleCard.style.transition = 'none';
+                titleCard.classList.remove('title-visible');
+
+                curtain.offsetHeight;
+
+                requestAnimationFrame(() => {
+                    curtain.style.transition = 'opacity 3s ease-in-out';
+                    curtain.classList.add('curtain-visible');
+                });
+
+                // At t = 3.0s: screen is completely black -> hide splash & fade in "Prologue" over 2s
+                const t1 = setTimeout(() => {
                     splash.style.display = 'none';
-                }, 460);
+                    splash.classList.add('slide-out');
+                    if (btn) btn.disabled = false;
+
+                    titleCard.style.transition = 'opacity 2s ease-in-out, transform 2s cubic-bezier(0.22, 1, 0.36, 1)';
+                    titleCard.classList.add('title-visible');
+                }, 3000);
+
+                // At t = 5.0s: "Prologue" finished appearing -> hold fixed for 3s (until t = 8.0s)
+                // At t = 8.0s: fade out curtain over 3s to reveal Page 2
+                const t2 = setTimeout(() => {
+                    curtain.style.transition = 'opacity 3s ease-in-out';
+                    curtain.classList.remove('curtain-visible');
+                }, 8000);
+
+                // At t = 11.05s: remove curtain from hit tree
+                const t3 = setTimeout(() => {
+                    curtain.style.display = 'none';
+                    titleCard.classList.remove('title-visible');
+                }, 11050);
+
+                prologueTimers.push(t1, t2, t3);
             }, 90);
+
+            prologueTimers.push(t0);
         }
 
         function returnToSplash() {
             const splash = document.getElementById('startSplash');
+            const curtain = document.getElementById('prologueCurtain');
+            const titleCard = document.getElementById('prologueTitleCard');
             const board = document.getElementById('retroBoard');
+            const btn = document.getElementById('splashStartBtn');
             if (!splash) return;
 
+            clearPrologueTimers();
             if (transitionTimer) {
                 clearTimeout(transitionTimer);
                 transitionTimer = null;
             }
             isTransitioning = false;
+
+            if (curtain) {
+                curtain.style.display = 'none';
+                curtain.classList.remove('curtain-visible');
+            }
+            if (titleCard) {
+                titleCard.classList.remove('title-visible');
+            }
+            if (btn) {
+                btn.disabled = false;
+                btn.classList.remove('pressed');
+            }
 
             stopSplitAnimation();
             stopVaultSpinning();
@@ -1513,19 +1686,28 @@
 
         function updateNarrativeView() {
             const textEl = document.getElementById('narrativeText');
+            const imgEl = document.getElementById('introIllustration');
             const indicatorEl = document.getElementById('narrativePageIndicator');
             const prevBtn = document.getElementById('textPrevBtn');
             const nextBtn = document.getElementById('textNextBtn');
+            const slide = PROLOGUE_SLIDES[narrativeIndex];
 
-            if (textEl) textEl.textContent = INTRO_NARRATIVE_PAGES[narrativeIndex];
-            if (indicatorEl) indicatorEl.textContent = `${narrativeIndex + 1} / ${INTRO_NARRATIVE_PAGES.length}`;
+            if (!slide) return;
+
+            if (textEl) textEl.textContent = slide.text;
+            if (imgEl) {
+                imgEl.dataset.fbIdx = '0';
+                imgEl.dataset.fallbacks = JSON.stringify(slide.fallbacks || []);
+                imgEl.src = slide.img;
+            }
+            if (indicatorEl) indicatorEl.textContent = `${narrativeIndex + 1}`;
             if (prevBtn) prevBtn.disabled = narrativeIndex === 0;
-            if (nextBtn) nextBtn.disabled = narrativeIndex === INTRO_NARRATIVE_PAGES.length - 1;
+            if (nextBtn) nextBtn.disabled = narrativeIndex === PROLOGUE_SLIDES.length - 1;
         }
 
         function cycleNarrativeText(delta) {
             const nextIdx = narrativeIndex + delta;
-            if (nextIdx < 0 || nextIdx >= INTRO_NARRATIVE_PAGES.length) return;
+            if (nextIdx < 0 || nextIdx >= PROLOGUE_SLIDES.length) return;
             narrativeIndex = nextIdx;
             updateNarrativeView();
         }
@@ -1836,7 +2018,6 @@
             transitionPage(rankVault, workspace, 'backward');
         }
 
-        /* Exact centered 2x2 grid world targets matching 128px mini-cubes */
         function getVaultSlotWorldTargets(wordsCount = CATEGORY_WORD_COUNT) {
             const scrollEl = document.getElementById('vaultScroll');
             const stageEl = document.getElementById('splitWebglStage');
@@ -1958,7 +2139,6 @@
             return { x, y, z, s, rx, ry, rz };
         }
 
-        /* 0.7s whole-cube vibration -> fast 390ms symmetric 4-cube split */
         function openMemoryVaultFromCategory() {
             if (isTransitioning || isCategoryTransitioning) return;
             clearCategoryTimers();
@@ -2060,7 +2240,6 @@
                     holder.classList.add('hidden-during-split');
                 }
 
-                /* Half duration: 390ms */
                 const totalDuration = 390;
                 const startTime = performance.now();
 
@@ -2118,7 +2297,6 @@
             }, shiverDuration);
         }
 
-        /* Reverse reassemble: mirrors the exact 4-cube split trajectory in reverse (localT: 1 -> 0) */
         function returnToRankVault() {
             if (isTransitioning || isCategoryTransitioning) return;
             clearCategoryTimers();
@@ -2801,7 +2979,6 @@
             return group;
         }
 
-        /* Single large category cube */
         function rebuildCategoryCubeMesh() {
             if (!catScene || typeof THREE === 'undefined') return;
             if (catCubeGroup) {
