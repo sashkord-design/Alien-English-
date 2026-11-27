@@ -206,7 +206,7 @@
         }
 
         .prologue-title-card.title-fading-out {
-            transition: opacity 1s ease-in-out, transform 1s cubic-bezier(0.22, 1, 0.36, 1);
+            transition: opacity 0.5s ease-in-out, transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
             opacity: 0;
             transform: scale(0.98);
         }
@@ -1626,8 +1626,9 @@
          * 0.0s .. 2.0s: fade to black (2s)
          * 2.0s .. 4.0s: fade in "Prologue" (2s)
          * 4.0s .. 5.0s: hold "Prologue" (1s)
-         * 5.0s .. 6.0s: fade out "Prologue" (1s — 2s earlier than 7.0s..8.0s)
-         * 6.0s .. 9.0s: fade out black curtain to reveal Page 2 (3s)
+         * 5.0s .. 5.5s: fade out "Prologue" (0.5s — 0.5s faster)
+         * 5.5s .. 6.5s: full blackness hold (1s after "Prologue" disappears)
+         * 6.5s .. 9.5s: fade out black curtain to reveal second page (3s)
          */
         function enterFromSplash(btn) {
             const splash = document.getElementById('startSplash');
@@ -1681,24 +1682,27 @@
                     titleCard.classList.add('title-visible');
                 }, 2000);
 
-                // 5.0s: fade out "Prologue" over 1s (2s earlier than before)
+                // 5.0s: fade out "Prologue" over 0.5s (0.5s faster than 1s)
                 const t2 = setTimeout(() => {
                     titleCard.classList.remove('title-visible');
                     titleCard.classList.add('title-fading-out');
                 }, 5000);
 
-                // 6.0s ("Prologue" is gone): fade out black curtain over 3s into Page 2
+                // 5.5s .. 6.5s: 1 second of pure darkness after "Prologue" is completely gone,
+                // then at 6.5s start smooth 3s fade out of the black curtain to reveal page 2
                 const t3 = setTimeout(() => {
+                    titleCard.style.display = 'none';
                     curtain.classList.add('curtain-exit');
                     curtain.classList.remove('curtain-visible');
-                }, 6000);
+                }, 6500);
 
-                // 9.05s: hide curtain
+                // 9.55s: hide curtain
                 const t4 = setTimeout(() => {
                     curtain.style.display = 'none';
                     curtain.classList.remove('curtain-exit');
                     titleCard.classList.remove('title-fading-out');
-                }, 9050);
+                    titleCard.style.display = '';
+                }, 9550);
 
                 prologueTimers.push(t1, t2, t3, t4);
             }, 90);
@@ -1727,6 +1731,7 @@
             }
             if (titleCard) {
                 titleCard.classList.remove('title-visible', 'title-fading-out');
+                titleCard.style.display = '';
             }
             if (btn) {
                 btn.disabled = false;
@@ -2570,87 +2575,97 @@
             return geom;
         }
 
-        function traceOrganicRaggedBlob(ctx, cx, cy, baseR, seed, lobeCount = 7) {
-            const steps = 48;
-            const p1 = seededRand(seed + 11) * Math.PI * 2;
-            const p2 = seededRand(seed + 23) * Math.PI * 2;
-            const p3 = seededRand(seed + 37) * Math.PI * 2;
-            const amp1 = 0.16 + seededRand(seed + 41) * 0.14;
-            const amp2 = 0.09 + seededRand(seed + 53) * 0.10;
-            const amp3 = 0.05 + seededRand(seed + 67) * 0.07;
+        function traceIrregularSpeckContour(ctx, cx, cy, rX, rY, seed) {
+            const pts = 18;
+            const pA = seededRand(seed + 13) * Math.PI * 2;
+            const pB = seededRand(seed + 29) * Math.PI * 2;
+            const pC = seededRand(seed + 47) * Math.PI * 2;
+            const kA = 2 + Math.floor(seededRand(seed + 59) * 3);
+            const kB = 4 + Math.floor(seededRand(seed + 71) * 4);
 
             ctx.beginPath();
-            for (let i = 0; i <= steps; i++) {
-                const a = (i / steps) * Math.PI * 2;
-                const mod = 1
-                    + amp1 * Math.sin(a * lobeCount + p1)
-                    + amp2 * Math.cos(a * (lobeCount + 2) + p2)
-                    + amp3 * Math.sin(a * (lobeCount * 2 + 1) + p3);
-                const r = baseR * Math.max(0.55, mod);
-                const px = cx + Math.cos(a) * r;
-                const py = cy + Math.sin(a) * r;
+            for (let i = 0; i <= pts; i++) {
+                const a = (i / pts) * Math.PI * 2;
+                const radialVar = 0.74
+                    + 0.18 * Math.sin(a * kA + pA)
+                    + 0.12 * Math.cos(a * kB + pB)
+                    + 0.08 * Math.sin(a * 7 + pC);
+                const px = cx + Math.cos(a) * rX * radialVar;
+                const py = cy + Math.sin(a) * rY * radialVar;
                 if (i === 0) ctx.moveTo(px, py);
                 else ctx.lineTo(px, py);
             }
             ctx.closePath();
         }
 
-        function drawSoftRaggedGreyPatches(ctx, size, seedOffset, useReferenceColors = false) {
+        function drawAgedBlottedGreyPatches(ctx, size, seedOffset, useReferenceColors = false) {
             const scale = size / 512;
-            const patchCount = 7;
 
-            const colors = useReferenceColors
-                ? [
-                    'rgba(182, 185, 194, 0.34)',
-                    'rgba(148, 152, 162, 0.30)',
-                    'rgba(128, 132, 142, 0.24)'
-                ]
-                : [
-                    'rgba(190, 193, 202, 0.44)',
-                    'rgba(150, 154, 164, 0.42)',
-                    'rgba(128, 132, 144, 0.34)'
-                ];
+            // Varied irregular blotches (both small clusters and a couple of soft larger clouds)
+            const blotchCount = 34;
+            const darkPalette = useReferenceColors
+                ? ['rgba(124, 128, 138, 0.28)', 'rgba(104, 108, 118, 0.24)', 'rgba(142, 146, 156, 0.22)']
+                : ['rgba(122, 126, 138, 0.34)', 'rgba(102, 106, 118, 0.30)', 'rgba(138, 142, 154, 0.26)'];
 
-            for (let i = 0; i < patchCount; i++) {
-                const s = seedOffset * 193 + i * 37;
-                const cx = (75 + seededRand(s + 1) * 362) * scale;
-                const cy = (75 + seededRand(s + 2) * 362) * scale;
-                const rx = (52 + seededRand(s + 3) * 78) * scale;
-                const ry = (38 + seededRand(s + 4) * 64) * scale;
-                const ang = seededRand(s + 5) * Math.PI;
-                const lobes = 5 + Math.floor(seededRand(s + 6) * 4);
+            for (let i = 0; i < blotchCount; i++) {
+                const s = seedOffset * 251 + i * 53;
+                const isCloud = i < 4;
+                const cx = (24 + seededRand(s + 1) * (size - 48 * scale)) ;
+                const cy = (24 + seededRand(s + 2) * (size - 48 * scale));
+                const baseR = (isCloud
+                    ? (28 + seededRand(s + 3) * 26)
+                    : (5 + seededRand(s + 3) * 14)) * scale;
+                const aspect = 0.65 + seededRand(s + 4) * 0.65;
+                const rot = seededRand(s + 5) * Math.PI * 2;
+                const color = darkPalette[i % darkPalette.length];
 
                 ctx.save();
                 ctx.translate(cx, cy);
-                ctx.rotate(ang);
-                ctx.scale(1, ry / rx);
-                ctx.filter = `blur(${Math.max(2.5, 6.5 * scale)}px)`;
+                ctx.rotate(rot);
+                ctx.filter = `blur(${Math.max(0.8, (isCloud ? 4.2 : 1.5) * scale)}px)`;
 
-                traceOrganicRaggedBlob(ctx, 0, 0, rx, s + 10, lobes);
-                ctx.fillStyle = colors[i % colors.length];
+                // Main blotch
+                traceIrregularSpeckContour(ctx, 0, 0, baseR, baseR * aspect, s + 10);
+                ctx.fillStyle = color;
                 ctx.fill();
 
-                // Secondary smaller ragged lobe overlapping edge for organic irregularity
-                const subX = (seededRand(s + 7) - 0.5) * rx * 0.65;
-                const subY = (seededRand(s + 8) - 0.5) * rx * 0.65;
-                traceOrganicRaggedBlob(ctx, subX, subY, rx * 0.58, s + 29, lobes + 1);
-                ctx.fillStyle = colors[(i + 1) % colors.length];
-                ctx.fill();
+                // 2–4 tiny asymmetric sub-specks scattered right around the blotch
+                const subCount = isCloud ? 5 : 2 + Math.floor(seededRand(s + 6) * 2);
+                for (let k = 0; k < subCount; k++) {
+                    const ks = s + 100 + k * 19;
+                    const dist = baseR * (0.45 + seededRand(ks + 1) * 0.85);
+                    const ang = seededRand(ks + 2) * Math.PI * 2;
+                    const sr = baseR * (0.25 + seededRand(ks + 3) * 0.42);
+                    traceIrregularSpeckContour(
+                        ctx,
+                        Math.cos(ang) * dist,
+                        Math.sin(ang) * dist,
+                        sr,
+                        sr * (0.7 + seededRand(ks + 4) * 0.5),
+                        ks + 7
+                    );
+                    ctx.fillStyle = darkPalette[(i + k + 1) % darkPalette.length];
+                    ctx.fill();
+                }
 
                 ctx.restore();
             }
 
-            // Subtle soft-edged small irregular speckles
-            for (let p = 0; p < 12; p++) {
-                const s = seedOffset * 613 + p * 23;
-                const px = (34 + seededRand(s + 1) * 444) * scale;
-                const py = (34 + seededRand(s + 2) * 444) * scale;
-                const r = (4 + seededRand(s + 3) * 8) * scale;
+            // Fine mottled pale/ashy stippling across the face
+            const stippleCount = 95;
+            for (let m = 0; m < stippleCount; m++) {
+                const s = seedOffset * 709 + m * 31;
+                const mx = (14 + seededRand(s + 1) * (size - 28 * scale));
+                const my = (14 + seededRand(s + 2) * (size - 28 * scale));
+                const mr = (2 + seededRand(s + 3) * 5.5) * scale;
+                const isLight = seededRand(s + 4) > 0.45;
 
                 ctx.save();
-                ctx.filter = `blur(${Math.max(1.2, 2.4 * scale)}px)`;
-                traceOrganicRaggedBlob(ctx, px, py, r, s + 5, 5);
-                ctx.fillStyle = p % 2 === 0 ? 'rgba(116, 120, 130, 0.36)' : 'rgba(196, 199, 206, 0.32)';
+                ctx.filter = `blur(${Math.max(0.6, 1.2 * scale)}px)`;
+                traceIrregularSpeckContour(ctx, mx, my, mr, mr * (0.65 + seededRand(s + 5) * 0.55), s + 12);
+                ctx.fillStyle = isLight
+                    ? 'rgba(206, 209, 216, 0.24)'
+                    : 'rgba(116, 120, 132, 0.22)';
                 ctx.fill();
                 ctx.restore();
             }
@@ -2725,18 +2740,18 @@
             ctx.drawImage(temp, -size / 2, -size / 2, size, size);
             ctx.restore();
 
-            ctx.fillStyle = 'rgba(156, 160, 172, 0.24)';
+            ctx.fillStyle = 'rgba(164, 168, 178, 0.34)';
             ctx.fillRect(0, 0, size, size);
 
-            drawSoftRaggedGreyPatches(ctx, size, seedOffset, true);
+            drawAgedBlottedGreyPatches(ctx, size, seedOffset, true);
 
             return true;
         }
 
         function drawFallbackCube1_3Base(ctx, size, seedOffset) {
-            ctx.fillStyle = '#b4b7c0';
+            ctx.fillStyle = '#bcc0c9';
             ctx.fillRect(0, 0, size, size);
-            drawSoftRaggedGreyPatches(ctx, size, seedOffset, false);
+            drawAgedBlottedGreyPatches(ctx, size, seedOffset, false);
         }
 
         function applySurfaceRoughness(ctx, bctx, size, seedOffset) {
@@ -2862,7 +2877,7 @@
                 bctx.rotate(rot);
                 bctx.fillStyle = 'rgb(192, 192, 192)';
                 bctx.beginPath();
-                ctx.ellipse(0, 0, rx * 0.95, ry * 0.95, 0, 0, Math.PI * 2);
+                bctx.ellipse(0, 0, rx * 0.95, ry * 0.95, 0, 0, Math.PI * 2);
                 bctx.fill();
                 bctx.restore();
 
