@@ -736,6 +736,21 @@
             animation: category-levitate 4.4s ease-in-out infinite;
         }
 
+        /* 0.7s Cube Vibration / Chatter before splitting */
+        .category-cube-holder.cube-shivering {
+            animation: big-cube-chatter 0.07s linear infinite !important;
+            transform: scale(1) !important;
+            opacity: 1 !important;
+        }
+
+        @keyframes big-cube-chatter {
+            0%   { transform: translate(-4.5px,  2.5px) rotate(-1.6deg) scale(1); }
+            25%  { transform: translate( 4.5px, -2.5px) rotate( 1.6deg) scale(1); }
+            50%  { transform: translate(-3.5px, -3.0px) rotate( 1.2deg) scale(1); }
+            75%  { transform: translate( 3.5px,  3.0px) rotate(-1.2deg) scale(1); }
+            100% { transform: translate(-4.5px,  2.5px) rotate(-1.6deg) scale(1); }
+        }
+
         .category-cube-holder.assemble-fade-in {
             animation: none !important;
             transition: transform 0.38s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.26s ease-out !important;
@@ -824,37 +839,6 @@
             top: 76%;
             width: 88px;
             height: 36px;
-        }
-
-        .cat-chatter-label {
-            display: none;
-            font-weight: 900;
-            color: #111215;
-            letter-spacing: 0.01em;
-            text-shadow: 0 0 3px rgba(202, 205, 212, 0.9);
-            user-select: none;
-            pointer-events: none;
-            animation: label-chatter-fast 0.08s linear infinite;
-        }
-
-        .cat-hit-btn.cat-center .cat-chatter-label {
-            font-size: 16.5px;
-        }
-
-        .cat-hit-btn:not(.cat-center) .cat-chatter-label {
-            font-size: 13.5px;
-        }
-
-        .cat-hit-btn.chattering .cat-chatter-label {
-            display: inline-block;
-        }
-
-        @keyframes label-chatter-fast {
-            0% { transform: translate(-3.5px, 1.5px); }
-            25% { transform: translate(3.5px, -1.5px); }
-            50% { transform: translate(-2.5px, -2px); }
-            75% { transform: translate(2.5px, 2px); }
-            100% { transform: translate(-3.5px, 1.5px); }
         }
 
         /* Fullscreen WebGL Stage for 6-Part Fracture / Reassemble */
@@ -1251,11 +1235,11 @@
                         </div>
 
                         <div class="category-face-hit-layer" id="categoryFaceHitLayer">
-                            <button class="cat-hit-btn cat-tl" data-slot="tl" onclick="onCategorySpotTap('tl', this)" aria-label="Top-left category"><span class="cat-chatter-label"></span></button>
-                            <button class="cat-hit-btn cat-tr" data-slot="tr" onclick="onCategorySpotTap('tr', this)" aria-label="Top-right category"><span class="cat-chatter-label"></span></button>
-                            <button class="cat-hit-btn cat-center" data-slot="center" onclick="onCategorySpotTap('center', this)" aria-label="Center category"><span class="cat-chatter-label"></span></button>
-                            <button class="cat-hit-btn cat-bl" data-slot="bl" onclick="onCategorySpotTap('bl', this)" aria-label="Bottom-left category"><span class="cat-chatter-label"></span></button>
-                            <button class="cat-hit-btn cat-br" data-slot="br" onclick="onCategorySpotTap('br', this)" aria-label="Bottom-right category"><span class="cat-chatter-label"></span></button>
+                            <button class="cat-hit-btn cat-tl" data-slot="tl" onclick="onCategorySpotTap('tl')" aria-label="Top-left category"></button>
+                            <button class="cat-hit-btn cat-tr" data-slot="tr" onclick="onCategorySpotTap('tr')" aria-label="Top-right category"></button>
+                            <button class="cat-hit-btn cat-center" data-slot="center" onclick="onCategorySpotTap('center')" aria-label="Center category"></button>
+                            <button class="cat-hit-btn cat-bl" data-slot="bl" onclick="onCategorySpotTap('bl')" aria-label="Bottom-left category"></button>
+                            <button class="cat-hit-btn cat-br" data-slot="br" onclick="onCategorySpotTap('br')" aria-label="Bottom-right category"></button>
                         </div>
                     </div>
                 </div>
@@ -1375,7 +1359,6 @@
         let engravedByFace = {
             4: { center: '', tl: '', tr: '', bl: '', br: '' }
         };
-        let hiddenTextureSlot = { faceIdx: -1, slotKey: '' };
 
         /* Shared fullscreen WebGL stage for 6-part fracture & reassemble */
         let splitScene, splitCamera, splitRenderer, splitCubeEntries = [];
@@ -1692,18 +1675,6 @@
             }
         }
 
-        function resetChatterOverlays() {
-            document.querySelectorAll('.cat-hit-btn.chattering').forEach((btn) => {
-                btn.classList.remove('chattering');
-                const span = btn.querySelector('.cat-chatter-label');
-                if (span) span.textContent = '';
-            });
-            if (hiddenTextureSlot.faceIdx !== -1) {
-                hiddenTextureSlot = { faceIdx: -1, slotKey: '' };
-                rebuildCategoryCubeMesh();
-            }
-        }
-
         function clearCategoryTimers() {
             if (letterRevealTimer) {
                 clearInterval(letterRevealTimer);
@@ -1717,7 +1688,10 @@
                 clearTimeout(rushStepTimer);
                 rushStepTimer = null;
             }
-            resetChatterOverlays();
+            const holder = document.getElementById('categoryCubeHolder');
+            if (holder) {
+                holder.classList.remove('cube-shivering');
+            }
         }
 
         function triggerCategoryEntrySequence(fromWordVault = false) {
@@ -1726,7 +1700,7 @@
             if (!holder) return;
 
             isCategoryTransitioning = false;
-            holder.classList.remove('assemble-fade-in', 'hidden-during-split', 'settled');
+            holder.classList.remove('assemble-fade-in', 'hidden-during-split', 'settled', 'cube-shivering');
 
             if (fromWordVault) {
                 catCurrentRotX = 0;
@@ -1846,7 +1820,7 @@
             transitionPage(rankVault, workspace, 'backward');
         }
 
-        /* Exact centered 2-column x 3-row world targets so cubes never drift right or jump */
+        /* Exact centered 2-column x 3-row world targets matching 114px mini-cubes */
         function getVaultSlotWorldTargets(wordsCount = 6) {
             const scrollEl = document.getElementById('vaultScroll');
             const stageEl = document.getElementById('splitWebglStage');
@@ -1878,6 +1852,13 @@
             const startX = scrollCenterX - totalGridW * 0.5 + cellSize * 0.5;
             const startY = scrollCenterY - totalGridH * 0.5 + cellSize * 0.5;
 
+            /* Exact scale matching mini-cube (cam z=5.25, fov=36, size=1.96 inside 114px slot) */
+            const miniFovRad = THREE.MathUtils.degToRad(36);
+            const miniViewH = 2 * Math.tan(miniFovRad * 0.5) * 5.25;
+            const miniPxPerWorld = cellSize / miniViewH;
+            const stagePxPerWorld = stageH / viewH;
+            const targetWorldScale = (1.96 * miniPxPerWorld) / (1.98 * stagePxPerWorld);
+
             const count = Math.min(wordsCount, 6);
             const targets = [];
 
@@ -1893,9 +1874,8 @@
                 const ndcY = -((cy / stageH) * 2 - 1);
                 const worldX = ndcX * (viewW * 0.5);
                 const worldY = ndcY * (viewH * 0.5);
-                const worldScale = (cellSize / 280) * 1.02;
 
-                targets.push({ x: worldX, y: worldY, z: 0, scale: worldScale });
+                targets.push({ x: worldX, y: worldY, z: 0, scale: targetWorldScale });
             }
 
             return targets;
@@ -1952,8 +1932,8 @@
             return createOutlinedStoneCubeGroup(geom, mats, 1.036);
         }
 
-        /* 6-part fracture: big cube splits into 6 pieces around center & settles smoothly into grid */
-        function openMemoryVaultFromCategory(categoryName, faceIdx = 4, slotKey = 'center', btnEl = null) {
+        /* 0.7s whole-cube vibration -> smooth 6-cube emergence & dispersal to grid slots */
+        function openMemoryVaultFromCategory() {
             if (isTransitioning || isCategoryTransitioning) return;
             clearCategoryTimers();
             stopSplitAnimation();
@@ -1969,17 +1949,16 @@
             const words = getStoredWords().slice(0, 6);
             saveStoredWords(words);
 
-            hiddenTextureSlot = { faceIdx, slotKey };
-            rebuildCategoryCubeMesh();
-
-            if (btnEl) {
-                const span = btnEl.querySelector('.cat-chatter-label');
-                if (span) span.textContent = categoryName;
-                btnEl.classList.add('chattering');
+            /* Vibrate the entire large category cube for 0.7 seconds */
+            if (holder) {
+                holder.classList.remove('settled', 'assemble-fade-in');
+                holder.classList.add('cube-shivering');
             }
 
             rushStepTimer = setTimeout(() => {
-                resetChatterOverlays();
+                if (holder) {
+                    holder.classList.remove('cube-shivering');
+                }
 
                 board.classList.remove('clouds-bg', 'blurred-bg');
                 board.classList.add('vault-bg');
@@ -1997,31 +1976,34 @@
                 rankVault.classList.remove('pos-center');
                 rankVault.classList.add('pos-right');
 
-                initSplitWebglStage();
+                const dims = initSplitWebglStage();
                 const targets = getVaultSlotWorldTargets(words.length);
 
-                const fractureOrigin = [
-                    { x: -0.18, y:  0.22, z:  0.18, spreadX: -0.24, spreadY:  0.22, spreadZ:  0.35, tiltX: -0.22, tiltY: -0.28, tiltZ:  0.14 },
-                    { x:  0.18, y:  0.22, z:  0.16, spreadX:  0.24, spreadY:  0.22, spreadZ:  0.30, tiltX: -0.20, tiltY:  0.28, tiltZ: -0.14 },
-                    { x: -0.20, y:  0.00, z:  0.20, spreadX: -0.26, spreadY:  0.04, spreadZ:  0.38, tiltX:  0.06, tiltY: -0.32, tiltZ:  0.10 },
-                    { x:  0.20, y:  0.00, z:  0.14, spreadX:  0.26, spreadY: -0.04, spreadZ:  0.28, tiltX: -0.06, tiltY:  0.32, tiltZ: -0.10 },
-                    { x: -0.18, y: -0.22, z:  0.18, spreadX: -0.24, spreadY: -0.22, spreadZ:  0.34, tiltX:  0.22, tiltY: -0.26, tiltZ: -0.14 },
-                    { x:  0.18, y: -0.22, z:  0.20, spreadX:  0.24, spreadY: -0.22, spreadZ:  0.38, tiltX:  0.20, tiltY:  0.26, tiltZ:  0.14 }
-                ];
+                const fovRad = THREE.MathUtils.degToRad(SPLIT_FOV_DEG);
+                const stageH = (dims && dims.h) || window.innerHeight || 844;
+                const viewH = 2 * Math.tan(fovRad * 0.5) * SPLIT_CAM_Z;
+                const pxPerWorldY = stageH / viewH;
+                /* Natural starting scale inside the big cube so cubes smoothly shrink to cell size without jumping */
+                const emergeScale = (280 * 0.56) / (1.98 * pxPerWorldY);
 
                 splitCubeEntries = words.map((item, idx) => {
                     const group = createWordSplitCubeGroup(item.word, idx);
-                    const f = fractureOrigin[idx % fractureOrigin.length];
-                    group.position.set(f.x, f.y, f.z);
-                    group.scale.setScalar(0.45);
+                    const target = targets[idx] || { x: 0, y: 0, z: 0, scale: 0.41 };
+                    /* Subtle offset inside the big cube matching each cube's destination direction */
+                    const startX = target.x * 0.16;
+                    const startY = target.y * 0.16;
+
+                    group.position.set(startX, startY, 0.12);
+                    group.scale.setScalar(emergeScale);
                     group.rotation.set(0, 0, 0);
                     splitScene.add(group);
                     return {
                         group,
-                        fracture: f,
-                        startScale: 0.45,
+                        startX,
+                        startY,
+                        startScale: emergeScale,
                         finalAngle: idx * 25,
-                        target: targets[idx] || { x: 0, y: 0, z: 0, scale: 0.41 }
+                        target
                     };
                 });
 
@@ -2030,38 +2012,32 @@
                 }
 
                 if (holder) {
-                    holder.classList.remove('settled', 'assemble-fade-in');
+                    holder.classList.remove('settled', 'assemble-fade-in', 'cube-shivering');
                     holder.classList.add('hidden-during-split');
                 }
 
-                const duration = 620;
+                const duration = 680;
                 const startTime = performance.now();
 
                 function animateSplit(now) {
                     const rawT = Math.min(1, (now - startTime) / duration);
-                    const ease = easeOutCubic(rawT);
-                    const crackCurve = Math.sin(rawT * Math.PI) * (1 - rawT * 0.45);
+                    const ease = easeInOutCubic(rawT);
 
-                    if (rawT > 0.72 && dualRow && dualRow.classList.contains('dock-hidden')) {
+                    if (rawT > 0.75 && dualRow && dualRow.classList.contains('dock-hidden')) {
                         dualRow.classList.remove('dock-hidden');
                     }
 
                     splitCubeEntries.forEach((entry) => {
-                        const f = entry.fracture;
-                        const baseX = f.x + (entry.target.x - f.x) * ease;
-                        const baseY = f.y + (entry.target.y - f.y) * ease;
-                        const baseZ = f.z + (entry.target.z - f.z) * ease;
-
-                        entry.group.position.x = baseX + f.spreadX * crackCurve;
-                        entry.group.position.y = baseY + f.spreadY * crackCurve;
-                        entry.group.position.z = baseZ + f.spreadZ * crackCurve;
+                        entry.group.position.x = entry.startX + (entry.target.x - entry.startX) * ease;
+                        entry.group.position.y = entry.startY + (entry.target.y - entry.startY) * ease;
+                        entry.group.position.z = 0.12 * (1 - ease);
 
                         const s = entry.startScale + (entry.target.scale - entry.startScale) * ease;
                         entry.group.scale.setScalar(s);
 
-                        entry.group.rotation.x = f.tiltX * crackCurve;
-                        entry.group.rotation.y = THREE.MathUtils.degToRad(entry.finalAngle * ease) + f.tiltY * crackCurve;
-                        entry.group.rotation.z = f.tiltZ * crackCurve;
+                        entry.group.rotation.x = 0;
+                        entry.group.rotation.y = THREE.MathUtils.degToRad(entry.finalAngle * ease);
+                        entry.group.rotation.z = 0;
                     });
 
                     if (splitRenderer && splitScene && splitCamera) {
@@ -2093,10 +2069,10 @@
                 }
 
                 splitAnimRaf = requestAnimationFrame(animateSplit);
-            }, 76);
+            }, 700);
         }
 
-        /* Reverse 6-part reassemble: word cubes break away from grid and fuse back into the big cube */
+        /* Smooth reverse reassemble: 6 word cubes converge back into the big cube */
         function returnToRankVault() {
             if (isTransitioning || isCategoryTransitioning) return;
             clearCategoryTimers();
@@ -2129,67 +2105,60 @@
 
             initCategoryCube();
             if (holder) {
-                holder.classList.remove('settled', 'assemble-fade-in');
+                holder.classList.remove('settled', 'assemble-fade-in', 'cube-shivering');
                 holder.classList.add('hidden-during-split');
                 holder.style.opacity = '0';
             }
 
-            initSplitWebglStage();
-
-            const fractureFuse = [
-                { x: -0.18, y:  0.22, z:  0.18, spreadX: -0.20, spreadY:  0.18, spreadZ:  0.28, tiltX: -0.18, tiltY: -0.22, tiltZ:  0.12 },
-                { x:  0.18, y:  0.22, z:  0.16, spreadX:  0.20, spreadY:  0.18, spreadZ:  0.24, tiltX: -0.16, tiltY:  0.22, tiltZ: -0.12 },
-                { x: -0.20, y:  0.00, z:  0.20, spreadX: -0.22, spreadY:  0.04, spreadZ:  0.30, tiltX:  0.05, tiltY: -0.26, tiltZ:  0.08 },
-                { x:  0.20, y:  0.00, z:  0.14, spreadX:  0.22, spreadY: -0.04, spreadZ:  0.22, tiltX: -0.05, tiltY:  0.26, tiltZ: -0.08 },
-                { x: -0.18, y: -0.22, z:  0.18, spreadX: -0.20, spreadY: -0.18, spreadZ:  0.28, tiltX:  0.18, tiltY: -0.20, tiltZ: -0.12 },
-                { x:  0.18, y: -0.22, z:  0.20, spreadX:  0.20, spreadY: -0.18, spreadZ:  0.30, tiltX:  0.16, tiltY:  0.20, tiltZ:  0.12 }
-            ];
+            const dims = initSplitWebglStage();
+            const fovRad = THREE.MathUtils.degToRad(SPLIT_FOV_DEG);
+            const stageH = (dims && dims.h) || window.innerHeight || 844;
+            const viewH = 2 * Math.tan(fovRad * 0.5) * SPLIT_CAM_Z;
+            const pxPerWorldY = stageH / viewH;
+            const fuseScale = (280 * 0.56) / (1.98 * pxPerWorldY);
 
             splitCubeEntries = words.map((item, idx) => {
                 const group = createWordSplitCubeGroup(item.word, idx);
                 const startPos = targets[idx] || { x: 0, y: 0, z: 0, scale: 0.41 };
-                const f = fractureFuse[idx % fractureFuse.length];
-                group.position.set(startPos.x, startPos.y, startPos.z);
+                const endX = startPos.x * 0.16;
+                const endY = startPos.y * 0.16;
+
+                group.position.set(startPos.x, startPos.y, 0);
                 group.scale.setScalar(startPos.scale);
                 group.rotation.set(0, THREE.MathUtils.degToRad(idx * 25), 0);
                 splitScene.add(group);
                 return {
                     group,
                     startPos,
-                    endPos: f,
+                    endX,
+                    endY,
                     startScale: startPos.scale,
-                    endScale: 0.45,
+                    endScale: fuseScale,
                     startRotY: idx * 25
                 };
             });
 
-            const duration = 520;
+            const duration = 560;
             const startTime = performance.now();
 
             function animateAssemble(now) {
                 const rawT = Math.min(1, (now - startTime) / duration);
                 const ease = easeInOutCubic(rawT);
-                const crackCurve = Math.sin(rawT * Math.PI) * (1 - rawT * 0.5);
 
                 splitCubeEntries.forEach((entry) => {
-                    const f = entry.endPos;
-                    const baseX = entry.startPos.x + (f.x - entry.startPos.x) * ease;
-                    const baseY = entry.startPos.y + (f.y - entry.startPos.y) * ease;
-                    const baseZ = entry.startPos.z + (f.z - entry.startPos.z) * ease;
-
-                    entry.group.position.x = baseX + f.spreadX * crackCurve;
-                    entry.group.position.y = baseY + f.spreadY * crackCurve;
-                    entry.group.position.z = baseZ + f.spreadZ * crackCurve;
+                    entry.group.position.x = entry.startPos.x + (entry.endX - entry.startPos.x) * ease;
+                    entry.group.position.y = entry.startPos.y + (entry.endY - entry.startPos.y) * ease;
+                    entry.group.position.z = 0.12 * ease;
 
                     const s = entry.startScale + (entry.endScale - entry.startScale) * ease;
                     entry.group.scale.setScalar(s);
 
-                    entry.group.rotation.x = f.tiltX * crackCurve;
-                    entry.group.rotation.y = THREE.MathUtils.degToRad(entry.startRotY * (1 - ease)) + f.tiltY * crackCurve;
-                    entry.group.rotation.z = f.tiltZ * crackCurve;
+                    entry.group.rotation.x = 0;
+                    entry.group.rotation.y = THREE.MathUtils.degToRad(entry.startRotY * (1 - ease));
+                    entry.group.rotation.z = 0;
                 });
 
-                if (rawT > 0.75 && holder && holder.classList.contains('hidden-during-split')) {
+                if (rawT > 0.76 && holder && holder.classList.contains('hidden-during-split')) {
                     holder.classList.remove('hidden-during-split');
                     triggerCategoryEntrySequence(true);
                 }
@@ -2639,7 +2608,6 @@
 
             if (options.isCategoryCluster) {
                 const engraved = options.engraved || {};
-                const hideSlot = options.hideSlot || '';
                 const spots = [
                     { key: 'tl', x: size * 0.25, y: size * 0.24 },
                     { key: 'tr', x: size * 0.75, y: size * 0.24 },
@@ -2649,7 +2617,6 @@
                 ];
 
                 spots.forEach((spot) => {
-                    if (spot.key === hideSlot) return;
                     const label = engraved[spot.key];
                     if (!label) return;
                     const basePx = spot.key === 'center' ? 42 : 35;
@@ -2799,15 +2766,13 @@
             const materials = Array.from({ length: 6 }, (_, faceIdx) => {
                 const faceSeed = 500 + faceIdx * 19;
                 const faceEngraved = engravedByFace[faceIdx];
-                const hideSlot = hiddenTextureSlot.faceIdx === faceIdx ? hiddenTextureSlot.slotKey : '';
                 const stoneSet = faceEngraved
                     ? createMultiStoneTextures(
                         [],
                         {
                             isCategoryCluster: true,
                             hasPurplePebbles: true,
-                            engraved: faceEngraved,
-                            hideSlot
+                            engraved: faceEngraved
                         },
                         faceSeed
                     )
@@ -2920,14 +2885,14 @@
             }
         }
 
-        function onCategorySpotTap(spotKey, btnEl) {
+        function onCategorySpotTap(spotKey) {
             if (isTransitioning || isCategoryTransitioning) return;
 
             const faceMap = CUBE_FACES_CATEGORIES[frontFaceIndex];
             const categoryLabel = faceMap ? faceMap[spotKey] : '';
             if (!categoryLabel || !unlockedCategories.has(categoryLabel)) return;
 
-            openMemoryVaultFromCategory(categoryLabel, frontFaceIndex, spotKey, btnEl);
+            openMemoryVaultFromCategory();
         }
 
         function disposeVaultMiniCubes() {
