@@ -162,7 +162,7 @@
             }
         }
 
-        /* PROLOGUE CINEMATIC BLACKOUT & TITLE CURTAIN */
+        /* PROLOGUE BLACKOUT & TITLE CURTAIN */
         .prologue-curtain {
             position: fixed;
             inset: 0;
@@ -176,12 +176,16 @@
             padding: 24px;
             opacity: 0;
             pointer-events: auto;
-            transition: opacity 3s ease-in-out;
+            transition: opacity 2s ease-in-out;
             will-change: opacity;
         }
 
         .prologue-curtain.curtain-visible {
             opacity: 1;
+        }
+
+        .prologue-curtain.curtain-exit {
+            transition: opacity 3s ease-in-out;
         }
 
         .prologue-title-card {
@@ -190,7 +194,7 @@
             align-items: center;
             justify-content: center;
             opacity: 0;
-            transform: scale(0.95);
+            transform: scale(0.96);
             transition: opacity 2s ease-in-out, transform 2s cubic-bezier(0.22, 1, 0.36, 1);
             will-change: opacity, transform;
             user-select: none;
@@ -201,33 +205,26 @@
             transform: scale(1);
         }
 
-        .prologue-comic-text {
-            font-family: "Trebuchet MS", "Arial Rounded MT Bold", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-            font-size: clamp(40px, 11vw, 56px);
-            font-weight: 900;
-            letter-spacing: 0.14em;
-            text-transform: uppercase;
-            color: #f4ead2;
-            -webkit-text-stroke: 2.4px #141418;
-            paint-order: stroke fill;
-            text-shadow:
-                3px 4px 0px #141418,
-                0px 0px 26px rgba(244, 234, 210, 0.22);
-            position: relative;
-            padding: 6px 14px;
+        .prologue-title-card.title-fading-out {
+            transition: opacity 1s ease-in-out, transform 1s cubic-bezier(0.22, 1, 0.36, 1);
+            opacity: 0;
+            transform: scale(0.98);
         }
 
-        .prologue-comic-text::after {
-            content: '';
-            position: absolute;
-            left: 14px;
-            right: 14px;
-            bottom: -4px;
-            height: 4px;
-            border-radius: 99px;
-            background-color: #fcd34d;
-            border: 1.5px solid #141418;
-            box-shadow: 2px 2px 0px #141418;
+        .prologue-comic-text {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-size: clamp(28px, 7.6vw, 38px);
+            font-weight: 900;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #f4ead2;
+            -webkit-text-stroke: 1.8px #141418;
+            paint-order: stroke fill;
+            text-shadow:
+                2px 3px 0px #141418,
+                0px 0px 20px rgba(244, 234, 210, 0.16);
+            position: relative;
+            padding: 4px 8px;
         }
 
         /* Background layers anchored on all sides with dark backing */
@@ -382,7 +379,7 @@
             object-position: center center;
             user-select: none;
             -webkit-user-drag: none;
-            transition: opacity 0.2s ease;
+            transform: translateZ(0);
         }
 
         .narrative-box {
@@ -494,7 +491,7 @@
             text-transform: uppercase;
             cursor: pointer;
             box-shadow: 2px 2px 0px var(--ink-dark);
-            transition: transform 0.16s ease, box-shadow 0.16s ease;
+            transition: transform 0.16s ease, box-shadow 0.16s ease, opacity 0.2s ease;
         }
 
         .enter-lesson-btn::before {
@@ -511,8 +508,14 @@
             z-index: 1;
         }
 
-        .enter-lesson-btn:active,
-        .enter-lesson-btn.pressed {
+        .enter-lesson-btn:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+            box-shadow: 1px 1px 0px var(--ink-dark);
+        }
+
+        .enter-lesson-btn:not(:disabled):active,
+        .enter-lesson-btn:not(:disabled).pressed {
             transform: translate(2px, 2px);
             box-shadow: 1px 1px 0px var(--ink-dark);
         }
@@ -1175,7 +1178,7 @@
         <button class="splash-start-btn" id="splashStartBtn" onclick="enterFromSplash(this)"><span>to start</span></button>
     </div>
 
-    <!-- Prologue Blackout & Comic Title Transition Overlay -->
+    <!-- Prologue Blackout & Title Transition Overlay -->
     <div class="prologue-curtain" id="prologueCurtain">
         <div class="prologue-title-card" id="prologueTitleCard">
             <span class="prologue-comic-text">Prologue</span>
@@ -1216,7 +1219,7 @@
                 </div>
 
                 <div class="intro-bottom-group">
-                    <button class="enter-lesson-btn" id="enterLessonBtn" onclick="startScan(this)"><span>Start Exercise</span></button>
+                    <button class="enter-lesson-btn" id="enterLessonBtn" onclick="startScan(this)" disabled><span>go to chapter 1</span></button>
                 </div>
             </div>
 
@@ -1401,6 +1404,8 @@
         let activePickedSlot = null;
         let vaultMiniCubes = [];
         let narrativeIndex = 0;
+        let visitedPrologueSlides = new Set([0]);
+        let hasCompletedFirstPrologue = false;
         let transitionTimer = null;
         let isTransitioning = false;
 
@@ -1432,6 +1437,44 @@
                 fallbacks: ["nr_i3.webp", "nr_i3.jpg", "nr_i3.jpeg"]
             }
         ];
+
+        const preloadedImageCache = new Map();
+
+        function preloadSingleImage(src) {
+            if (!src || preloadedImageCache.has(src)) return;
+            const img = new Image();
+            img.decoding = 'async';
+            img.src = src;
+            preloadedImageCache.set(src, img);
+            if (typeof img.decode === 'function') {
+                img.decode().catch(() => {});
+            }
+        }
+
+        function preloadAllAssets() {
+            const assets = [
+                'start page.webp',
+                'start%20page.webp',
+                'start page.png',
+                'start page.jpg',
+                'Background0.jpeg',
+                'Background0.webp',
+                'Background1.webp',
+                'Background2.webp',
+                'frame.png',
+                'Cube1_3.webp',
+                'nr_i1.webp',
+                'nr_i1.png',
+                'nr_i1.jpg',
+                'nr_i2.webp',
+                'nr_i2.png',
+                'nr_i2.jpg',
+                'nr_i3.png',
+                'nr_i3.webp',
+                'nr_i3.jpg'
+            ];
+            assets.forEach(preloadSingleImage);
+        }
 
         const refCubeImage = new Image();
         let refCubeImageReady = false;
@@ -1568,12 +1611,23 @@
             prologueTimers = [];
         }
 
+        function syncChapterButtonState() {
+            const btn = document.getElementById('enterLessonBtn');
+            if (!btn) return;
+            const allViewed = visitedPrologueSlides.size >= PROLOGUE_SLIDES.length;
+            if (allViewed) {
+                hasCompletedFirstPrologue = true;
+            }
+            btn.disabled = !hasCompletedFirstPrologue;
+        }
+
         /*
-         * Cinematic Splash -> Prologue sequence:
-         * 1. Slow fade to black over 3s
-         * 2. Fade-in "Prologue" in comic style over 2s
-         * 3. Hold "Prologue" fixed for 3s
-         * 4. Fade out black curtain over 3s into Page 2 (introScreen)
+         * Splash -> Prologue sequence:
+         * 0.0s .. 2.0s: fade to black (2s - 1s faster than before)
+         * 2.0s .. 4.0s: fade in "Prologue" (2s)
+         * 4.0s .. 7.0s: hold "Prologue" fixed (3s)
+         * 7.0s .. 8.0s: fade out "Prologue" (1s - 1s faster)
+         * 8.0s .. 11.0s: fade out black curtain to reveal Page 2 (3s)
          */
         function enterFromSplash(btn) {
             const splash = document.getElementById('startSplash');
@@ -1588,32 +1642,36 @@
                 btn.classList.add('pressed');
             }
 
+            preloadAllAssets();
             clearPrologueTimers();
+
             narrativeIndex = 0;
+            if (!hasCompletedFirstPrologue) {
+                visitedPrologueSlides = new Set([0]);
+            }
             updateNarrativeView();
 
             const t0 = setTimeout(() => {
                 if (btn) btn.classList.remove('pressed');
 
-                // Prepare page 2 underneath before curtain fades out
                 board.classList.remove('clouds-bg', 'vault-bg', 'blurred-bg');
                 setSoloPage('introScreen');
 
-                // Reset curtain state and fade to black over 3s
-                curtain.style.transition = 'none';
                 curtain.style.display = 'flex';
-                curtain.classList.remove('curtain-visible');
+                curtain.classList.remove('curtain-exit', 'curtain-visible');
+                curtain.style.transition = 'none';
+
+                titleCard.classList.remove('title-visible', 'title-fading-out');
                 titleCard.style.transition = 'none';
-                titleCard.classList.remove('title-visible');
 
                 curtain.offsetHeight;
 
                 requestAnimationFrame(() => {
-                    curtain.style.transition = 'opacity 3s ease-in-out';
+                    curtain.style.transition = 'opacity 2s ease-in-out';
                     curtain.classList.add('curtain-visible');
                 });
 
-                // At t = 3.0s: screen is completely black -> hide splash & fade in "Prologue" over 2s
+                // 2.0s: screen is black -> hide splash & fade in "Prologue" over 2s
                 const t1 = setTimeout(() => {
                     splash.style.display = 'none';
                     splash.classList.add('slide-out');
@@ -1621,22 +1679,28 @@
 
                     titleCard.style.transition = 'opacity 2s ease-in-out, transform 2s cubic-bezier(0.22, 1, 0.36, 1)';
                     titleCard.classList.add('title-visible');
-                }, 3000);
+                }, 2000);
 
-                // At t = 5.0s: "Prologue" finished appearing -> hold fixed for 3s (until t = 8.0s)
-                // At t = 8.0s: fade out curtain over 3s to reveal Page 2
+                // 7.0s (after 2s fade-in + 3s hold): fade out "Prologue" over 1s
                 const t2 = setTimeout(() => {
-                    curtain.style.transition = 'opacity 3s ease-in-out';
+                    titleCard.classList.remove('title-visible');
+                    titleCard.classList.add('title-fading-out');
+                }, 7000);
+
+                // 8.0s ("Prologue" is gone): fade out black curtain over 3s into Page 2
+                const t3 = setTimeout(() => {
+                    curtain.classList.add('curtain-exit');
                     curtain.classList.remove('curtain-visible');
                 }, 8000);
 
-                // At t = 11.05s: remove curtain from hit tree
-                const t3 = setTimeout(() => {
+                // 11.05s: hide curtain
+                const t4 = setTimeout(() => {
                     curtain.style.display = 'none';
-                    titleCard.classList.remove('title-visible');
+                    curtain.classList.remove('curtain-exit');
+                    titleCard.classList.remove('title-fading-out');
                 }, 11050);
 
-                prologueTimers.push(t1, t2, t3);
+                prologueTimers.push(t1, t2, t3, t4);
             }, 90);
 
             prologueTimers.push(t0);
@@ -1659,10 +1723,10 @@
 
             if (curtain) {
                 curtain.style.display = 'none';
-                curtain.classList.remove('curtain-visible');
+                curtain.classList.remove('curtain-visible', 'curtain-exit');
             }
             if (titleCard) {
-                titleCard.classList.remove('title-visible');
+                titleCard.classList.remove('title-visible', 'title-fading-out');
             }
             if (btn) {
                 btn.disabled = false;
@@ -1694,12 +1758,23 @@
 
             if (!slide) return;
 
+            visitedPrologueSlides.add(narrativeIndex);
+            syncChapterButtonState();
+
             if (textEl) textEl.textContent = slide.text;
+
             if (imgEl) {
+                const cached = preloadedImageCache.get(slide.img);
                 imgEl.dataset.fbIdx = '0';
                 imgEl.dataset.fallbacks = JSON.stringify(slide.fallbacks || []);
-                imgEl.src = slide.img;
+                if (cached && cached.complete && cached.naturalWidth > 0) {
+                    imgEl.src = cached.src;
+                } else {
+                    preloadSingleImage(slide.img);
+                    imgEl.src = slide.img;
+                }
             }
+
             if (indicatorEl) indicatorEl.textContent = `${narrativeIndex + 1}`;
             if (prevBtn) prevBtn.disabled = narrativeIndex === 0;
             if (nextBtn) nextBtn.disabled = narrativeIndex === PROLOGUE_SLIDES.length - 1;
@@ -1794,6 +1869,12 @@
 
         function startScan(btn) {
             if (isTransitioning) return;
+            if (!hasCompletedFirstPrologue && visitedPrologueSlides.size < PROLOGUE_SLIDES.length) {
+                syncChapterButtonState();
+                return;
+            }
+            hasCompletedFirstPrologue = true;
+
             const intro = document.getElementById('introScreen');
             const workspace = document.getElementById('scanWorkspace');
             const board = document.getElementById('retroBoard');
@@ -2739,7 +2820,7 @@
                 bctx.rotate(rot);
                 bctx.fillStyle = 'rgb(192, 192, 192)';
                 bctx.beginPath();
-                bctx.ellipse(0, 0, rx * 0.95, ry * 0.95, 0, 0, Math.PI * 2);
+                ctx.ellipse(0, 0, rx * 0.95, ry * 0.95, 0, 0, Math.PI * 2);
                 bctx.fill();
                 bctx.restore();
 
@@ -3388,6 +3469,7 @@
             targetRotY += 180;
         }
 
+        preloadAllAssets();
         updateNarrativeView();
     </script>
 </body>
