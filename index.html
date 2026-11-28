@@ -241,7 +241,7 @@
             pointer-events: none;
             transform: scale(1);
             filter: blur(0px);
-            transition: opacity 0.2s ease, filter 0.24s cubic-bezier(0.22, 1, 0.36, 1), transform 0.24s cubic-bezier(0.22, 1, 0.36, 1);
+            transition: opacity 0.2s ease, filter 0.34s cubic-bezier(0.22, 1, 0.36, 1), transform 0.34s cubic-bezier(0.22, 1, 0.36, 1);
             will-change: filter, transform;
         }
 
@@ -944,7 +944,7 @@
             padding: 12px 0 10px;
             position: relative;
             overflow: hidden;
-            transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), filter 0.3s ease, opacity 0.3s ease;
+            transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), filter 0.34s ease, opacity 0.3s ease;
         }
 
         .memory-vault.defocused {
@@ -1118,13 +1118,8 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            transform: scale(0.88);
-            transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
             pointer-events: none;
-        }
-
-        .webgl-cube-holder.approached {
-            transform: scale(1);
+            will-change: transform;
         }
 
         #threeCanvasHost {
@@ -1354,7 +1349,7 @@
         <div class="cube-stage" id="cubeStage" onclick="returnToVault()">
             <div class="webgl-cube-holder" id="cubeDepthHolder">
                 <div id="threeCanvasHost"></div>
-                <div class="touch-overlay" onclick="event.stopPropagation()">
+                <div class="touch-overlay" id="inspectionTouchOverlay" onclick="event.stopPropagation()">
                     <div class="zone" onclick="tiltUp()"></div>
                     <div class="zone" onclick="tiltUp()"></div>
                     <div class="zone" onclick="tiltUp()"></div>
@@ -1402,6 +1397,9 @@
 
         let vaultSpinRaf = null;
         let activePickedSlot = null;
+        let activePickedMiniEntry = null;
+        let isInspectTransitioning = false;
+        let inspectMorphRaf = null;
         let vaultMiniCubes = [];
         let narrativeIndex = 0;
         let visitedPrologueSlides = new Set([0]);
@@ -1626,7 +1624,7 @@
          * 0.0s .. 2.0s: fade to black (2s)
          * 2.0s .. 4.0s: fade in "Prologue" (2s)
          * 4.0s .. 5.0s: hold "Prologue" (1s)
-         * 5.0s .. 5.5s: fade out "Prologue" (0.5s — 0.5s faster)
+         * 5.0s .. 5.5s: fade out "Prologue" (0.5s)
          * 5.5s .. 6.5s: full blackness hold (1s after "Prologue" disappears)
          * 6.5s .. 9.5s: fade out black curtain to reveal second page (3s)
          */
@@ -1672,7 +1670,6 @@
                     curtain.classList.add('curtain-visible');
                 });
 
-                // 2.0s: screen is black -> hide splash & fade in "Prologue" over 2s
                 const t1 = setTimeout(() => {
                     splash.style.display = 'none';
                     splash.classList.add('slide-out');
@@ -1682,21 +1679,17 @@
                     titleCard.classList.add('title-visible');
                 }, 2000);
 
-                // 5.0s: fade out "Prologue" over 0.5s (0.5s faster than 1s)
                 const t2 = setTimeout(() => {
                     titleCard.classList.remove('title-visible');
                     titleCard.classList.add('title-fading-out');
                 }, 5000);
 
-                // 5.5s .. 6.5s: 1 second of pure darkness after "Prologue" is completely gone,
-                // then at 6.5s start smooth 3s fade out of the black curtain to reveal page 2
                 const t3 = setTimeout(() => {
                     titleCard.style.display = 'none';
                     curtain.classList.add('curtain-exit');
                     curtain.classList.remove('curtain-visible');
                 }, 6500);
 
-                // 9.55s: hide curtain
                 const t4 = setTimeout(() => {
                     curtain.style.display = 'none';
                     curtain.classList.remove('curtain-exit');
@@ -1738,6 +1731,7 @@
                 btn.classList.remove('pressed');
             }
 
+            resetInspectionImmediate();
             stopSplitAnimation();
             stopVaultSpinning();
             disposeVaultMiniCubes();
@@ -2076,6 +2070,7 @@
             const rankVault = document.getElementById('rankVault');
             const board = document.getElementById('retroBoard');
 
+            resetInspectionImmediate();
             stopSplitAnimation();
             stopVaultSpinning();
             disposeVaultMiniCubes();
@@ -2384,8 +2379,9 @@
         }
 
         function returnToRankVault() {
-            if (isTransitioning || isCategoryTransitioning) return;
+            if (isTransitioning || isCategoryTransitioning || isInspectTransitioning) return;
             clearCategoryTimers();
+            resetInspectionImmediate();
             stopVaultSpinning();
             stopSplitAnimation();
             isTransitioning = true;
@@ -2496,7 +2492,8 @@
         }
 
         function returnToStudyFromVault() {
-            if (isTransitioning) return;
+            if (isTransitioning || isInspectTransitioning) return;
+            resetInspectionImmediate();
             stopSplitAnimation();
             const vault = document.getElementById('memoryVault');
             const workspace = document.getElementById('scanWorkspace');
@@ -2601,7 +2598,6 @@
         function drawAgedBlottedGreyPatches(ctx, size, seedOffset, useReferenceColors = false) {
             const scale = size / 512;
 
-            // Varied irregular blotches (both small clusters and a couple of soft larger clouds)
             const blotchCount = 34;
             const darkPalette = useReferenceColors
                 ? ['rgba(124, 128, 138, 0.28)', 'rgba(104, 108, 118, 0.24)', 'rgba(142, 146, 156, 0.22)']
@@ -2610,7 +2606,7 @@
             for (let i = 0; i < blotchCount; i++) {
                 const s = seedOffset * 251 + i * 53;
                 const isCloud = i < 4;
-                const cx = (24 + seededRand(s + 1) * (size - 48 * scale)) ;
+                const cx = (24 + seededRand(s + 1) * (size - 48 * scale));
                 const cy = (24 + seededRand(s + 2) * (size - 48 * scale));
                 const baseR = (isCloud
                     ? (28 + seededRand(s + 3) * 26)
@@ -2624,12 +2620,10 @@
                 ctx.rotate(rot);
                 ctx.filter = `blur(${Math.max(0.8, (isCloud ? 4.2 : 1.5) * scale)}px)`;
 
-                // Main blotch
                 traceIrregularSpeckContour(ctx, 0, 0, baseR, baseR * aspect, s + 10);
                 ctx.fillStyle = color;
                 ctx.fill();
 
-                // 2–4 tiny asymmetric sub-specks scattered right around the blotch
                 const subCount = isCloud ? 5 : 2 + Math.floor(seededRand(s + 6) * 2);
                 for (let k = 0; k < subCount; k++) {
                     const ks = s + 100 + k * 19;
@@ -2651,7 +2645,6 @@
                 ctx.restore();
             }
 
-            // Fine mottled pale/ashy stippling across the face
             const stippleCount = 95;
             for (let m = 0; m < stippleCount; m++) {
                 const s = seedOffset * 709 + m * 31;
@@ -3336,6 +3329,7 @@
                         camera: miniCam,
                         renderer: miniRenderer,
                         mesh: cubeGroup,
+                        slotEl: slot,
                         wordText: item.word,
                         angle: index * 25
                     });
@@ -3440,61 +3434,238 @@
             threeAnimId = requestAnimationFrame(renderThreeLoop);
             if (!renderer || !scene || !camera) return;
 
-            currentRotX += (targetRotX - currentRotX) * 0.14;
-            currentRotY += (targetRotY - currentRotY) * 0.14;
+            if (!isInspectTransitioning) {
+                currentRotX += (targetRotX - currentRotX) * 0.14;
+                currentRotY += (targetRotY - currentRotY) * 0.14;
 
-            if (stoneCubeGroup) {
-                stoneCubeGroup.rotation.x = THREE.MathUtils.degToRad(currentRotX);
-                stoneCubeGroup.rotation.y = THREE.MathUtils.degToRad(currentRotY);
-                stoneCubeGroup.position.y = Math.sin(performance.now() * 0.0022) * 0.035;
+                if (stoneCubeGroup) {
+                    stoneCubeGroup.rotation.x = THREE.MathUtils.degToRad(currentRotX);
+                    stoneCubeGroup.rotation.y = THREE.MathUtils.degToRad(currentRotY);
+                    stoneCubeGroup.position.y = Math.sin(performance.now() * 0.0022) * 0.035;
+                }
             }
 
             renderer.render(scene, camera);
         }
 
-        function inspectMemoryCube(wordData, sourceSlot, cubeSeedBase = 1) {
-            const vault = document.getElementById('memoryVault');
-            const cubeStage = document.getElementById('cubeStage');
-            const holder = document.getElementById('cubeDepthHolder');
-            const board = document.getElementById('retroBoard');
+        function getMiniCubeScreenMetrics(sourceSlot) {
+            const rect = sourceSlot
+                ? sourceSlot.getBoundingClientRect()
+                : { left: window.innerWidth * 0.5 - 64, top: window.innerHeight * 0.5 - 64, width: 128, height: 128 };
 
-            if (activePickedSlot) {
-                activePickedSlot.classList.remove('picked-out');
-            }
-            activePickedSlot = sourceSlot || null;
-            if (sourceSlot) {
-                sourceSlot.classList.add('picked-out');
-            }
+            const slotCenterX = rect.left + rect.width * 0.5;
+            const slotCenterY = rect.top + rect.height * 0.5;
+            const screenCenterX = window.innerWidth * 0.5;
+            const screenCenterY = window.innerHeight * 0.5;
 
-            initThreeCube(wordData, cubeSeedBase);
+            const dx = slotCenterX - screenCenterX;
+            const dy = slotCenterY - screenCenterY;
 
-            vault.classList.add('defocused');
-            board.classList.add('blurred-bg');
+            // Match visual cube size between 128px mini-stage (fov 36, z 5.25, size 1.96)
+            // and 264px inspection stage (fov 38, z 5.5, size 1.98)
+            const miniFov = THREE.MathUtils.degToRad(36);
+            const inspFov = THREE.MathUtils.degToRad(38);
+            const miniPxPerUnit = rect.height / (2 * Math.tan(miniFov * 0.5) * 5.25);
+            const inspPxPerUnit = 264 / (2 * Math.tan(inspFov * 0.5) * 5.5);
+            const startScale = (1.96 * miniPxPerUnit) / (1.98 * inspPxPerUnit);
 
-            holder.classList.remove('approached');
-            cubeStage.style.display = 'flex';
-            holder.offsetHeight;
-
-            requestAnimationFrame(() => {
-                holder.classList.add('approached');
-            });
+            return { dx, dy, startScale };
         }
 
-        function returnToVault() {
+        function resetInspectionImmediate() {
+            if (inspectMorphRaf) {
+                cancelAnimationFrame(inspectMorphRaf);
+                inspectMorphRaf = null;
+            }
+            isInspectTransitioning = false;
             const vault = document.getElementById('memoryVault');
             const cubeStage = document.getElementById('cubeStage');
             const holder = document.getElementById('cubeDepthHolder');
             const board = document.getElementById('retroBoard');
+            const overlay = document.getElementById('inspectionTouchOverlay');
 
             if (activePickedSlot) {
                 activePickedSlot.classList.remove('picked-out');
                 activePickedSlot = null;
             }
+            activePickedMiniEntry = null;
+            if (holder) holder.style.transform = '';
+            if (overlay) overlay.style.pointerEvents = 'auto';
+            if (board) board.classList.remove('blurred-bg');
+            if (vault) vault.classList.remove('defocused');
+            if (cubeStage) cubeStage.style.display = 'none';
+        }
 
-            holder.classList.remove('approached');
+        function inspectMemoryCube(wordData, sourceSlot, cubeSeedBase = 1) {
+            if (isInspectTransitioning || isCategoryTransitioning || isTransitioning) return;
+
+            const vault = document.getElementById('memoryVault');
+            const cubeStage = document.getElementById('cubeStage');
+            const holder = document.getElementById('cubeDepthHolder');
+            const board = document.getElementById('retroBoard');
+            const overlay = document.getElementById('inspectionTouchOverlay');
+
+            if (inspectMorphRaf) {
+                cancelAnimationFrame(inspectMorphRaf);
+                inspectMorphRaf = null;
+            }
+
+            if (activePickedSlot && activePickedSlot !== sourceSlot) {
+                activePickedSlot.classList.remove('picked-out');
+            }
+            activePickedSlot = sourceSlot || null;
+            activePickedMiniEntry = vaultMiniCubes.find((m) => m.slotEl === sourceSlot) || null;
+
+            initThreeCube(wordData, cubeSeedBase);
+
+            const { dx, dy, startScale } = getMiniCubeScreenMetrics(sourceSlot);
+            const startAngleY = activePickedMiniEntry ? (activePickedMiniEntry.angle % 360) : 0;
+            const normalizedStartY = startAngleY > 180 ? startAngleY - 360 : startAngleY;
+
+            isInspectTransitioning = true;
+            if (overlay) overlay.style.pointerEvents = 'none';
+
+            currentRotX = 0;
+            currentRotY = normalizedStartY;
+            targetRotX = 0;
+            targetRotY = 0;
+
+            if (stoneCubeGroup) {
+                stoneCubeGroup.position.set(0, 0, 0);
+                stoneCubeGroup.rotation.set(0, THREE.MathUtils.degToRad(normalizedStartY), 0);
+            }
+
+            holder.style.transform = `translate3d(${dx.toFixed(2)}px, ${dy.toFixed(2)}px, 0px) scale(${startScale.toFixed(4)})`;
+            cubeStage.style.display = 'flex';
+            if (renderer && scene && camera) {
+                renderer.render(scene, camera);
+            }
+
+            if (sourceSlot) {
+                sourceSlot.classList.add('picked-out');
+            }
+
+            requestAnimationFrame(() => {
+                vault.classList.add('defocused');
+                board.classList.add('blurred-bg');
+            });
+
+            const duration = 360;
+            const startTime = performance.now();
+
+            function stepExpand(now) {
+                const rawT = Math.min(1, (now - startTime) / duration);
+                const t = easeOutCubic(rawT);
+
+                const curX = dx * (1 - t);
+                const curY = dy * (1 - t);
+                const curS = startScale + (1 - startScale) * t;
+                const rotY = normalizedStartY * (1 - t);
+
+                holder.style.transform = `translate3d(${curX.toFixed(2)}px, ${curY.toFixed(2)}px, 0px) scale(${curS.toFixed(4)})`;
+
+                currentRotX = 0;
+                currentRotY = rotY;
+                if (stoneCubeGroup) {
+                    stoneCubeGroup.position.set(0, 0, 0);
+                    stoneCubeGroup.rotation.set(0, THREE.MathUtils.degToRad(rotY), 0);
+                }
+
+                if (rawT < 1) {
+                    inspectMorphRaf = requestAnimationFrame(stepExpand);
+                } else {
+                    inspectMorphRaf = null;
+                    isInspectTransitioning = false;
+                    currentRotX = 0;
+                    currentRotY = 0;
+                    targetRotX = 0;
+                    targetRotY = 0;
+                    holder.style.transform = 'translate3d(0px, 0px, 0px) scale(1)';
+                    if (overlay) overlay.style.pointerEvents = 'auto';
+                }
+            }
+
+            inspectMorphRaf = requestAnimationFrame(stepExpand);
+        }
+
+        function returnToVault() {
+            const cubeStage = document.getElementById('cubeStage');
+            if (!cubeStage || cubeStage.style.display === 'none' || isInspectTransitioning) return;
+
+            const vault = document.getElementById('memoryVault');
+            const holder = document.getElementById('cubeDepthHolder');
+            const board = document.getElementById('retroBoard');
+            const overlay = document.getElementById('inspectionTouchOverlay');
+
+            if (inspectMorphRaf) {
+                cancelAnimationFrame(inspectMorphRaf);
+                inspectMorphRaf = null;
+            }
+
+            isInspectTransitioning = true;
+            if (overlay) overlay.style.pointerEvents = 'none';
+
             board.classList.remove('blurred-bg');
             vault.classList.remove('defocused');
-            cubeStage.style.display = 'none';
+
+            const { dx, dy, startScale } = getMiniCubeScreenMetrics(activePickedSlot);
+            const fromRotX = currentRotX;
+            const fromRotY = currentRotY;
+            const fromFloatY = stoneCubeGroup ? stoneCubeGroup.position.y : 0;
+
+            const duration = 340;
+            const startTime = performance.now();
+
+            function stepShrink(now) {
+                const rawT = Math.min(1, (now - startTime) / duration);
+                const t = easeInOutCubic(rawT);
+
+                const curX = dx * t;
+                const curY = dy * t;
+                const curS = 1 + (startScale - 1) * t;
+
+                const targetMiniAngle = activePickedMiniEntry ? (activePickedMiniEntry.angle % 360) : 0;
+                const nearestTurn = Math.round((fromRotY - targetMiniAngle) / 360) * 360 + targetMiniAngle;
+                const rotX = fromRotX * (1 - t);
+                const rotY = fromRotY + (nearestTurn - fromRotY) * t;
+
+                holder.style.transform = `translate3d(${curX.toFixed(2)}px, ${curY.toFixed(2)}px, 0px) scale(${curS.toFixed(4)})`;
+
+                if (stoneCubeGroup) {
+                    stoneCubeGroup.position.set(0, fromFloatY * (1 - t), 0);
+                    stoneCubeGroup.rotation.set(
+                        THREE.MathUtils.degToRad(rotX),
+                        THREE.MathUtils.degToRad(rotY),
+                        0
+                    );
+                }
+
+                if (rawT < 1) {
+                    inspectMorphRaf = requestAnimationFrame(stepShrink);
+                } else {
+                    inspectMorphRaf = null;
+                    isInspectTransitioning = false;
+
+                    if (activePickedMiniEntry) {
+                        activePickedMiniEntry.angle = ((rotY % 360) + 360) % 360;
+                        activePickedMiniEntry.mesh.rotation.x = 0;
+                        activePickedMiniEntry.mesh.rotation.y = THREE.MathUtils.degToRad(activePickedMiniEntry.angle);
+                        activePickedMiniEntry.renderer.render(activePickedMiniEntry.scene, activePickedMiniEntry.camera);
+                    }
+
+                    if (activePickedSlot) {
+                        activePickedSlot.classList.remove('picked-out');
+                        activePickedSlot = null;
+                    }
+                    activePickedMiniEntry = null;
+
+                    holder.style.transform = '';
+                    if (overlay) overlay.style.pointerEvents = 'auto';
+                    cubeStage.style.display = 'none';
+                }
+            }
+
+            inspectMorphRaf = requestAnimationFrame(stepShrink);
         }
 
         function alignYToUprightFront() {
@@ -3502,26 +3673,31 @@
         }
 
         function tiltUp() {
+            if (isInspectTransitioning) return;
             alignYToUprightFront();
             targetRotX = targetRotX > 0 ? 0 : -90;
         }
 
         function tiltDown() {
+            if (isInspectTransitioning) return;
             alignYToUprightFront();
             targetRotX = targetRotX < 0 ? 0 : 90;
         }
 
         function turnLeft() {
+            if (isInspectTransitioning) return;
             targetRotX = 0;
             targetRotY += 90;
         }
 
         function turnRight() {
+            if (isInspectTransitioning) return;
             targetRotX = 0;
             targetRotY -= 90;
         }
 
         function turnBack() {
+            if (isInspectTransitioning) return;
             targetRotX = 0;
             targetRotY += 180;
         }
